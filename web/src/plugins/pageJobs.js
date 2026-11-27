@@ -74,48 +74,58 @@ async function read(job) {
   await call('page_read_done', { id: job.id, reader: job.reader, mode: job.mode, values: answer?.values ?? null, error: answer?.error ?? null, timedOut: !answer })
 }
 
-/** Works through the items waiting for a plugin page, in the main window only. */
+/** Works through the items waiting for a plugin page, in the main window only: thumbnails and file reads in loops of their own, so a page slow to make a picture never holds up the reading. */
 export function startPageJobs() {
   const gaveUpThumbs = new Set()
   const gaveUpReads = new Map()
   const answered = new Map()
   let lib = S.startup?.current ?? null
   let contrib = S.contrib
-  const tick = async () => {
-    let busy = false
-    try {
-      const curLib = S.startup?.current ?? null
-      if (curLib !== lib) {
-        lib = curLib
-        gaveUpThumbs.clear()
-        gaveUpReads.clear()
-        answered.clear()
-        PJ.frames = []
-      }
-      if (S.contrib !== contrib) {
-        contrib = S.contrib
-        gaveUpThumbs.clear()
-        gaveUpReads.clear()
-      }
-      if (S.libOpen) {
-        const thumbs = (await call('page_jobs', { limit: 8, skip: [...gaveUpThumbs] })).filter((j) => !gaveUpThumbs.has(j.id))
-        const now = Date.now()
-        for (const [key, entry] of answered) if (now - entry.at > ANSWERED_MS) answered.delete(key)
-        const skipReads = [...gaveUpReads.values(), ...[...answered.values()].map((e) => [e.id, e.reader])]
-        const reads = (await call('page_reads', { limit: 8, skip: skipReads })).filter((j) => !gaveUpReads.has(`${j.id}|${j.reader}`) && !answered.has(`${j.id}|${j.reader}`))
-        busy = thumbs.length > 0 || reads.length > 0
-        for (const j of thumbs) await thumbnail(j).catch(() => gaveUpThumbs.add(j.id))
-        for (const j of reads) {
-          const key = `${j.id}|${j.reader}`
-          await read(j).then(() => answered.set(key, { id: j.id, reader: j.reader, at: Date.now() }), () => gaveUpReads.set(key, [j.id, j.reader]))
-        }
-      }
-    } catch {
-      /* the library closed meanwhile */
+  // another library, or other plugins, start over
+  const follow = () => {
+    const curLib = S.startup?.current ?? null
+    if (curLib !== lib) {
+      lib = curLib
+      gaveUpThumbs.clear()
+      gaveUpReads.clear()
+      answered.clear()
+      PJ.frames = []
     }
-    const now = Date.now()
-    PJ.frames = PJ.frames.filter((f) => now - f.used < CLOSE_AFTER_MS)
-    setTimeout(tick, busy ? 0 : IDLE_MS)
+    if (S.contrib !== contrib) {
+      contrib = S.contrib
+      gaveUpThumbs.clear()
+      gaveUpReads.clear()
+    }
   }
-  tick()
+  const loop = (work) => {
+    const tick = async () => {
+      let busy = false
+      try {
+        follow()
+        if (S.libOpen) busy = await work()
+      } catch {
+        /* the library closed meanwhile */
+      }
+      const now = Date.now()
+      PJ.frames = PJ.frames.filter((f) => now - f.used < CLOSE_AFTER_MS)
+      setTimeout(tick, busy ? 0 : IDLE_MS)
+    }
+    tick()
+  }
+  loop(async () => {
+    const thumbs = (await call('page_jobs', { limit: 8, skip: [...gaveUpThumbs] })).filter((j) => !gaveUpThumbs.has(j.id))
+    for (const j of thumbs) await thumbnail(j).catch(() => gaveUpThumbs.add(j.id))
+    return thumbs.length > 0
+  })
+  loop(async () => {
+    const now = Date.now()
+    for (const [key, entry] of answered) if (now - entry.at > ANSWERED_MS) answered.delete(key)
+    const skipReads = [...gaveUpReads.values(), ...[...answered.values()].map((e) => [e.id, e.reader])]
+    const reads = (await call('page_reads', { limit: 8, skip: skipReads })).filter((j) => !gaveUpReads.has(`${j.id}|${j.reader}`) && !answered.has(`${j.id}|${j.reader}`))
+    for (const j of reads) {
+      const key = `${j.id}|${j.reader}`
+      await read(j).then(() => answered.set(key, { id: j.id, reader: j.reader, at: Date.now() }), () => gaveUpReads.set(key, [j.id, j.reader]))
+    }
+    return reads.length > 0
+  })
 }
