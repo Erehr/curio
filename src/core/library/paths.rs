@@ -14,6 +14,7 @@ pub struct LibraryPaths {
     pub tmp: PathBuf,
     pub backups: PathBuf,
     pub exports: PathBuf,
+    /// Plugins that travel with the library; made by whoever puts one there, not by `ensure`, so most libraries have none.
     pub plugins: PathBuf,
 }
 
@@ -41,7 +42,7 @@ impl LibraryPaths {
         }
     }
     pub fn ensure(&self) -> std::io::Result<()> {
-        for d in [&self.root, &self.managed, &self.thumbs, &self.previews, &self.tmp, &self.backups, &self.exports, &self.plugins] {
+        for d in [&self.root, &self.managed, &self.thumbs, &self.previews, &self.tmp, &self.backups, &self.exports] {
             std::fs::create_dir_all(d)?;
         }
         Ok(())

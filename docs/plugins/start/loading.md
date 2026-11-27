@@ -23,7 +23,7 @@ External plugins load after built-in plugins in this order:
 
 ## Approvals
 
-- **Per-library state**: Enablement and granted permissions are stored inside each library's SQLite database (`plugin_state`), so different libraries can enable different plugins and grants.
+- **Per-library state**: Enablement and granted permissions are stored inside each library's SQLite database (`plugin_state`), so different libraries can enable different plugins and grants. A plugin from an added folder or the application plugins directory starts on, with the permissions it asks for, in each library that has no state for it yet.
 - **Library-local approval**: Plugins inside `<Library>.curio/plugins/` stay paused on any new computer (or after any file inside the plugin folder changes) until approved by the user. See [Permissions](permissions.md#reapproval) for how content hashing and reapproval work.
 
 ## Failures

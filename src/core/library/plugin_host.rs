@@ -35,6 +35,14 @@ pub(super) fn load_plugins(db: &Db, ctx: &Ctx, dirs: &[PathBuf]) {
             if failures >= plugins::MAX_FAILURES && p.problem.is_none() {
                 p.problem = Some(format!("disabled after {failures} failures (re-enable to retry)"));
             }
+        } else if p.problem.is_none() && !p.dir.starts_with(&ctx.paths.plugins) {
+            // one added for every library (an added folder, the app's plugins folder) is on, with what it asks for, in a library that hasn't switched it off; one inside the library folder waits for approval instead
+            p.enabled = true;
+            p.configured = true;
+            p.granted = p.manifest.permissions.clone();
+            if let Err(e) = db.set_plugin_state(&p.manifest.id, true, &p.manifest.version, &p.granted) {
+                logging::warn(&format!("switching on {}: {e}", p.manifest.id));
+            }
         }
         plugins::loading::hold_until_approved(&mut p, &ctx.paths.plugins, &approved);
         list.push(p);

@@ -17,13 +17,13 @@ Open **Settings › Plugins** to manage built-in format families, add external p
 
 ## Add plugins
 
-- **Add an external plugin folder**: Click **Add plugin** in **Settings › Plugins** and choose the plugin directory itself (it must contain `plugin.json` directly). Curio registers the path, turns the plugin on and grants its requested permissions.
-- **App-level & per-library folders**: You can also place plugins in Curio's app plugins folder (`%APPDATA%\Curio\plugins` on Windows, `~/.local/share/Curio/plugins` on Linux, `~/Library/Application Support/Curio/plugins` on macOS) or inside a library's `<Library>.curio/plugins/` folder.
+- **Add an external plugin folder**: Click **Add plugin** in **Settings › Plugins** and choose the plugin directory itself (it must contain `plugin.json` directly). Curio registers the path for every library and turns the plugin on with the permissions it asks for.
+- **App-level & per-library folders**: You can also place plugins in Curio's app plugins folder (`%APPDATA%\Curio\plugins` on Windows, `~/.local/share/Curio/plugins` on Linux, `~/Library/Application Support/Curio/plugins` on macOS) or inside a library's `<Library>.curio/plugins/` folder, which you create when you need it.
 - **Automatic cleanup**: When an externally added plugin folder is moved, renamed or deleted from disk, Curio removes its stale entry on open or reload.
 
 ## Permissions
 
-- **Per-library enablement**: Toggle any plugin on or off for the active library. Turning a plugin on for the first time grants the permissions declared in its manifest. Expand a plugin row to turn individual permissions on or off (`metadata.read`, `metadata.write`, `organize`, `files.read`, `files.write`, `files.outside`, `ui`, `exec`, `network`).
+- **Per-library enablement**: Added plugins and those in the app plugins folder start on in every library. Toggle any plugin on or off for the active library, which keeps your choice. Expand a plugin row to turn individual permissions on or off (`metadata.read`, `metadata.write`, `organize`, `files.read`, `files.write`, `files.outside`, `ui`, `exec`, `network`).
 - **Per-computer approval**: Plugins stored inside a `.curio` library folder wait for explicit approval on each new computer before running pages or programs. See [Permissions and isolation](../../plugins/start/permissions.md).
 - **Plugin settings**: If a plugin includes its own settings page, expanding its row in **Settings › Plugins** embeds that panel inline.
 
