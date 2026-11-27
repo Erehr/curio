@@ -8,6 +8,7 @@ import { ensureItems } from '../library/results.js'
 import { itemFiles, loadViewerFiles, viewerFile, viewerIdAt, viewerPosition, viewerResults } from './session.js'
 import { V, panTo, shownId, closeViewer, fitShare, flip, gesturePercent, isPicture, isPlayer, isText, isVideo, liveClip, oneToOne, setTextZoom, setViewerMounted, step, textPercentFrom, textView, viewerItem, wheelFactor, zoomAround, zoomFromPercent } from './viewerControls.js'
 import { playUrl } from '../platform/fileUrls.js'
+import { call } from '../platform/ipc.js'
 import ItemPreview from '../formats/ItemPreview.vue'
 import ItemViewerStrip from './ItemViewerStrip.vue'
 import ItemMenu from '../library/ItemMenu.vue'
@@ -36,6 +37,8 @@ const startView = (opening) => {
 }
 startView(true)
 watch([() => S.viewer?.id, () => S.viewer?.file ?? null], () => startView(false))
+// an item on show counts as opened, for Recently used
+watch(() => S.viewer?.id, (id) => id != null && call('mark_used', { id }).catch(() => {}), { immediate: true })
 // the files grouped into the item, again whenever its row changes (a file grouped in or split off)
 watch(
   [() => S.viewer?.id, () => viewerItem.value],

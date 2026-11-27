@@ -7,6 +7,7 @@ use serde_json::{json, Value};
 use crate::core::api::{library_named, read, same_path, with_library, ApiError, ApiResult, Ctx};
 use crate::core::library::instance;
 use crate::core::library::changes::Changed;
+use crate::core::library::changes::Parts;
 use crate::core::model::*;
 use crate::core::thumbs;
 use crate::core::api::operations::unreachable_library;
@@ -368,7 +369,7 @@ pub(super) fn item_open(c: &Ctx, p: OpenItem) -> ApiResult {
                 crate::core::system::filesystem::open_default(&path)?;
             }
             with_library(c.host, |lib| {
-                lib.write(move |db, _| db.mark_used(id).map(|_| Changed::default()));
+                lib.write(move |db, _| db.mark_used(id).map(|_| Changed::parts(Parts::SIDEBAR)));
                 Ok(())
             })?;
             done()

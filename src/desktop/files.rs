@@ -6,8 +6,18 @@ use std::path::PathBuf;
 use tauri::Manager;
 use crate::core::library::instance;
 use crate::core::library::changes::Changed;
+use crate::core::library::changes::Parts;
 use crate::core::system::logging;
 use crate::core::system::app_dirs::data_dir;
+
+/// The viewer showed an item, which puts it in Recently used.
+#[tauri::command]
+pub(super) async fn mark_used(state: tauri::State<'_, AppState>, id: i64) -> R<()> {
+    state.with_lib(|l| {
+        l.write(move |db, _| db.mark_used(id).map(|_| Changed::parts(Parts::SIDEBAR)));
+        Ok(())
+    })
+}
 
 #[tauri::command]
 pub(super) async fn open_item(state: tauri::State<'_, AppState>, id: i64, how: String) -> R<()> {
@@ -17,7 +27,7 @@ pub(super) async fn open_item(state: tauri::State<'_, AppState>, id: i64, how: S
         _ => crate::core::system::filesystem::open_default(&p)?,
     }
     state.with_lib(|l| {
-        l.write(move |db, _| db.mark_used(id).map(|_| Changed::default()));
+        l.write(move |db, _| db.mark_used(id).map(|_| Changed::parts(Parts::SIDEBAR)));
         Ok(())
     })
 }

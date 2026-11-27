@@ -621,6 +621,7 @@ pub fn run(mut opts: StartOptions) {
             import::root_op,
             import::relink,
             files::open_item,
+            files::mark_used,
             reads::paths_of,
             maintenance::export,
             settings::library_settings,

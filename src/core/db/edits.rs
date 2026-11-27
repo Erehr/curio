@@ -12,16 +12,17 @@ use crate::core::system::filesystem;
 use crate::core::model::*;
 
 impl Db {
-    /// Record a metadata edit (`modified_at`).
+    /// Record a metadata edit (`modified_at`); an edit isn't a use, so imports and bulk edits leave Recently used alone.
     pub fn touch(&self, ids: &[AssetId]) -> DbResult<()> {
         let now = now_ms();
-        let mut st = self.conn.prepare_cached("UPDATE assets SET modified_at = ?, last_used = ? WHERE id = ?").map_err(e)?;
+        let mut st = self.conn.prepare_cached("UPDATE assets SET modified_at = ? WHERE id = ?").map_err(e)?;
         for id in ids {
-            st.execute(params![now, now, id]).map_err(e)?;
+            st.execute(params![now, id]).map_err(e)?;
         }
         Ok(())
     }
 
+    /// Record an opening (`last_used`), in the viewer or another program, for Recently used.
     pub fn mark_used(&self, id: AssetId) -> DbResult<()> {
         self.conn.execute("UPDATE assets SET last_used = ? WHERE id = ?", params![now_ms(), id]).map_err(e)?;
         Ok(())

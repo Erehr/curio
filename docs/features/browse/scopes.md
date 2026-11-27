@@ -15,7 +15,7 @@ Built-in views sit at the top of the **Library** sidebar with live asset counts:
 
 ## Recent & Random
 
-- **Recently used**: Shows assets you recently opened, imported or edited, newest first.
+- **Recently used**: Shows assets you recently opened, in the viewer or another program, newest first.
 - **Random**: Displays your library in a shuffled order. Click **Shuffle again** or re-select **Random** for a new order without changing sort settings in other views.
 
 ## Missing & Trash
