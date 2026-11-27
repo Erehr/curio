@@ -24,6 +24,8 @@ const field = ref(null)
 // opened beside a rail icon by a click: it stays when the pointer leaves
 let stays = false
 let leaveTimer = null
+// the button that opened it: a press there leaves the menu to the button's click, which toggles it closed rather than opening it again
+let opener = null
 // just long enough to cross from the icon onto its menu
 const LEAVE_MS = 70
 const MENU_GAP = 2
@@ -70,6 +72,7 @@ function at(x, y) {
   return { pageX: x - 1 + window.scrollX, pageY: y - 1 + window.scrollY, stopPropagation() {}, preventDefault() {} }
 }
 function openAt(x, y, opts = {}) {
+  opener = opts.opener || null
   q.value = ''
   source.value = typeof props.model === 'function' ? props.model() : props.model
   hover.value = opts.from || null
@@ -77,11 +80,13 @@ function openAt(x, y, opts = {}) {
   stays = !!opts.stay
   shown.value = true
   cm.value.show(at(x, y))
+  // OpenVue closes the menu on a click anywhere but its target, which it never sets itself
+  cm.value.target = opener
 }
 function show(e) {
   const r = e.currentTarget?.getBoundingClientRect?.()
   const pointer = e.type === 'contextmenu' || !r
-  openAt(pointer ? e.clientX : r.left, pointer ? e.clientY : r.bottom + UNDER_GAP)
+  openAt(pointer ? e.clientX : r.left, pointer ? e.clientY : r.bottom + UNDER_GAP, { opener: pointer ? null : e.currentTarget })
 }
 /** Open beside a rail button; closes by itself once the pointer has left, unless `stay` (opened by a click). */
 function hoverAt(el, stay = false) {
@@ -181,12 +186,13 @@ function closed() {
   shown.value = false
   hover.value = null
   field.value = null
+  opener = null
   window.removeEventListener('pointerdown', outside, true)
   moreModel.value = null
   emit('hide')
 }
 function outside(e) {
-  if (!e.target.closest?.('.app-menu')) hide()
+  if (!e.target.closest?.('.app-menu') && !opener?.contains?.(e.target)) hide()
 }
 function enter() {
   clearTimeout(leaveTimer)
