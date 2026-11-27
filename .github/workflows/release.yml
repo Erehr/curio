@@ -296,6 +296,13 @@ jobs:
           merge-multiple: true
           path: dist
 
+      # an artifact of several paths keeps their folders below the common one (nsis/ and portable/, deb/, rpm/ and appimage/), and the release takes only the files in dist/ itself
+      - name: The downloads in one folder
+        run: |
+          find dist -mindepth 2 -type f -exec mv -t dist {} +
+          find dist -mindepth 1 -type d -empty -delete
+          ls -l dist
+
       - uses: actions/download-artifact@v8
         with:
           pattern: ffmpeg-*
