@@ -377,6 +377,41 @@ function onScroll() {
     scrollLeft.value = scroller.value?.scrollLeft || 0
   })
 }
+// a new thumbnail size keeps the view where it was: the focused item when it is in sight, else the one nearest the middle, stays at the same height on screen
+function anchorOf(L0, top0, sc) {
+  const view = sc.clientHeight
+  const shownAt = (i) => (L0.y[i] != null && L0.h[i] > 0 ? L0.y[i] + top0 + L0.h[i] / 2 - sc.scrollTop : null)
+  // the focus outlives a cleared selection, and then it is no longer what the person is looking at
+  const f = S.focus != null && selSet.value.has(S.results.ids[S.focus]) ? S.focus : null
+  const fy = f != null ? shownAt(f) : null
+  if (fy != null && fy >= 0 && fy <= view) return { i: f, at: fy / view, focused: true }
+  let best = null
+  let dist = Infinity
+  for (let i = 0; i < L0.y.length; i++) {
+    const y = shownAt(i)
+    if (y == null) continue
+    const d = Math.abs(y - view / 2)
+    if (d < dist) [best, dist] = [i, d]
+  }
+  return best == null ? null : { i: best, at: shownAt(best) / view }
+}
+// one anchor for a run of steps (the wheel turned, the slider dragged), which otherwise drifts from one item to the next
+const ANCHOR_HOLD_MS = 600
+let held = null
+watch(
+  () => [layoutRef.value, itemsTop.value, lay.value.size, lay.value.view],
+  async ([L1, top1, size1, view1], [L0, top0, size0, view0]) => {
+    const sc = scroller.value
+    if (!sc || size1 === size0 || view1 !== view0 || !L0?.y || !L1?.y) return
+    const now = performance.now()
+    const a = held && now < held.until ? held : anchorOf(L0, top0, sc)
+    held = a && { ...a, until: now + ANCHOR_HOLD_MS }
+    // at the top of the list it stays at the top, unless the focused item would leave the view
+    if (!a || L1.y[a.i] == null || (sc.scrollTop <= 0 && !a.focused)) return
+    await nextTick()
+    sc.scrollTop = L1.y[a.i] + top1 + L1.h[a.i] / 2 - a.at * sc.clientHeight
+  },
+)
 async function ensureExpanded(i) {
   const sec = sectionOfIndex(layoutRef.value, i)
   if (sec?.collapsed) {
