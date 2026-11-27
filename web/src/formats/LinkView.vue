@@ -22,6 +22,16 @@ watch(() => props.item?.id, async (id) => {
     if (props.item?.id === id) link.value = null
   }
 }, { immediate: true })
+// a click in YouTube's player takes the keys into its frame, where Escape and the viewer's other keys never reach this window; the mouse keeps working there without them
+const yt = ref(null)
+function keysBack() {
+  setTimeout(() => {
+    if (yt.value && document.activeElement === yt.value) {
+      yt.value.blur()
+      window.focus()
+    }
+  })
+}
 const openInApp = () => call('open_web', { url: link.value, title: props.item?.title })
 const openOutside = () => call('open_url', { url: link.value })
 
@@ -78,6 +88,7 @@ let mo = null
 let unlisten = null
 let gone = false
 onMounted(async () => {
+  window.addEventListener('blur', keysBack)
   timer = setInterval(sync, PLACE_EVERY_MS)
   ro = new ResizeObserver(sync)
   if (slot.value) ro.observe(slot.value)
@@ -89,6 +100,7 @@ onMounted(async () => {
 })
 onBeforeUnmount(() => {
   gone = true
+  window.removeEventListener('blur', keysBack)
   clearInterval(timer)
   ro?.disconnect()
   mo?.disconnect()
@@ -99,7 +111,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <iframe v-if="ytId && !compact" class="frame fills-stage" :src="`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&vq=hq1080`" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen />
+  <iframe v-if="ytId && !compact" ref="yt" class="frame fills-stage" :src="`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&vq=hq1080`" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen />
   <div v-else-if="page" ref="slot" class="page-slot fills-stage">
     <img v-if="thumb" :src="thumb" class="pic" draggable="false" />
   </div>
