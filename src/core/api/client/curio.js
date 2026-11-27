@@ -184,6 +184,8 @@ var Curio = (function () {
     root.classList.toggle('overlay-scroll', styled && !!m.overlayScroll)
     // what the wheel does over a picture in Curio's viewer (navigate, zoom or scroll), for a viewer page to do the same
     if (m.wheel) root.dataset.curioWheel = m.wheel
+    // whether Curio's viewer keeps the zoom when it steps to another picture, for a viewer page to do the same
+    if ('rememberZoom' in m) root.toggleAttribute('data-curio-remember-zoom', !!m.rememberZoom)
     // Curio's own scrollbars, which take no room and show while scrolling
     if (styled && m.overlayScroll && !overlayLoading) overlayLoading = import(/* @vite-ignore */ OVERLAY_SCROLL).then(function (o) { o.installOverlayScroll() }).catch(function () {})
     if (typeof CustomEvent === 'function') window.dispatchEvent(new CustomEvent('curio-theme', { detail: m.theme }))

@@ -42,7 +42,7 @@ const originOf = (plugin) => (navigator.userAgent.includes('Windows') ? pageOrig
 const plain = (v) => JSON.parse(JSON.stringify(v ?? {}))
 
 function tellTheme(f) {
-  if (themeShown.theme) post(f, { theme: themeShown.theme, seeThrough: themeShown.seeThrough, inactive: !document.hasFocus(), role: f.role, overlayScroll: S.ui.overlayScrollbars !== false, lang: language(), wheel: S.ui.viewerWheel || 'navigate' })
+  if (themeShown.theme) post(f, { theme: themeShown.theme, seeThrough: themeShown.seeThrough, inactive: !document.hasFocus(), role: f.role, overlayScroll: S.ui.overlayScrollbars !== false, lang: language(), wheel: S.ui.viewerWheel || 'navigate', rememberZoom: !!S.ui.rememberZoom })
 }
 
 const listens = (f, name) => [...f.local.values()].some((names) => names.includes(name) || names.includes('plugin.*'))
@@ -227,7 +227,7 @@ function start() {
     for (const f of frames.values()) if (f.remote.has(sub)) post(f, { sub: f.remote.get(sub), event })
   })
   // started by the first frame's component, whose unmounting would stop a watch of its own: this one serves every frame from then on
-  effectScope(true).run(() => watch(() => [S.themeVer, S.ui.overlayScrollbars, S.ui.viewerWheel, language()], () => frames.forEach(tellTheme)))
+  effectScope(true).run(() => watch(() => [S.themeVer, S.ui.overlayScrollbars, S.ui.viewerWheel, S.ui.rememberZoom, language()], () => frames.forEach(tellTheme)))
   // an inactive window's panels turn solid, the pages' with them
   for (const e of ['focus', 'blur']) window.addEventListener(e, () => themeShown.seeThrough && frames.forEach(tellTheme))
   document.addEventListener('visibilitychange', () => frames.forEach((f) => f.visible && tellLocal(f, document.hidden ? 'plugin.hide' : 'plugin.show')))
