@@ -1,6 +1,6 @@
 # HTTP
 
-Curio exposes a local HTTP API on `127.0.0.1` for scripts, userscripts, browser extensions and desktop tools. One loopback endpoint serves every registered operation with the same parameters, permissions and return shapes used by `curio.js`, MCP tools and plugins.
+Curio exposes a local HTTP API on `127.0.0.1` for scripts, browser extensions and desktop tools. One loopback endpoint serves every registered operation with the same parameters, permissions and return shapes used by `curio.js`, MCP tools and plugins.
 
 ```mermaid
 flowchart LR
@@ -64,7 +64,6 @@ Curio's [`curio://open?background=1`](launch-pair.md#curioopenbackground1) launc
 
 `GET /api/v1/curio.js` serves Curio's standalone JavaScript client (`Content-Type: text/javascript; charset=utf-8`, `Access-Control-Allow-Origin: *`). It requires no token and contains no secrets.
 
-- **Userscripts**: Load it with `// @require http://127.0.0.1:41733/api/v1/curio.js` while Curio is running.
 - **Local web pages**: Include it with `<script src="http://127.0.0.1:41733/api/v1/curio.js"></script>`.
 - **Node.js and browser extensions**: Bundle or download a copy from this endpoint to match the installed Curio version.
 
@@ -191,5 +190,3 @@ Curio treats requests without an `Origin` header (such as `curl`, Python, Node.j
    - A non-empty `origins` list requires a case-insensitive match after stripping trailing `/`; mismatches fail with HTTP `403` (`not_allowed`).
 4. **Response CORS headers**: Curio echoes `Access-Control-Allow-Origin` and `Vary: Origin` on success and error responses so browser code can read errors. Curio never uses cookies or `Access-Control-Allow-Credentials`. Authentication uses only `Authorization: Bearer`.
 
-!!! tip "Calling from a userscript on a site with strict CSP"
-    Websites with a strict `Content-Security-Policy` (`connect-src`) block browser `fetch()` requests to `127.0.0.1`. Grant `GM_xmlhttpRequest` and `@connect 127.0.0.1` in your userscript so [`curio.js`](client.md#environments) bypasses page CSP and CORS automatically.

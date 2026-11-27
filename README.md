@@ -3,7 +3,7 @@
 
 # Curio
 
-**A local-first digital asset manager that keeps your files as ordinary files on disk.**<br>Organize images, video, audio, documents, books, fonts, 3D models, code and web links while your files stay where you expect them.
+**A local-first digital asset manager.**<br>Organize images, video, audio, documents, books, fonts, 3D models, code and web links while your files stay where you expect them.
 
 ![License: GNU GPL v3](https://img.shields.io/badge/license-GPL--3.0-3B9160?style=flat-square)
 ![Platforms](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-2b2f36?style=flat-square)
@@ -22,7 +22,7 @@
 
 Curio runs on a native Rust and SQLite engine with a Tauri 2 desktop window. Your originals remain ordinary files you can browse, edit or back up from any file manager:
 
-- **Files stay ordinary files**: Index existing folders in place as **Locations** (**Read-only**, **Edit files** or **Edit and organize** access), or copy assets into managed storage where `files/` mirrors your folder tree with real filenames and hard links.
+- **Plain files and folders**: Index existing folders in place as **Locations** (**Read-only**, **Edit files** or **Edit and organize** access), or copy assets into managed storage where `files/` mirrors your folder tree with real filenames and hard links.
 - **Local and offline**: No account, telemetry, subscription or cloud service. Everything runs on your machine.
 - **Open, inspectable metadata**: Library state lives in a standard SQLite database (`library.db`) beside your files, with scheduled backups, integrity checks and export to **JSON**, **CSV** and **`.curio.json` sidecars**.
 - **Built-in portable mode**: Start with `--portable` or place a `Curio data` folder beside the executable to keep settings, plugins and relative-path libraries together on a USB drive.
@@ -54,7 +54,7 @@ Curio runs on a native Rust and SQLite engine with a Tauri 2 desktop window. You
 - **Folders, Tags and Inspector**: Organize with nested folders (icons, colors and auto-tagging), tags and color-inheriting tag groups, star ratings, Favorites, Explicit thumbnail blur and single or bulk Inspector editing.
 - **Custom fields and metadata readers**: Define typed fields (text, whole and decimal numbers, yes/no, dates, single and multi-select, URLs, JSON and file references) alongside built-in EXIF/GPS, audio/video and font readers. Toggle indexing per field; manual edits survive rescans.
 - **Grouped files**: Keep related files together as one asset, including Apple Live Photos, RAW + JPEG pairs, XMP sidecars, 3D materials and buffers, AI model previews or manual multi-file groups.
-- **Auto-Import and Actions**: Watch folders for new files with subfolder policies and ordered condition/action rules. Build reusable multi-step **Actions** with keyboard shortcuts, and capture media, pages and screenshots from the browser with the [**Send to Curio**](https://github.com/Erehr/curio-extension) extension or the [Tampermonkey userscript](https://erehr.github.io/curio/features/import/browser/#userscript).
+- **Auto-Import and Actions**: Watch folders for new files with subfolder policies and ordered condition/action rules. Build reusable multi-step **Actions** with keyboard shortcuts, and capture media, pages and screenshots from the browser with the [**Send to Curio**](https://github.com/Erehr/curio-extension) extension.
 
 ### Built-in Viewers & Tools
 - **Images**: Logarithmic 10%–1000% zoom, smooth or pixelated scaling, transparency checkerboard, mirror and rotate (view only or write to file), animated image playback, Live Photo motion and RAW + JPEG switching.
@@ -99,7 +99,7 @@ Download builds from [GitHub Releases](https://github.com/Erehr/curio/releases) 
 - **Linux (`.deb`)**: `sudo apt install ./Curio_<version>_amd64.deb` (FFmpeg and GStreamer plugins come from your distribution).
 - **Linux (`.rpm`)**: `sudo dnf install ./Curio-<version>-1.x86_64.rpm` (uses system FFmpeg and GStreamer).
 - **Linux (AppImage)**: Make executable (`chmod +x Curio_<version>_amd64.AppImage`) and run. Carries GStreamer plugins and uses system `ffmpeg`.
-- **macOS**: Available as ad-hoc signed, non-notarized `.dmg` builds for Apple Silicon and Intel (macOS 12 Monterey or later with Safari 16.4+, bundling FFmpeg). Drag **Curio.app** into `/Applications`, then run `xattr -cr /Applications/Curio.app` once or choose **Open Anyway** in **System Settings › Privacy & Security**.
+- **macOS**: A `.dmg` for Apple Silicon or Intel, macOS 12 Monterey or later with Safari 16.4 or later. Bundles FFmpeg. The app is ad-hoc signed and not notarized: after dragging **Curio.app** into `/Applications`, run `xattr -cr /Applications/Curio.app` once or choose **Open Anyway** in **System Settings › Privacy & Security**.
 
 ### Settings & Portable Mode
 
@@ -124,7 +124,7 @@ Browse the full documentation site at **[erehr.github.io/curio](https://erehr.gi
 | **API & MCP** | [API overview](https://erehr.github.io/curio/api/) · [Query syntax](https://erehr.github.io/curio/api/query/syntax/) · [MCP](https://erehr.github.io/curio/api/connect/mcp/) | HTTP endpoints, tokens, JS/TS client, SSE events, MCP setup, types and all 164 operations. |
 | **Plugins** | [Plugins overview](https://erehr.github.io/curio/plugins/) · [First plugin](https://erehr.github.io/curio/plugins/start/first-plugin/) · [Manifest](https://erehr.github.io/curio/plugins/manifest/) | Extension points, page runtime, UI kit, native programs, page hooks and `plugin.json` reference. |
 
-To preview or build the documentation locally, see [dev/zensical.md](dev/zensical.md).
+To preview the documentation locally, install Zensical (`pip install zensical`) and run `zensical serve` in this folder.
 
 ## Companion Repositories
 

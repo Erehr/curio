@@ -1,6 +1,6 @@
 # Install
 
-Curio runs locally on Windows and Linux, with ad-hoc signed macOS `.dmg` builds available. No account, cloud connection or administrator privileges are required.
+Curio runs locally on Windows, Linux and macOS. No account, cloud connection or administrator privileges are required.
 
 ## Windows
 
@@ -97,8 +97,8 @@ Curio keeps application settings and library data separate from the program bina
 | Default folder for new libraries and app-level plugins | `%APPDATA%\Curio` | `~/.local/share/Curio` | `~/Library/Application Support/Curio` |
 | Library database, thumbnails, backups and managed files | Inside each `<Name>.curio` folder | Inside each `<Name>.curio` folder | Inside each `<Name>.curio` folder |
 
-!!! tip "Automatic updates"
-    Built-in signed auto-updates are planned for a future release. Until then, install the newer package over your existing installation (or replace the program files in a portable folder while keeping `Curio data/`).
+!!! tip "Updating"
+    Curio doesn't update itself or check for updates online. To update, install the newer package over your existing installation, or replace the program files in a portable folder while keeping `Curio data/`.
 
 ## Portable mode
 

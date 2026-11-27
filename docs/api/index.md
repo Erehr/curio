@@ -7,7 +7,7 @@ The API calls library entries **items** (matching the `item.*` namespace); user-
 ```mermaid
 flowchart LR
   HTTP["HTTP / curl / Python<br/>POST /api/v1/&lt;ns&gt;/&lt;method&gt;"] --> Router
-  JS["curio.js (Browser / Node / Userscript / Extension)"] --> Router
+  JS["curio.js (Browser / Node / Extension)"] --> Router
   MCP["MCP Client (AI Assistants)<br/>POST /mcp"] --> Router
   PLUG["Plugin Pages & Programs<br/>Bridge / CURIO_API_TOKEN"] --> Router
 
@@ -25,7 +25,7 @@ flowchart LR
 | Caller | Transport | Authentication | Best for |
 |---|---|---|---|
 | **HTTP scripts & backends** | `POST http://127.0.0.1:41733/api/v1/<namespace>/<method>` | `Authorization: Bearer curio_...` token from **Settings › API** | Python, PowerShell, curl, Rust, shell pipelines and custom integrations. See [Web API and service discovery](connect/http.md). |
-| **JavaScript / TypeScript** | Served client `/api/v1/curio.js` + `/api/v1/curio.d.ts` | Token (or automatic in plugin pages and plugin Node programs) | Userscripts (`GM_xmlhttpRequest`), browser extensions, Node.js tools and web apps. See [JavaScript and TypeScript client](connect/client.md). |
+| **JavaScript / TypeScript** | Served client `/api/v1/curio.js` + `/api/v1/curio.d.ts` | Token (or automatic in plugin pages and plugin Node programs) | Browser extensions, Node.js tools and web apps. See [JavaScript and TypeScript client](connect/client.md). |
 | **MCP clients (AI assistants)** | Streamable HTTP JSON-RPC at `POST http://127.0.0.1:41733/mcp` | Bearer token + tool allowlist in **Settings › MCP** | Claude Desktop, IDEs and agents querying or organizing libraries. See [Connect an MCP client](connect/mcp.md). |
 | **Plugins (pages & programs)** | Sandboxed postMessage bridge (pages) or loopback HTTP (`CURIO_API_TOKEN`) | Plugin manifest permissions granted per library (implicit `library.read`, never `library.manage`) | Extending Curio's UI, viewers, metadata readers, actions and URL handlers. See [Plugins](../plugins/index.md). |
 

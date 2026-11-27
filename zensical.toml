@@ -186,7 +186,6 @@ nav = [
     { "Examples" = [
       { "Starters" = "plugins/examples/starters.md" },
       { "Curio plugins" = "plugins/examples/curio.md" },
-      { "Demos" = "plugins/examples/demos.md" },
     ] },
     { "Hooks" = [
       { "Lifecycle" = "plugins/hooks/lifecycle.md" },

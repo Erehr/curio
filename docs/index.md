@@ -1,13 +1,13 @@
 ---
 title: Curio
-description: Local-first digital asset manager for Windows, Linux and macOS that keeps your files as ordinary files on disk.
+description: Local-first digital asset manager for Windows, Linux and macOS.
 ---
 
 <div class="curio-hero" markdown>
 
 # Curio
 
-<p class="curio-hero-lead">A local-first digital asset manager for Windows and Linux, with ad-hoc signed macOS builds. Organize images, video, audio, documents, books, fonts, 3D models, archives, code and web links while your files remain ordinary files on disk.</p>
+<p class="curio-hero-lead">A local-first digital asset manager for Windows, Linux and macOS. Organize images, video, audio, documents, books, fonts, 3D models, archives, code and web links while your files stay where you expect them.</p>
 
 <div class="curio-hero-actions">
   <a class="md-button md-button--primary" href="start/install/">Install Curio</a>
@@ -25,7 +25,7 @@ description: Local-first digital asset manager for Windows, Linux and macOS that
 
 ## Why Curio
 
-Curio is an open-source (GNU GPL v3) alternative to proprietary asset managers such as Eagle, built on a Rust and SQLite engine with a Tauri 2 desktop window. Your files stay accessible from any file manager: index existing folders in place, or copy assets into a `.curio` library whose `files/` folder mirrors your library folders with hard links.
+Curio is an open-source (GNU GPL v3) alternative to proprietary asset managers such as Eagle, built on a Rust and SQLite engine with a Tauri 2 desktop window. Your files stay accessible from any file manager.
 
 <div class="grid cards" markdown>
 
@@ -85,7 +85,7 @@ Curio is a native desktop application with no account, cloud sync or telemetry:
 
 | Platform | Packages | Runtime notes |
 |---|---|---|
-| **Windows** | NSIS per-user installer (`Curio_<version>_x64-setup.exe`) and portable ZIP (`Curio-<version>-windows-x64-portable.zip`) | Bundles WebView2 bootstrapper and FFmpeg (BtbN GPL shared build). No admin rights needed. |
+| **Windows** | NSIS per-user installer (`Curio_<version>_x64-setup.exe`) and portable ZIP (`Curio-<version>-windows-x64-portable.zip`) | Bundles FFmpeg (BtbN GPL shared build). The installer downloads WebView2 if it is missing. No admin rights needed. |
 | **Linux** | Debian/Ubuntu (`.deb`), Fedora/openSUSE (`.rpm`) and AppImage (`.AppImage`) | Uses system WebKitGTK 4.1, GStreamer (`gst-libav`) and FFmpeg. AppImage bundles GStreamer plugins. |
 | **macOS** | `.dmg` builds for Apple Silicon and Intel (ad-hoc signed, not notarized) | Needs macOS 12 Monterey or later with Safari 16.4 or later; bundles FFmpeg (Martin Riedl static GPL build). Run `xattr -cr /Applications/Curio.app` once after copying to `/Applications`. |
 
@@ -109,7 +109,7 @@ The **Features** guide covers every desktop workflow:
 
     ---
 
-    Drag and drop files, capture images and pages with the **Send to Curio** browser extension or userscript, watch folders with Auto-Import rules, migrate Eagle `.library` folders and export sidecars.
+    Drag and drop files, capture images and pages with the **Send to Curio** browser extension, watch folders with Auto-Import rules, migrate Eagle `.library` folders and export sidecars.
 
     [Import & export](features/import/files.md)
 
@@ -133,12 +133,12 @@ The **Features** guide covers every desktop workflow:
 
 ## API & MCP
 
-Curio exposes one operation registry over four transports, so scripts, browser extensions, plugins and AI assistants share the same operation names, schemas and permission checks:
+Scripts, browser extensions, plugins and AI assistants all call the same operations, with the same names, parameters and permission checks:
 
 - **HTTP API (`POST /api/v1/<namespace>/<method>`)**: Call 164 operations on `http://127.0.0.1:41733`, upload binaries and stream live updates over Server-Sent Events (`POST /api/v1/events`). See [Web API and service discovery](api/connect/http.md).
-- **JavaScript & TypeScript client (`curio.js`)**: Served by the running app at `/api/v1/curio.js` with TypeScript definitions at `/api/v1/curio.d.ts`. Works in browsers, Node.js, userscripts (`GM_xmlhttpRequest`), browser extensions and plugin pages. See [JavaScript and TypeScript client](api/connect/client.md).
+- **JavaScript & TypeScript client (`curio.js`)**: Served by the running app at `/api/v1/curio.js` with TypeScript definitions at `/api/v1/curio.d.ts`. Works in browsers, Node.js, browser extensions and plugin pages. See [JavaScript and TypeScript client](api/connect/client.md).
 - **Model Context Protocol (`POST /mcp`)**: Turn on the built-in Streamable HTTP MCP server in **Settings › MCP** and choose which tools and token permissions an AI assistant may use. See [Connect an MCP client](api/connect/mcp.md).
-- **Browser capture markup**: Add `data-curio-*` attributes or listen for `curio:collect` on web pages and userscripts to pass high-resolution files and metadata to Send to Curio. See [Web page and userscript capture contract](api/connect/browser-markup.md).
+- **Browser capture markup**: Add `data-curio-*` attributes or listen for `curio:collect` on web pages to pass high-resolution files and metadata to Send to Curio. See [Browser markup](api/connect/browser-markup.md).
 
 ## Plugins
 

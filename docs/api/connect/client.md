@@ -1,6 +1,6 @@
 # Client
 
-`curio.js` is Curio's zero-dependency JavaScript client. It works across browsers, Node.js (18+), Tampermonkey and Violentmonkey userscripts, browser extensions, plugin pages and plugin Node.js programs.
+`curio.js` is Curio's zero-dependency JavaScript client. It works across browsers, Node.js (18+), browser extensions, plugin pages and plugin Node.js programs.
 
 The running application serves both the client and its TypeScript declarations:
 
@@ -143,8 +143,7 @@ try {
 `curio.js` picks the right transport automatically:
 
 1. **Plugin page bridge (`bridge`)**: Selected inside a framed `plugin://` or `http://plugin.<id>.localhost/` page without an explicit token. It uses `window.parent.postMessage`, forwards unhandled keys and pointer positions and applies live theme tokens (`--bg`, `--accent`). It also dispatches `curio-theme` and `curio-language` events and tracks widget height and `document.title`.
-2. **Userscript GM request (`gm`)**: Selected when `GM_xmlhttpRequest` or `GM.xmlHttpRequest` is available, bypassing page CSP and CORS to reach `127.0.0.1`. Tampermonkey streams SSE through GM, while Violentmonkey falls back to `fetch` because it buffers responses until completion.
-3. **Standard Fetch (`fetch`)**: Used in browsers, browser extensions and Node.js 18+. In CommonJS Node.js scripts, load `curio.js` with `const Curio = require('./curio.js')`; in browser scripts, loading `curio.js` sets `globalThis.Curio`.
+2. **Standard Fetch (`fetch`)**: Used in browsers, browser extensions and Node.js 18+. In CommonJS Node.js scripts, load `curio.js` with `const Curio = require('./curio.js')`; in browser scripts, loading `curio.js` sets `globalThis.Curio`.
 
 ## Types & helpers
 

@@ -6,7 +6,7 @@ This walkthrough covers creating a library, adding files, tagging assets and run
 
 Every Curio library is a self-contained folder ending in `.curio` (for example `Design.curio` or `Photos.curio`). Inside it are the SQLite database (`library.db`), cached thumbnails, automatic backups and a `files/` folder tree.
 
-Before creating your first library, pick a **local disk** (an internal SSD or local drive).
+Create your first library on a **local disk**, such as your internal drive.
 
 !!! warning "Keep the `.curio` library folder on a local disk"
     Curio's SQLite database requires reliable local file locking. Do not place a `.curio` library folder inside a live cloud-sync folder (OneDrive, Dropbox, Google Drive) or open the same `.curio` folder from two computers over a network share at the same time. If your media lives on a NAS or external drive, keep the `.curio` folder on your local disk and add the NAS folder as an **indexed location** instead. See [Libraries in multiple windows](../features/libraries/windows.md).

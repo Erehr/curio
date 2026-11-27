@@ -53,7 +53,7 @@ Add a declarative panel to the **Library** sidebar using `panels[]`:
 {
   "panels": [
     {
-      "id": "curio.ai.quick",
+      "id": "quick-views",
       "title": "AI quick views",
       "text": "Common generation filters.",
       "filters": [

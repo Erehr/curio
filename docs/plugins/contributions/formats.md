@@ -24,7 +24,7 @@ Use lowercase extensions without dots in `exts`, assign a built-in item `kind` (
 
 ## Overrides
 
-When a user-enabled plugin declares an extension already claimed by a built-in format plugin (for example `curio.reader` claiming `pdf`, `cbz` and `cb7`, or `curio.csv` claiming `csv`), the external plugin overrides the built-in viewer and thumbnailer while enabled.
+When an enabled plugin declares an extension one of Curio's built-in formats already reads, the plugin's viewer and thumbnailer replace the built-in ones while it is enabled.
 
 - **Settings › Plugins** displays an override indicator on the overridden plugin listing the affected extensions and overriding plugin name.
 - Disabling the overriding plugin restores the built-in handler immediately.

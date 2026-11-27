@@ -1,6 +1,6 @@
 # Browser markup
 
-Websites and userscripts can annotate DOM elements for the [Send to Curio](../../features/import/browser.md) browser extension. Annotations supply full-resolution URLs, titles, notes, tags, ratings, custom fields and suggested destinations.
+Websites can annotate DOM elements for the [Send to Curio](../../features/import/browser.md) browser extension. Annotations supply full-resolution URLs, titles, notes, tags, ratings, custom fields and suggested destinations.
 
 ## Resolution
 
@@ -66,7 +66,7 @@ The nearest attribute wins for each property independently. A gallery card or `<
 
 ## Async collect
 
-Before reading attributes, Send to Curio dispatches a bubbling, composed (`composed: true`) **`curio:collect`** `CustomEvent` on the target element. Site code or userscripts can populate attributes on demand inside this listener.
+Before reading attributes, Send to Curio dispatches a bubbling, composed (`composed: true`) **`curio:collect`** `CustomEvent` on the target element. Site code can populate attributes on demand inside this listener.
 
 If the listener needs async work (such as fetching an original file URL), set **`data-curio-pending`** synchronously and remove it once done. Send to Curio waits up to **3 seconds** for `data-curio-pending` to clear:
 
@@ -88,54 +88,9 @@ document.addEventListener('curio:collect', async (event) => {
 
 ## Security
 
-Send to Curio treats every DOM attribute as untrusted page input, whether written by the site or a userscript:
+Send to Curio treats every DOM attribute as untrusted page input:
 
 - **Trusted gestures**: Captures run only from real user actions (`event.isTrusted === true`).
 - **Local-network blocking**: Pages cannot force downloads from loopback or local-network addresses (`127.0.0.1`, `localhost`, LAN IPs) or read files on disk.
 - **Cross-host cookie stripping**: When `data-curio-src` points to another host, Send to Curio strips browser cookies even if **Send the site's cookies with a download** is enabled.
 - **Token isolation**: Page attributes cannot read the API token, invoke arbitrary operations or write outside libraries allowed by the extension's token.
-
-## Example userscript
-
-Download or install [`curio-attributes.user.js`](../../assets/userscripts/curio-attributes.user.js) as a starting template for annotating a site with `data-curio-*` attributes and `curio:collect`:
-
-```javascript
-// ==UserScript==
-// @name         Curio attributes (example)
-// @namespace    curio
-// @version      1.0.0
-// @description  Annotates article images with full-size URLs, tags and a suggested library for Send to Curio.
-// @match        https://example.com/*
-// @grant        none
-// @run-at       document-idle
-// ==/UserScript==
-
-// Send to Curio follows data-curio-library on quick-save only when a Site rule enables Use page destination.
-;(function () {
-  'use strict'
-
-  function mark(root) {
-    for (const img of root.querySelectorAll('article img:not([data-curio-src])')) {
-      img.dataset.curioSrc = img.src.replace('/thumb/', '/full/')
-      img.dataset.curioTags = JSON.stringify(['from the web', img.closest('article')?.dataset.author].filter(Boolean))
-      img.dataset.curioLibrary = 'Inspiration'
-    }
-  }
-
-  mark(document)
-  new MutationObserver(() => mark(document)).observe(document.body, { childList: true, subtree: true })
-
-  document.addEventListener('curio:collect', (e) => {
-    const img = e.target
-    if (!(img instanceof HTMLImageElement) || img.dataset.curioTitle) return
-    img.dataset.curioPending = ''
-    fetch(img.closest('a')?.href || location.href)
-      .then((r) => r.text())
-      .then((html) => {
-        const title = new DOMParser().parseFromString(html, 'text/html').querySelector('h1')?.textContent?.trim()
-        if (title) img.dataset.curioTitle = title
-      })
-      .finally(() => delete img.dataset.curioPending)
-  })
-})()
-```

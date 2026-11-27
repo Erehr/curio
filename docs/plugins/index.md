@@ -93,5 +93,4 @@ Inside any plugin page or program, `Curio.connect()` connects automatically with
 
 - **Starter templates**: Open **Settings › Plugins › New example plugin** to generate any of six templates (**Window**, **Tab**, **Widget**, **Format viewer**, **Program**, **URL handler**). See [Create and load a plugin](start/first-plugin.md) and [Starter templates](examples/starters.md).
 - **Curio's optional plugins**: Study how **Reader**, **3D models** and **AI generation** implement archive streaming, WebGL thumbnailers, viewer toolbars, companion rules and paired field queries in [Curio's optional plugins](examples/curio.md).
-- **Demonstration plugins**: Explore eight focused examples (image conversion, CSV tables, UI gallery, link catcher, text notes, review workflow, shape tagger and library stats) in [Demonstration plugins](examples/demos.md).
 - **Manifest reference**: Look up every key in [`plugin.json` manifest reference](manifest/index.md).

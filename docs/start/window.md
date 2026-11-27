@@ -38,7 +38,7 @@ Once a library is open, the **Library switcher** sits at the start of the top to
 The top **Toolbar** holds common controls:
 
 - **Menu**: File operations, tools (**Batch rename**, **Find duplicates**, **Compare**), Plugins menu, **Edit layout** and **Settings**.
-- **Back and forward** (++alt+left++ / ++alt+right++): Step through browsing history. While the viewer is open, **Back** closes the viewer first before stepping back through previous views.
+- **Back and forward** (++alt+left++ / ++alt+right++): Step through browsing history. While the viewer is open, **Back** closes it first.
 - **Breadcrumb**: Shows the current scope (such as a nested folder path or location directory). Click any parent segment to jump up the tree.
 - **Search** (++ctrl+f++): Accepts plain words, prefix queries and [Query language](../api/query/syntax.md) expressions, with a menu to choose which fields plain text searches.
 - **Filters**, **Layout** (Grid, Masonry, Justified, List, Spectrum, thumbnail size slider, captions, Sort by, Group by, Show subfolders and Show subfolder contents) and **Library / Inspector** toggles.
@@ -72,7 +72,7 @@ Curio opens secondary windows when you want reference material or tools beside y
 
 - **Asset windows**: Right-click an asset (or press ++shift+alt+w++) and choose **Open in a window** to keep a reference image, video, book or model open alongside the main grid, with optional **Always on top**.
 - **Built-in tool windows**: **Batch rename**, **Find duplicates** and **Compare** open in focused windows that stay synced with your library.
-- **Plugin windows and tabs**: Plugins can open standalone windows (such as a converter or gallery) or register tabs beside the main grid and Tag Manager.
+- **Plugin windows and tabs**: Plugins can open standalone windows or register tabs beside the main grid and Tag Manager.
 - **Settings window** (++ctrl+comma++): Opens in a searchable window covering all 16 Settings pages. Library-scoped pages (**Storage**, **Backup**, **Auto-Import**, **Grouped files** and **Fields**) display the active library's name in their header when multiple libraries exist.
 
 ## Commands & shortcuts
