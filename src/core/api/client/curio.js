@@ -182,6 +182,8 @@ var Curio = (function () {
     root.classList.toggle('fx-see-through', !!m.seeThrough)
     root.classList.toggle('fx-inactive', !!m.inactive)
     root.classList.toggle('overlay-scroll', styled && !!m.overlayScroll)
+    // what the wheel does over a picture in Curio's viewer (navigate, zoom or scroll), for a viewer page to do the same
+    if (m.wheel) root.dataset.curioWheel = m.wheel
     // Curio's own scrollbars, which take no room and show while scrolling
     if (styled && m.overlayScroll && !overlayLoading) overlayLoading = import(/* @vite-ignore */ OVERLAY_SCROLL).then(function (o) { o.installOverlayScroll() }).catch(function () {})
     if (typeof CustomEvent === 'function') window.dispatchEvent(new CustomEvent('curio-theme', { detail: m.theme }))

@@ -10,11 +10,12 @@ Include `/curio/ui/curio.js` in every plugin page:
 <script src="/curio/ui/curio.js"></script>
 ```
 
-Even without `curio.css`, `curio.js` performs four setup tasks:
+Even without `curio.css`, `curio.js` performs five setup tasks:
 
 - Sets active theme tokens on `:root` as CSS custom properties (grouped below).
 - Sets `color-scheme: dark | light` and toggles `.app-dark`, `.fx-see-through` (Mica/Acrylic) and `.fx-inactive` on `<html>`.
 - Keeps `document.documentElement.lang` synced and dispatches `curio-theme` and `curio-language`.
+- Sets `data-curio-wheel` on `<html>` to what the wheel does over a picture in Curio's viewer (**Settings › Controls**): `navigate`, `zoom` or `scroll`, so a viewer page can do the same.
 - Leaves root `font-size` and scrollbars untouched when you bring your own framework or CSS.
 
 Key CSS custom properties injected on `:root`:
