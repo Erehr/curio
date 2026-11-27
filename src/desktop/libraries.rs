@@ -301,7 +301,8 @@ pub(super) async fn startup(state: tauri::State<'_, AppState>) -> R<serde_json::
         "warnings": state.lib.lock().as_ref().map(|l| l.warnings.clone()).unwrap_or_default().into_iter().chain(crate::core::system::app_dirs::problem().map(str::to_string)).collect::<Vec<_>>(),
         "platform": std::env::consts::OS,
         "mediaBase": MEDIA_BASE.get(),
-        "version": env!("CURIO_VERSION"),
+        // a build between releases shows its commit after the version
+        "version": if env!("CURIO_BUILD").is_empty() { env!("CURIO_VERSION").to_string() } else { format!("{}+{}", env!("CURIO_VERSION"), env!("CURIO_BUILD")) },
         "configDir": config_dir(),
         "portable": crate::core::system::app_dirs::portable().is_some(),
         "materials": crate::desktop::system::material::materials(),

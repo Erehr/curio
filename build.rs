@@ -69,6 +69,25 @@ fn version() {
     let conf = std::fs::read_to_string("tauri.conf.json").expect("tauri.conf.json");
     let version = conf.split("\"version\"").nth(1).and_then(|rest| rest.split('"').nth(1)).expect("tauri.conf.json has a version");
     println!("cargo:rustc-env=CURIO_VERSION={version}");
+    build_label(version);
+}
+
+/// `CURIO_BUILD`: the commit a build between releases was made from (`4f3c642`, with `-dirty` when files differ from it), shown after the version so such builds can be told apart; empty for a release, built from its `v<version>` tag, and without git.
+/// Only for showing: `CURIO_VERSION` stays the plain version that plugins' `min_curio` and the database compare against.
+fn build_label(version: &str) {
+    for watched in [".git/HEAD", ".git/index", ".git/refs/heads", ".git/refs/tags", ".git/packed-refs"] {
+        println!("cargo:rerun-if-changed={watched}");
+    }
+    let git = |args: &[&str]| Command::new("git").args(args).output().ok().filter(|o| o.status.success()).map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string());
+    let tagged = std::env::var("GITHUB_REF_TYPE").as_deref() == Ok("tag") || git(&["describe", "--tags", "--exact-match", "--match", &format!("v{version}"), "HEAD"]).is_some();
+    let label = match git(&["rev-parse", "--short=7", "HEAD"]) {
+        Some(hash) if !tagged => {
+            let dirty = git(&["status", "--porcelain", "--untracked-files=no"]).is_some_and(|s| !s.is_empty());
+            if dirty { format!("{hash}-dirty") } else { hash }
+        }
+        _ => String::new(),
+    };
+    println!("cargo:rustc-env=CURIO_BUILD={label}");
 }
 
 /// Lists each language's `locales/<code>/native.json` for `locale::CATALOGS`, English first, so a language added there needs no code.
