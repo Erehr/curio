@@ -91,7 +91,8 @@ const shown = (c, v) => `${numberText(v, { digits: Number.isInteger(c.step) ? 0 
 <style>
 .v-tool { display: inline-flex; align-items: center; min-width: 0; }
 .v-tool-text { margin: 0 calc(0.42rem * var(--g)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 40ch; }
-.v-tool-slider { width: round(9.79rem, 1px); margin: 0 calc(0.7rem * var(--g)) 0 calc(0.42rem * var(--g)); }
+/* the handle stands half its width past either end of the track, at the first and last value; the margins keep it clear of the text beside it */
+.v-tool-slider { width: round(9.79rem, 1px); margin: 0 calc(0.7rem * var(--g) + 0.77rem) 0 calc(0.7rem * var(--g) + 0.77rem); }
 .v-tool-stand { opacity: .55; }
 /* laid out as the layout popover is: a name on the left, its control on the right */
 .tool-panel { width: round(25.17rem, 1px); display: flex; flex-direction: column; gap: calc(0.7rem * var(--g)); padding: calc(0.28rem * var(--g)); }
