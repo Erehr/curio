@@ -25,7 +25,7 @@ Configure playback options under **Settings › Preview › Video & audio playba
 | **Play on hover** | Hovering over a video card starts muted preview playback after 300 ms; moving horizontally scrubs the clip. Hovering over an audio card shows its waveform after 250 ms, plays audio and lets you click to seek. Card mute and hover-play toggles persist app-wide. In List view, hovering a row's picture plays it the same way, without the buttons, once **Size** is at its middle or above. |
 | **Stretch to fill** | Scales videos smaller than the stage up to fill the viewer while keeping their aspect ratio. |
 | **Autoplay** | Starts video playback as soon as a video opens (enabled by default). |
-| **Resume playback** | Saves your playback position for the last 200 assets when you pause, step away or close the viewer. Positions within the last 3 seconds clear the saved resume point. |
+| **Resume playback** | Saves your playback position for the last 200 assets when you pause, step away or close the viewer. Stopping in the first 10 seconds or the last 3 clears it, so skimming through videos saves nothing. |
 
 ## Subtitles
 

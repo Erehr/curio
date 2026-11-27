@@ -21,6 +21,8 @@ const POSITIONS_KEY = 'curio.video.places'
 const KEEP_POSITIONS = 200
 // the last few seconds count as finished
 const END_MARGIN = 3
+// the first seconds count as not started, so skimming through videos remembers nothing
+const START_MARGIN = 10
 const poster = computed(() => thumbOf(props.item) || undefined)
 const goingOn = ref(P.goOn)
 P.goOn = false
@@ -42,6 +44,14 @@ const style = computed(() => {
     s.maxWidth = box.value.h + 'px'
     s.maxHeight = box.value.w + 'px'
   }
+  // the size it will play at, set before it loads, so its poster fills the same box rather than showing small in the middle
+  const { width: w, height: h } = props.item || {}
+  if (!S.ui.videoStretch && w > 0 && h > 0 && box.value.w) {
+    const [bw, bh] = turned ? [box.value.h, box.value.w] : [box.value.w, box.value.h]
+    const k = Math.min(bw / w, bh / h, 1)
+    s.width = Math.round(w * k) + 'px'
+    s.height = Math.round(h * k) + 'px'
+  }
   return s
 })
 function toggle() {
@@ -57,12 +67,13 @@ const positions = () => {
     return {}
   }
 }
-function remember() {
+// `uid`: the item that was playing, which on a switch is no longer props.item
+function remember(uid = props.item?.uid) {
   const m = el.value
-  if (!m || S.ui.videoRememberPosition === false || !Number.isFinite(m.duration)) return
+  if (!m || !uid || S.ui.videoRememberPosition === false || !Number.isFinite(m.duration)) return
   const all = positions()
-  if (m.currentTime > 0 && m.currentTime < m.duration - END_MARGIN) all[props.item.uid] = m.currentTime
-  else delete all[props.item.uid]
+  if (m.currentTime >= START_MARGIN && m.currentTime < m.duration - END_MARGIN) all[uid] = m.currentTime
+  else delete all[uid]
   const keys = Object.keys(all)
   if (keys.length > KEEP_POSITIONS) delete all[keys[0]]
   localStorage.setItem(POSITIONS_KEY, JSON.stringify(all))
@@ -83,8 +94,11 @@ watch(el, (m, old) => {
   P.el = m
   if (old && old !== m) releaseMedia(old)
 })
-watch(() => props.item?.id, (id, old) => {
-  if (old != null) remember()
+// runs before the new video replaces the old one, so el is still the old item's
+watch(() => props.item, (item, old) => {
+  if (old && old.id !== item?.id) remember(old.uid)
+})
+watch(() => props.item?.id, (id) => {
   goingOn.value = P.goOn
   P.goOn = false
   resetPlayer()
@@ -96,6 +110,7 @@ let ro
 onMounted(() => {
   P.el = el.value
   if (props.item?.id != null) loadSiblingSubtitles(props.item.id)
+  box.value = { w: area.value.clientWidth, h: area.value.clientHeight }
   ro = new ResizeObserver(() => (box.value = { w: area.value.clientWidth, h: area.value.clientHeight }))
   ro.observe(area.value)
 })
