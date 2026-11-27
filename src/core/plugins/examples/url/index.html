@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Example links</title>
+  <link rel="stylesheet" href="/curio/ui/curio.css">
+  <script src="/curio/ui/curio.js"></script>
+  <script type="module" src="links.js"></script>
+</head>
+<body>
+  <div class="curio-page">
+    <header class="curio-page-head"><span class="title">Example links</span></header>
+    <main class="curio-page-body">
+      <p class="muted" id="hint">Drop or paste an address of example.com into Curio to open this window with it.</p>
+      <ul id="urls" class="mono"></ul>
+      <label class="faint" for="note">Note for the new items</label>
+      <input id="note" class="field" placeholder="Where they came from">
+    </main>
+    <footer class="curio-page-foot"><span class="grow faint" id="status"></span><button id="add" class="btn primary" disabled>Add as links</button></footer>
+  </div>
+</body>
+</html>

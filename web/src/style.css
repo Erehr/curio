@@ -1,0 +1,75 @@
+/* The window's own styles; the base styles shared with opt-in plugin pages live in shared/curio.css. */
+@import './shared/curio.css';
+
+html, body, #app { margin: 0; height: 100%; overflow: hidden; }
+/* a Mac's window has rounded corners, drawn by the page over its see-through window */
+html.mac-window body { background: transparent; }
+html.mac-window #app { background: var(--bg); border-radius: 10px; }
+/* where the keyboard is, on Curio's own buttons; OpenVue's controls draw their own */
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* dragging (app/dragLook.js): the copy lifted under the pointer, what the drop will do under it, the room made where it lands */
+.drag-lift { z-index: 9999; pointer-events: none; overflow: hidden; outline: 1px solid var(--float-border); }
+.drag-count { position: absolute; top: 0.28rem; right: 0.28rem; min-width: round(1.4rem, 1px); height: round(1.4rem, 1px); padding: 0 0.42rem; box-sizing: border-box; border-radius: var(--round); background: var(--accent); color: var(--accent-text); font-size: 0.85rem; font-weight: 600; line-height: round(1.4rem, 1px); text-align: center; }
+.drag-ghost {
+  position: fixed; z-index: 9999; pointer-events: none; padding: calc(0.42rem * var(--g)) calc(0.7rem * var(--g)); border-radius: calc(8px * var(--r));
+  background: var(--surface-2); color: var(--text); border: 1px solid var(--float-border); font-size: 0.92rem;
+}
+.drag-slot { position: fixed; z-index: 9998; pointer-events: none; background: color-mix(in srgb, var(--accent) 22%, transparent); }
+.drag-source { visibility: hidden !important; }
+body.dragging, body.dragging * { cursor: grabbing !important; }
+body.dragging .p-tooltip { display: none !important; }
+.drop-hover:not(.sub-card, .sub-cell, .slot, .slot-end, .edit-window, .step) { background: color-mix(in srgb, var(--accent) 22%, transparent) !important; }
+
+/* Settings: no numbers beside sidebar rows */
+.no-side-counts .zone .count { display: none; }
+
+/* Settings: see-through panels over the window's material; --fx-panel and --fx-side come from the panel opacity setting */
+html.fx-see-through, html.fx-see-through body { background: transparent; }
+/* the window's own layer, then its centre pane over it: Acrylic's transparencies are tuned for the two together, as below their sum it only turns greyer; a plugin's window has both too, so its page looks as see-through as the grid */
+html.fx-see-through .center, html.fx-see-through .app { background: color-mix(in srgb, var(--bg) var(--fx-panel), transparent); }
+html.fx-see-through .player-bar { background: transparent; }
+html.fx-see-through .side, html.fx-see-through .bottom-inspector { background: color-mix(in srgb, var(--panel) var(--fx-side), transparent); }
+html.fx-see-through .peek { background: transparent; }
+html.fx-see-through .peek.open { background: color-mix(in srgb, var(--panel) 94%, transparent); backdrop-filter: blur(18px); }
+/* a hidden sidebar shown from the window's edge has the window's own layer cut away beneath it (App.vue), so it carries that layer itself */
+html.fx-see-through .side.reveal { background: linear-gradient(color-mix(in srgb, var(--panel) var(--fx-side), transparent), color-mix(in srgb, var(--panel) var(--fx-side), transparent)), color-mix(in srgb, var(--bg) var(--fx-panel), transparent); }
+html.fx-see-through.fx-inactive { --fx-panel: 100% !important; --fx-side: 100% !important; }
+
+/* menus and popups let only a little through, like the sidebar over the window's own layer */
+html.fx-see-through .p-popover, html.fx-see-through .p-select-overlay, html.fx-see-through .p-multiselect-overlay, html.fx-see-through .p-dialog, html.fx-see-through .p-tooltip-text, html.fx-see-through .p-toast-message { background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(18px); }
+/* a backdrop filter on the menu itself would become the frame its fixed submenus are placed in, so it sits on a layer behind */
+html.overlay-scroll, html.overlay-scroll * { scrollbar-width: none; }
+/* the compact sidebar's filter opens beside its button, as the rail's hover menus */
+.rail-filter.p-popover { margin: 0; }
+.ov-thumb.ov-y { width: 0.42rem; }
+.ov-thumb.ov-x { height: 0.42rem; }
+.ov-thumb.show { opacity: 1; pointer-events: auto; }
+.ov-thumb:hover, .ov-thumb.drag { background: color-mix(in srgb, var(--text) 50%, transparent); }
+html.fx-see-through .app-menu, html.fx-see-through .app-menu .p-contextmenu-submenu, html.fx-see-through .picker, html.fx-see-through .edit-window { background: transparent; }
+html.fx-see-through .app-menu::before, html.fx-see-through .app-menu .p-contextmenu-submenu::before, html.fx-see-through .picker::before, html.fx-see-through .edit-window::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(18px); }
+/* Settings gets the same two layers as the main window: the window's own, then each pane */
+html.fx-see-through .prefs { background: color-mix(in srgb, var(--bg) var(--fx-panel), transparent); }
+html.fx-see-through .pbody { background: color-mix(in srgb, var(--surface) var(--fx-side), transparent); }
+html.fx-see-through .prefs nav { background: color-mix(in srgb, var(--panel) var(--fx-side), transparent); }
+
+
+/* a button filling the joined end of a field (InputGroupAddon), as the URL's open and the searches' menus */
+.p-inputgroupaddon:has(> .addon-btn) { padding: 0; min-width: var(--control-h); }
+.addon-btn { display: inline-flex; align-items: center; justify-content: center; gap: 1px; width: 100%; height: 100%; min-width: var(--control-h); padding: 0 calc(0.42rem * var(--g)); border: 0; border-radius: inherit; background: transparent; color: var(--text-muted); font: inherit; cursor: pointer; }
+.addon-btn:hover { background: var(--hover); color: var(--text); }
+.addon-btn.on { color: var(--accent); }
+/* AppListboxTristate and AppCheckboxTristate: the box is drawn by the row, and a value left out shows red with an x */
+.tri-box { pointer-events: none; flex: none; }
+.tri-box.out .p-checkbox-box { background: var(--danger); border-color: var(--danger); }
+.tri-ico { color: #fff; }
+/* the colours a folder, location or library can have, in every menu and filter that offers them */
+.swatches { display: flex; flex-wrap: wrap; gap: calc(0.49rem * var(--g)); }
+.swatch-dot { width: round(1.12rem, 1px); height: round(1.12rem, 1px); padding: 0; border: 0; border-radius: var(--round); flex: none; cursor: pointer; }
+.swatch-dot.none { background: var(--text-faint); }
+.swatch-dot.sel { outline: 2px solid var(--text); outline-offset: 2px; }
+
+/* work under way on a row, such as a location being scanned */
+.spinning { animation: spinning 1s linear infinite; }
+@keyframes spinning { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinning { animation: none; } }

@@ -1,0 +1,72 @@
+/* Optional layout and control classes bundled into /curio/ui/curio.css for plugin pages. */
+/* the rows of Curio's Properties widget */
+.curio-props { display: flex; flex-direction: column; }
+.curio-props .kv { display: flex; justify-content: space-between; align-items: center; gap: calc(1.12rem * var(--g)); min-height: round(2.1rem * var(--row), 1px); line-height: 1.3; font-size: 1rem; }
+/* a label longer than the room wraps, in any language; a value set in mono stays whole up to most of the row, then ends in an ellipsis */
+.curio-props .kv > :first-child { flex: 0 1 auto; min-width: 0; color: var(--text); overflow-wrap: break-word; }
+.curio-props .kv > :last-child { min-width: 0; text-align: right; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.curio-props .kv > .mono:last-child { flex-shrink: 0; max-width: 65%; font-size: 0.92rem; }
+.curio-props .kv > a:last-child { color: var(--accent); text-decoration: none; }
+.curio-props .kv > a:last-child:hover { text-decoration: underline; }
+
+/* thin themed progress bar */
+.curio-progress { width: 100%; height: 0.28rem; border-radius: var(--round); background: var(--button); overflow: hidden; }
+.curio-progress > span { display: block; height: 100%; background: var(--accent); border-radius: var(--round); transition: width 0.15s ease; }
+
+/* select trigger button paired with curio.ui.choose */
+.curio-select-btn {
+  display: inline-flex; align-items: center; justify-content: space-between; gap: calc(0.56rem * var(--g));
+  height: var(--control-h); padding: 0 calc(0.7rem * var(--g)); min-width: round(8rem, 1px);
+  background: var(--input); color: var(--text); border: 1px solid var(--input-border); border-radius: calc(6px * var(--r));
+  font: inherit; font-size: 0.92rem; cursor: pointer; text-align: left;
+}
+.curio-select-btn:hover { border-color: color-mix(in srgb, var(--text) 28%, var(--input-border)); }
+.curio-select-btn:focus-visible { outline: none; border-color: var(--accent); }
+.curio-select-btn::after { content: ''; flex: none; width: 0.45rem; height: 0.45rem; border-right: 1.5px solid var(--text-faint); border-bottom: 1.5px solid var(--text-faint); transform: rotate(45deg) translateY(-0.14rem); }
+.curio-select-btn.full { width: 100%; }
+
+.curio-field { display: inline-flex; flex-wrap: wrap; align-items: center; gap: calc(0.35rem * var(--g)); min-height: var(--control-h); padding: 0.21rem calc(0.28rem * var(--g)); border: 1px solid var(--input-border); border-radius: calc(6px * var(--r)); background: var(--input); }
+.curio-dot { width: round(0.63rem, 1px); height: round(0.63rem, 1px); border-radius: var(--round); flex: none; }
+.curio-swatch { width: var(--control-h); height: var(--control-h); border-radius: calc(6px * var(--r)); border: 1px solid var(--input-border); cursor: pointer; padding: 0; }
+.curio-thumb { margin: 0; display: flex; flex-direction: column; gap: 0.28rem; }
+.curio-thumb.fill, .curio-thumb.fill .curio-thumb-box { width: 100%; height: 100%; }
+.curio-thumb-box { display: flex; align-items: center; justify-content: center; background: var(--grid-item); border-radius: calc(6px * var(--r)); overflow: hidden; color: var(--text-faint); }
+.curio-thumb-box img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+.curio-thumb.fill .curio-thumb-box img { width: 100%; height: 100%; object-fit: cover; }
+.curio-thumb figcaption { font-size: 0.85rem; color: var(--grid-caption); }
+
+/* the Library-like side column */
+.curio-sidebar { display: flex; flex-direction: column; gap: 1px; padding: calc(0.56rem * var(--g)); width: round(15.38rem, 1px); height: 100%; box-sizing: border-box; overflow-y: auto; background: var(--panel); border-right: 1px solid var(--border); }
+.curio-side-head { margin: calc(0.84rem * var(--g)) calc(0.56rem * var(--g)) calc(0.28rem * var(--g)); font-size: 0.92rem; font-weight: 500; color: var(--text-faint); }
+.curio-side-item { display: flex; align-items: center; gap: calc(0.56rem * var(--g)); height: round(2.1rem * var(--row), 1px); padding: 0 calc(0.56rem * var(--g)); border-radius: calc(6px * var(--r)); color: var(--text); cursor: default; font-size: 1rem; }
+.curio-side-item .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.curio-side-item .count { font-size: 0.85rem; color: var(--text-faint); }
+.curio-side-item:hover { background: var(--hover); }
+.curio-side-item.on { background: var(--active); }
+
+/* a window's page: heading, body (with a side column), footer with the buttons on the right */
+:root.curio-kit body:has(.curio-page) { margin: 0; padding: 0; overflow: hidden; }
+.curio-page { display: flex; flex-direction: column; height: 100vh; }
+.curio-page-head { display: flex; align-items: center; gap: calc(0.56rem * var(--g)); min-height: round(3.36rem, 1px); padding: 0 calc(1.12rem * var(--g)); border-bottom: 1px solid var(--border); flex: none; }
+.curio-page-head .title { font-weight: 500; font-size: 1.08rem; }
+.curio-page-head .grow { flex: 1; }
+/* in a window of its own, or as a tab, Curio's own bar names the page, so the page's header keeps only its controls, or goes; the page shows what is behind it, as the app's own views do */
+:is(.curio-role-window, .curio-role-tab) .curio-page-head > :is(.title, .page-icon) { display: none; }
+:is(.curio-role-window, .curio-role-tab) .curio-page-head:not(:has(> :not(.title, .page-icon, .grow))) { display: none; }
+:root.curio-kit:is(.curio-role-window, .curio-role-tab) body { background: transparent; }
+.curio-page-main { display: flex; flex: 1; min-height: 0; }
+.curio-page-side { flex: none; }
+.curio-page-body { flex: 1; min-width: 0; overflow: auto; padding: calc(1.12rem * var(--g)); display: flex; flex-direction: column; gap: calc(0.98rem * var(--g)); }
+.curio-page-foot { display: flex; align-items: center; justify-content: flex-end; gap: calc(0.56rem * var(--g)); padding: calc(0.7rem * var(--g)) calc(1.12rem * var(--g)); border-top: 1px solid var(--border); flex: none; }
+.curio-page-foot .grow { flex: 1; }
+/* over a window's material the panels let it through, as the app's own do; --fx-side comes with the theme */
+:root.fx-see-through .curio-sidebar { background: color-mix(in srgb, var(--panel) var(--fx-side), transparent); }
+:root.fx-see-through .curio-section { background: color-mix(in srgb, var(--surface) var(--fx-side), transparent); }
+:root.fx-see-through.fx-inactive { --fx-panel: 100% !important; --fx-side: 100% !important; }
+.curio-section { display: flex; flex-direction: column; gap: calc(0.7rem * var(--g)); padding: calc(0.98rem * var(--g)) calc(1.12rem * var(--g)); border-radius: calc(10px * var(--r)); background: var(--surface); border: 1px solid var(--border); }
+:root.curio-kit .curio-section > h3 { margin: 0; font-size: 1rem; font-weight: 500; color: var(--text); }
+:root.curio-kit .curio-section > p { margin: 0; }
+.curio-row { display: grid; grid-template-columns: minmax(6.29rem, max-content) minmax(0, 1fr); align-items: center; gap: calc(0.84rem * var(--g)); min-height: var(--control-h); }
+.curio-row > span:first-child { color: var(--text-muted); }
+.curio-row > :not(:first-child) { justify-self: start; }
+.curio-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: calc(0.56rem * var(--g)); }

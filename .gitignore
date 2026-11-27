@@ -1,0 +1,16 @@
+/target/
+/web/node_modules/
+/web/dist/
+/gen/
+/shots/
+/.codegraph/
+/.venv/
+/.cache/
+/site/
+# the internal changelog, never published
+/CHANGELOG.md
+# the agents' files live in the folder above the repositories
+/AGENTS.md
+/CLAUDE.md
+/.agents/
+/.claude/

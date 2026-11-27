@@ -1,0 +1,129 @@
+/* Curio's base styles: the app's own sheet, and the opt-in sheet plugin pages get at /curio/ui/curio.css. */
+/* Every colour comes from the theme tokens (theme.js); a plugin page receives them as the same CSS variables. */
+/* --r scales corners, --round is the corner of what is otherwise fully round, --g the space between things, --row the height of rows: Settings > Appearance. */
+/* --control-h is the one height of text fields, selects, buttons and the toolbar's icons, so a row of them lines up */
+:root { --control-h: round(2.24rem, 1px); --r: 1; --round: 999px; --g: 1; --row: 1; --ui-font: system-ui, 'Segoe UI', 'Noto Sans', 'DejaVu Sans'; --mono-font: ui-monospace, 'Cascadia Mono', Consolas, 'DejaVu Sans Mono', monospace; }
+* { box-sizing: border-box; }
+/* no shadows anywhere, including the component library's */
+*, *::before, *::after { box-shadow: none !important; }
+body {
+  font-family: var(--ui-font), sans-serif;
+  font-size: 1rem;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+input, textarea { user-select: text; }
+.mono, .count { font-family: var(--mono-font); font-variant-numeric: tabular-nums; }
+.count { font-size: 0.85rem; color: var(--text-faint); }
+.ico { flex: none; display: inline-block; vertical-align: middle; }
+
+html.overlay-scroll, html.overlay-scroll * { scrollbar-width: none; }
+.ov-thumb { position: fixed; z-index: 5000; display: none; border-radius: calc(4px * var(--r)); background: color-mix(in srgb, var(--text) 32%, transparent); opacity: 0; pointer-events: none; transition: opacity 0.25s, width 0.12s, height 0.12s; }
+.ov-thumb.ov-y { width: 0.42rem; }
+.ov-thumb.ov-x { height: 0.42rem; }
+.ov-thumb.show { opacity: 1; pointer-events: auto; }
+.ov-thumb:hover, .ov-thumb.drag { background: color-mix(in srgb, var(--text) 50%, transparent); }
+::-webkit-scrollbar { width: round(0.7rem, 1px); height: round(0.7rem, 1px); }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: calc(8px * var(--r)); border: 3px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background-color: var(--text-faint); }
+::-webkit-scrollbar-corner { background: transparent; }
+
+.icon-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: calc(0.42rem * var(--g));
+  min-width: round(1.96rem, 1px); height: round(1.96rem, 1px); padding: 0 calc(0.35rem * var(--g)); border-radius: calc(6px * var(--r));
+  color: var(--text-muted); background: transparent; border: 0; cursor: pointer; font: inherit;
+}
+.icon-btn:hover { background: var(--hover); color: var(--text); }
+.icon-btn.on { color: var(--text); background: var(--active); }
+.icon-btn.accent { color: var(--accent); }
+.icon-btn:disabled { opacity: 0.35; cursor: default; background: transparent; }
+
+/* OpenVue's Chip (doubled, as its own sheet may come later) and the plain HTML one look the same */
+.chip, .p-chip.chip {
+  display: inline-flex; align-items: center; gap: calc(0.35rem * var(--g)); height: round(1.82rem, 1px); padding: 0 calc(0.63rem * var(--g));
+  border-radius: calc(6px * var(--r)); background: var(--button); color: var(--text); font-family: inherit; font-size: 0.92rem; cursor: default;
+}
+.chip button { all: unset; cursor: pointer; color: var(--text-faint); display: inline-flex; }
+.chip button:hover { color: var(--text); }
+.p-chip.chip { position: relative; }
+.p-chip.chip .p-chip-label { margin: 0; line-height: normal; }
+/* a chip that shows what it names when clicked, as the Inspector's tags, folders and genres: borderless soft fill */
+.chip[style*='--tint'], .p-chip.chip[style*='--tint'] { background: color-mix(in srgb, var(--tint) 18%, transparent); }
+.chip.chip-link, .p-chip.chip.chip-link { height: round(1.82rem, 1px); padding: 0 calc(0.56rem * var(--g)); border: 0; background: color-mix(in srgb, var(--text) 9%, transparent); font-size: 0.92rem; gap: calc(0.42rem * var(--g)); cursor: pointer; }
+.chip.chip-link:hover, .p-chip.chip.chip-link:hover { background: color-mix(in srgb, var(--text) 15%, transparent); }
+.chip.chip-link[style*='--tint'], .p-chip.chip.chip-link[style*='--tint'] { background: color-mix(in srgb, var(--tint) 18%, transparent); }
+.chip.chip-link[style*='--tint']:hover, .p-chip.chip.chip-link[style*='--tint']:hover { background: color-mix(in srgb, var(--tint) 26%, transparent); }
+
+/* stars: OpenVue's Rating in the app */
+.curio-rating.p-rating { gap: 0.14rem; }
+.curio-rating .p-rating-option { color: color-mix(in srgb, var(--text) 22%, transparent); cursor: pointer; }
+.curio-rating .p-rating-option.p-rating-option-active { color: var(--star); }
+.curio-rating.p-readonly .p-rating-option { cursor: default; }
+
+.section-title { font-size: 0.92rem; color: var(--text-faint); font-weight: 500; }
+.muted { color: var(--text-muted); }
+.faint { color: var(--text-faint); }
+.danger { color: var(--danger); }
+.row { display: flex; align-items: center; gap: calc(0.56rem * var(--g)); }
+.grow { flex: 1; min-width: 0; }
+.ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.field {
+  width: 100%; background: var(--input); color: var(--text); border: 1px solid var(--input-border);
+  border-radius: calc(6px * var(--r)); padding: calc(0.49rem * var(--g)) calc(0.7rem * var(--g)); font: inherit; outline: none;
+}
+.field:focus { border-color: var(--accent); }
+.field::placeholder { color: var(--text-faint); }
+textarea.field { resize: vertical; min-height: round(2.8rem, 1px); }
+
+/* the round x on a chip's corner, shown while the pointer is over the chip */
+.chip-clear, .chip .chip-clear { position: absolute; top: -0.42rem; right: -0.42rem; width: round(1.05rem, 1px); height: round(1.05rem, 1px); display: none; align-items: center; justify-content: center; border-radius: var(--round); background: var(--text-muted); color: var(--bg); cursor: pointer; }
+.chip-clear:hover, .chip .chip-clear:hover { background: var(--text); }
+.chip:hover .chip-clear { display: flex; }
+.kbd { font-family: var(--mono-font); font-size: 0.85rem; padding: 1px calc(0.42rem * var(--g)); border-radius: calc(4px * var(--r)); background: var(--button); color: var(--text-muted); }
+
+.tip-keys { display: inline-flex; align-items: center; gap: 0.21rem; margin-inline-start: calc(0.56rem * var(--g)); white-space: nowrap; vertical-align: 1px; }
+.tip-key { font: inherit; font-size: 0.85rem; line-height: 1.45; min-width: 1.45em; text-align: center; padding: 0 calc(0.35rem * var(--g)); border-radius: calc(4px * var(--r)); background: var(--button); color: var(--text); }
+.tip-or { margin: 0 0.14rem; color: var(--text-faint); }
+
+/* Plugin pages: plain HTML looks like the app's own when the page links /curio/ui/curio.css (.curio-kit is set by curio.js) */
+:root.curio-kit body { margin: 0; padding: calc(0.98rem * var(--g)); line-height: 1.45; }
+:root.curio-kit.fx-see-through body { background: transparent; }
+/* a widget is drawn on the sidebar it sits in, from its edge, as Curio's own widgets are */
+:root.curio-kit.curio-role-widget body { background: transparent; padding: 0; font-size: 1rem; }
+:root.curio-kit h1, :root.curio-kit h2, :root.curio-kit h3 { font-weight: 500; margin: 0 0 calc(0.7rem * var(--g)); }
+:root.curio-kit h1 { font-size: 1.3rem; }
+:root.curio-kit h2 { font-size: 1.08rem; }
+:root.curio-kit h3 { font-size: 1rem; color: var(--text-muted); }
+:root.curio-kit p { margin: 0 0 calc(0.7rem * var(--g)); }
+:root.curio-kit a { color: var(--accent); }
+:root.curio-kit hr { border: 0; border-top: 1px solid var(--border); margin: calc(0.84rem * var(--g)) 0; }
+:root.curio-kit button:not([class]), :root.curio-kit .btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: calc(0.42rem * var(--g)); height: round(2.24rem, 1px); padding: 0 calc(0.84rem * var(--g));
+  border: 0; border-radius: calc(6px * var(--r)); background: var(--button); color: var(--text); font: inherit; font-size: 0.92rem; cursor: pointer;
+}
+:root.curio-kit button:not([class]):hover, :root.curio-kit .btn:hover { background: var(--button-hover); }
+:root.curio-kit .btn.primary { background: var(--accent); color: var(--accent-text); }
+:root.curio-kit .btn.primary:hover { background: color-mix(in srgb, var(--accent) 85%, white); }
+:root.curio-kit .btn.text { background: transparent; color: var(--text-muted); padding: 0 calc(0.49rem * var(--g)); }
+:root.curio-kit .btn.text:hover { background: var(--hover); color: var(--text); }
+:root.curio-kit .btn.small { height: round(1.82rem, 1px); padding: 0 calc(0.56rem * var(--g)); font-size: 0.88rem; }
+:root.curio-kit button:disabled { opacity: 0.45; cursor: default; }
+:root.curio-kit input:not([type]), :root.curio-kit input[type='text'], :root.curio-kit input[type='search'], :root.curio-kit input[type='number'], :root.curio-kit select, :root.curio-kit textarea {
+  background: var(--input); color: var(--text); border: 1px solid var(--input-border); border-radius: calc(6px * var(--r));
+  padding: calc(0.42rem * var(--g)) calc(0.63rem * var(--g)); font: inherit; font-size: 0.92rem; outline: none;
+}
+:root.curio-kit input:focus, :root.curio-kit select:focus, :root.curio-kit textarea:focus { border-color: var(--accent); }
+:root.curio-kit input[type='checkbox'], :root.curio-kit input[type='radio'], :root.curio-kit input[type='range'] { accent-color: var(--accent); }
+:root.curio-kit label.check { display: inline-flex; align-items: center; gap: calc(0.42rem * var(--g)); }
+:root.curio-kit .card {
+  background: var(--surface-2); border-radius: calc(8px * var(--r));
+  padding: calc(0.98rem * var(--g)) calc(0.91rem * var(--g)); display: flex; flex-direction: column; gap: calc(0.7rem * var(--g));
+}
+:root.curio-kit table { border-collapse: collapse; width: 100%; }
+:root.curio-kit th { text-align: left; font-weight: 500; color: var(--text-faint); font-size: 0.92rem; }
+:root.curio-kit th, :root.curio-kit td { padding: calc(0.35rem * var(--g)) calc(0.56rem * var(--g)); border-bottom: 1px solid var(--border); }
+:root.curio-kit tr:hover td { background: var(--hover); }

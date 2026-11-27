@@ -1,0 +1,110 @@
+/* Curio Meadow Green brand palette (#3B9160) */
+:root,
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: #3b9160;
+  --md-primary-fg-color--light: #4ea775;
+  --md-primary-fg-color--dark: #2c714a;
+  --md-accent-fg-color: #2f7d52;
+  --md-accent-fg-color--transparent: rgba(59, 145, 96, 0.12);
+  --curio-badge-bg: rgba(59, 145, 96, 0.12);
+  --curio-badge-fg: #245c3c;
+  --curio-badge-border: rgba(59, 145, 96, 0.28);
+  --curio-meta-bg: rgba(0, 0, 0, 0.03);
+  --curio-meta-border: rgba(0, 0, 0, 0.09);
+}
+
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #3b9160;
+  --md-primary-fg-color--light: #56b47e;
+  --md-primary-fg-color--dark: #2a6a46;
+  --md-accent-fg-color: #56b47e;
+  --md-accent-fg-color--transparent: rgba(86, 180, 126, 0.14);
+  --curio-badge-bg: rgba(86, 180, 126, 0.14);
+  --curio-badge-fg: #8ce0ad;
+  --curio-badge-border: rgba(86, 180, 126, 0.30);
+  --curio-meta-bg: rgba(255, 255, 255, 0.035);
+  --curio-meta-border: rgba(255, 255, 255, 0.10);
+}
+
+/* Home hero banner */
+.curio-hero {
+  padding: 1.5rem 0 1.25rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--curio-meta-border);
+}
+
+.curio-hero-lead {
+  font-size: 1.12rem;
+  line-height: 1.65;
+  color: var(--md-default-fg-color--light);
+  max-width: 52rem;
+  margin-top: 0.4rem;
+}
+
+.curio-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1.25rem;
+}
+
+/* Operation / Event / Manifest metadata ribbon */
+.curio-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.6rem;
+  align-items: center;
+  padding: 0.55rem 0.8rem;
+  margin: 0.6rem 0 1rem;
+  border-radius: 0.4rem;
+  background: var(--curio-meta-bg);
+  border: 1px solid var(--curio-meta-border);
+  font-size: 0.78rem;
+}
+
+.curio-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: var(--curio-badge-bg);
+  color: var(--curio-badge-fg);
+  border: 1px solid var(--curio-badge-border);
+  font-family: var(--md-code-font-family);
+  font-size: 0.74rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.curio-badge--muted {
+  background: var(--curio-meta-bg);
+  color: var(--md-default-fg-color--light);
+  border-color: var(--curio-meta-border);
+}
+
+/* Screenshots */
+.curio-shot {
+  margin: 1.1rem 0 1.35rem;
+}
+
+.curio-shot img {
+  border-radius: 0.5rem;
+  border: 1px solid var(--curio-meta-border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+}
+
+.curio-shot figcaption {
+  margin-top: 0.45rem;
+  font-size: 0.78rem;
+  color: var(--md-default-fg-color--light);
+}
+
+/* Compact reference tables */
+.md-typeset table:not([class]) {
+  font-size: 0.82rem;
+}
+
+.md-typeset table:not([class]) code {
+  white-space: nowrap;
+}

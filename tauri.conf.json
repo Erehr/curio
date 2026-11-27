@@ -1,0 +1,45 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Curio",
+  "version": "1.0.0",
+  "identifier": "app.curio.desktop",
+  "build": {
+    "frontendDist": "target/web-dist"
+  },
+  "app": {
+    "windows": [],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: thumb: http://thumb.localhost; media-src 'self' data: blob: thumb: http://thumb.localhost http://127.0.0.1:*; connect-src 'self' ipc: http://ipc.localhost thumb: http://thumb.localhost data: blob:; font-src 'self' data:; frame-src thumb: http://thumb.localhost plugin: http://*.localhost https://www.youtube-nocookie.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'",
+      "dangerousDisableAssetCspModification": ["style-src"],
+      "capabilities": [
+        {
+          "identifier": "default",
+          "description": "The main window: app commands and events only (no general file system access).",
+          "windows": ["main", "item*", "prefs", "plugin*", "tool*"],
+          "permissions": [
+            "core:default",
+            "core:window:allow-close",
+            "core:window:allow-set-fullscreen",
+            "core:window:allow-start-dragging",
+            "core:window:allow-start-resize-dragging",
+            "core:window:allow-minimize",
+            "core:window:allow-toggle-maximize",
+            "core:window:allow-is-maximized",
+            "core:window:allow-set-always-on-top",
+            "core:window:allow-set-focus",
+            "core:window:allow-set-resizable",
+            "core:webview:allow-set-webview-zoom"
+          ]
+        }
+      ]
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "icon": ["web/icons/icon.png", "web/icons/icon.ico"],
+    "category": "Graphics and Design",
+    "shortDescription": "Local-first digital asset manager",
+    "resources": ["LICENSE", "LICENSING.md"]
+  }
+}

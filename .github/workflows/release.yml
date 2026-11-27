@@ -1,0 +1,377 @@
+# Every download, built from a tag (v*) or by hand: macOS .dmg for Apple Silicon and Intel (ad-hoc signed, not notarized), the Windows installer and portable zip, and the Linux .deb, .rpm and AppImage.
+# A tag also drafts its GitHub release, with notes from the typed commit titles since the previous tag and the source of the FFmpeg the downloads carry.
+# FFmpeg is each publisher's newest release build, checked against the SHA-256 it publishes: BtbN's GPL shared build on Windows, Martin Riedl's static GPL builds on macOS; the Linux packages use the distribution's.
+# Run by hand, it can build one platform alone, which saves the private repository's minutes (macOS counts ten times); compiled dependencies are cached between runs.
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      platforms:
+        description: Which downloads to build
+        type: choice
+        options: [all, linux, windows, macos, macos-arm, macos-intel]
+        default: all
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+# Each build makes target/web-dist first: the packager refuses to start without the window's folder, which build.rs fills only during the build.
+env:
+  TAURI_CLI: "@tauri-apps/cli@2"
+  CARGO_PROFILE_RELEASE_INCREMENTAL: "false"
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      macos: ${{ steps.pick.outputs.macos }}
+      windows: ${{ steps.pick.outputs.windows }}
+      linux: ${{ steps.pick.outputs.linux }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: The tag is tauri.conf.json's version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          v=$(node -p "require('./tauri.conf.json').version")
+          [ "v$v" = "$GITHUB_REF_NAME" ] || { echo "::error::The tag is $GITHUB_REF_NAME but tauri.conf.json says $v"; exit 1; }
+      # a tag builds everything; by hand, what was chosen
+      - name: The platforms to build
+        id: pick
+        env:
+          PICKED: ${{ inputs.platforms || 'all' }}
+        run: |
+          arm='{"runner":"macos-latest","target":"aarch64-apple-darwin","arch":"ARM64","ffmpeg":"arm64"}'
+          intel='{"runner":"macos-15-intel","target":"x86_64-apple-darwin","arch":"X64","ffmpeg":"amd64"}'
+          case "$PICKED" in
+            all|macos) macs="[$arm,$intel]" ;;
+            macos-arm) macs="[$arm]" ;;
+            macos-intel) macs="[$intel]" ;;
+            *) macs="[]" ;;
+          esac
+          echo "macos=$macs" >> "$GITHUB_OUTPUT"
+          echo "windows=$([ "$PICKED" = all ] || [ "$PICKED" = windows ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "linux=$([ "$PICKED" = all ] || [ "$PICKED" = linux ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+  macos:
+    needs: version
+    if: needs.version.outputs.macos != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.version.outputs.macos) }}
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+          cache-on-failure: true
+
+      - name: FFmpeg, the newest release build
+        run: |
+          mkdir -p target/ffmpeg
+          : > target/ffmpeg-build.txt
+          for p in ffmpeg ffprobe; do
+            # the address of the newest release build; the redirect sometimes answers 404 at first
+            url=$(curl -fsS --retry 5 --retry-all-errors -o /dev/null -w '%{redirect_url}' "https://ffmpeg.martin-riedl.de/redirect/latest/macos/${{ matrix.ffmpeg }}/release/$p.zip")
+            [ -n "$url" ] || { echo "::error::No latest release build of $p"; exit 1; }
+            curl -fsSL --retry 5 --retry-all-errors -o "$p.zip" "$url"
+            want=$(curl -fsSL --retry 5 --retry-all-errors "$url.sha256" | awk '{print $1}')
+            got=$(shasum -a 256 "$p.zip" | awk '{print $1}')
+            [ "$want" = "$got" ] || { echo "::error::$p.zip doesn't match its published SHA-256"; exit 1; }
+            unzip -q -o "$p.zip" -d target/ffmpeg
+            echo "$url $got" >> target/ffmpeg-build.txt
+          done
+          # the libraries this build compiles in, with their versions
+          curl -fsSL --retry 5 --retry-all-errors -o target/ffmpeg-versions.txt "${url%/*}/versions.txt"
+          chmod +x target/ffmpeg/ffmpeg target/ffmpeg/ffprobe
+          # a program built for a newer macOS than the app claims would fail on the oldest Macs it installs on
+          need=$(node -p "require('./tauri.macos.conf.json').bundle.macOS.minimumSystemVersion")
+          for f in target/ffmpeg/*; do
+            min=$(vtool -show-build "$f" | awk '/minos/ {print $2; exit}')
+            [ "$(printf '%s\n%s\n' "$need" "$min" | sort -V | tail -1)" = "$need" ] || { echo "::error::$f needs macOS $min, the app claims $need"; exit 1; }
+          done
+          # the app's signature seals Resources without signing the programs in it, and an Apple Silicon Mac won't run an unsigned one
+          for f in target/ffmpeg/*; do
+            codesign --verify "$f" 2>/dev/null || codesign --force --sign - "$f"
+          done
+          target/ffmpeg/ffmpeg -hide_banner -version | head -1 | tee -a target/ffmpeg-build.txt
+          echo '{ "bundle": { "resources": { "target/ffmpeg/*": "resources/ffmpeg" } } }' > target/ffmpeg.conf.json
+
+      - name: The window's packages
+        working-directory: web
+        run: npm ci
+
+      - name: Build
+        run: |
+          mkdir -p target/web-dist
+          npx --yes "$TAURI_CLI" build --target ${{ matrix.target }} --config target/ffmpeg.conf.json
+
+      - name: Ad-hoc signature over the app and its FFmpeg
+        run: |
+          app=$(find target/${{ matrix.target }}/release/bundle/macos -maxdepth 1 -name '*.app' | head -1)
+          codesign --force --deep --sign - "$app"
+          codesign --verify --deep --strict "$app"
+          dmg=$(find target/${{ matrix.target }}/release/bundle/dmg -name '*.dmg' | head -1)
+          rm "$dmg"
+          stage=$(mktemp -d)
+          cp -R "$app" "$stage/"
+          ln -s /Applications "$stage/Applications"
+          hdiutil create -volname Curio -srcfolder "$stage" -ov -format UDZO "$dmg"
+          rm -rf "$stage"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: curio-macos-${{ matrix.arch }}
+          path: target/${{ matrix.target }}/release/bundle/dmg/*.dmg
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ffmpeg-macos-${{ matrix.arch }}
+          path: |
+            target/ffmpeg-build.txt
+            target/ffmpeg-versions.txt
+
+  windows:
+    needs: version
+    if: needs.version.outputs.windows == 'true'
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+
+      - name: FFmpeg, the newest release build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # BtbN's "latest" release holds a build of each release branch's newest commit; the highest branch is the newest release
+          name=$(gh release view latest -R BtbN/FFmpeg-Builds --json assets --jq '.assets[].name' | grep -E '^ffmpeg-n[0-9.]+-latest-win64-gpl-shared-[0-9.]+\.zip$' | sort -V | tail -1)
+          [ -n "$name" ] || { echo "::error::No release build of FFmpeg for Windows in BtbN's latest release"; exit 1; }
+          gh release download latest -R BtbN/FFmpeg-Builds -p "$name" -p checksums.sha256
+          want=$(awk -v n="$name" '$2 == n || $2 == "*" n {print $1}' checksums.sha256)
+          got=$(sha256sum "$name" | awk '{print $1}')
+          [ -n "$want" ] && [ "$want" = "$got" ] || { echo "::error::$name doesn't match its published SHA-256"; exit 1; }
+          7z x -y -offmpeg-unpacked "$name" > /dev/null
+          top="ffmpeg-unpacked/${name%.zip}"
+          mkdir -p target/ffmpeg
+          cp "$top"/bin/ffmpeg.exe "$top"/bin/ffprobe.exe "$top"/bin/*.dll "$top"/LICENSE.txt target/ffmpeg/
+          echo "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/$name $got" > target/ffmpeg-build.txt
+          target/ffmpeg/ffmpeg.exe -hide_banner -version | head -1 | tee -a target/ffmpeg-build.txt
+          echo '{ "bundle": { "resources": { "target/ffmpeg/*": "resources/ffmpeg" } } }' > target/ffmpeg.conf.json
+
+      - name: The window's packages
+        working-directory: web
+        run: npm ci
+
+      - name: Build
+        run: |
+          mkdir -p target/web-dist
+          npx --yes "$TAURI_CLI" build --config target/ffmpeg.conf.json
+          [ ! -e target/web-dist/pseudo.txt ] || { echo "::error::The built window was built for debugging, which a release must not be."; exit 1; }
+
+      - name: The portable zip
+        shell: pwsh
+        run: |
+          $version = (Get-Content tauri.conf.json -Raw | ConvertFrom-Json).version
+          $name = "Curio-$version-windows-x64-portable"
+          $out = "target\portable\$name"
+          New-Item -ItemType Directory -Force "$out\resources", "$out\Curio data" | Out-Null
+          Copy-Item target\release\curio.exe "$out\Curio.exe"
+          Copy-Item LICENSE, LICENSING.md $out
+          Copy-Item -Recurse target\ffmpeg "$out\resources\ffmpeg"
+          $readme = @(
+            "Curio $version",
+            "",
+            "Unzip anywhere and run Curio.exe.",
+            "Needs WebView2, which Windows 10 and 11 normally already have.",
+            "",
+            "Settings, plugins and new libraries stay in the Curio data folder beside the program, so the whole folder can move to another computer or a USB drive.",
+            "To update, copy a newer version's files over these: the Curio data folder in it is empty and leaves yours as it is.",
+            "Without the Curio data folder, Curio keeps them in your user folders, as the installed version does."
+          )
+          Set-Content -Path "$out\README.txt" -Value $readme -Encoding utf8
+          Compress-Archive -Path $out -DestinationPath "target\portable\$name.zip" -Force
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: curio-windows
+          path: |
+            target/release/bundle/nsis/*-setup.exe
+            target/portable/*.zip
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ffmpeg-windows
+          path: target/ffmpeg-build.txt
+
+  linux:
+    needs: version
+    if: needs.version.outputs.linux == 'true'
+    # the oldest supported runner, so the AppImage runs on distributions with an older glibc
+    runs-on: ubuntu-22.04
+    env:
+      # linuxdeploy runs as an AppImage itself, without FUSE on the runner
+      APPIMAGE_EXTRACT_AND_RUN: "1"
+      NO_STRIP: "true"
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+
+      - name: The libraries Curio builds against
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config file patchelf libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev libdbus-1-dev libxdo-dev libssl-dev
+          # the AppImage carries the GStreamer plugins installed here, for playing video and sound
+          sudo apt-get install -y gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-libav
+
+      - name: The window's packages
+        working-directory: web
+        run: npm ci
+
+      - name: Build
+        run: |
+          mkdir -p target/web-dist
+          npx --yes "$TAURI_CLI" build
+          [ ! -e target/web-dist/pseudo.txt ] || { echo "::error::The built window was built for debugging, which a release must not be."; exit 1; }
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: curio-linux
+          path: |
+            target/release/bundle/deb/*.deb
+            target/release/bundle/rpm/*.rpm
+            target/release/bundle/appimage/*.AppImage
+
+  release:
+    needs: [macos, windows, linux]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: curio-*
+          merge-multiple: true
+          path: dist
+
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: ffmpeg-*
+          path: ffmpeg-builds
+
+      # GPL-3.0: the source of the FFmpeg each download carries, beside them in the release
+      - name: FFmpeg's source
+        run: |
+          version=${GITHUB_REF_NAME#v}
+          out="Curio-$version-ffmpeg-source"
+          mkdir -p "$out"
+          {
+            echo "# The FFmpeg in Curio $version"
+            echo
+            echo "The Windows and macOS downloads carry FFmpeg as a separate program, under the GPL version 3 (LICENSING.md). These are the builds they carry, as published, and FFmpeg's source for each."
+            echo "The libraries each build compiles in, and their versions, are named by its publisher: BtbN's build scripts at https://github.com/BtbN/FFmpeg-Builds (each release names the commit it was built from), Martin Riedl's at https://git.martin-riedl.de/ffmpeg/build-script (each build's versions.txt is copied here beside its source)."
+            echo
+          } > "$out/README.md"
+          for f in ffmpeg-builds/*/ffmpeg-build.txt; do
+            platform=$(basename "$(dirname "$f")")
+            line=$(grep '^ffmpeg version' "$f")
+            echo "## ${platform#ffmpeg-}" >> "$out/README.md"
+            echo >> "$out/README.md"
+            grep -v '^ffmpeg version' "$f" | sed 's/^\(.*\) \(.*\)$/- \1 (SHA-256 \2)/' >> "$out/README.md"
+            echo "- $line" >> "$out/README.md"
+            # a build from a commit names it after -g, a release build its number
+            commit=$(echo "$line" | sed -n 's/^ffmpeg version [^ ]*-g\([0-9a-f]\{7,\}\).*/\1/p')
+            number=$(echo "$line" | sed -n 's/^ffmpeg version n\{0,1\}\([0-9][0-9.]*\).*/\1/p')
+            if [ -n "$commit" ]; then
+              src="ffmpeg-$commit.tar.gz"
+              [ -e "$out/$src" ] || curl -fsSL --retry 5 -o "$out/$src" "https://github.com/FFmpeg/FFmpeg/archive/$commit.tar.gz"
+            elif [ -n "$number" ]; then
+              src="ffmpeg-$number.tar.xz"
+              [ -e "$out/$src" ] || curl -fsSL --retry 5 -o "$out/$src" "https://ffmpeg.org/releases/$src"
+            else
+              echo "::error::Can't tell FFmpeg's source from: $line"; exit 1
+            fi
+            echo "- Source: $src" >> "$out/README.md"
+            if [ -e "$(dirname "$f")/ffmpeg-versions.txt" ]; then
+              cp "$(dirname "$f")/ffmpeg-versions.txt" "$out/${platform#ffmpeg-}-versions.txt"
+              echo "- The libraries compiled in: ${platform#ffmpeg-}-versions.txt" >> "$out/README.md"
+            fi
+            echo >> "$out/README.md"
+          done
+          tar -cf "dist/$out.tar" "$out"
+
+      # the typed commit titles since the previous tag (feat: ..., fix: ...), grouped as the changelog's types are
+      - name: Release notes
+        run: |
+          prev=$(git describe --tags --abbrev=0 --match 'v*' "$GITHUB_REF_NAME^" 2>/dev/null || true)
+          range=${prev:+$prev..}$GITHUB_REF_NAME
+          git log --no-merges --format=%s "$range" > commits.txt
+          node - "$prev" <<'EOF'
+          const fs = require('fs')
+          const prev = process.argv[2]
+          const groups = [['break', 'Breaking changes'], ['security', 'Security'], ['feat', 'New'], ['change', 'Changed'], ['fix', 'Fixed'], ['perf', 'Faster'], ['data', 'Library data'], ['remove', 'Removed']]
+          const internal = new Set(['docs', 'test', 'build', 'refactor', 'chore', 'ci', 'style'])
+          const found = Object.fromEntries(groups.map(([t]) => [t, []]))
+          const other = []
+          for (const title of fs.readFileSync('commits.txt', 'utf8').split('\n').filter(Boolean)) {
+            const m = title.match(/^(\w+)(?:\([^)]*\))?!?:\s*(.+)$/)
+            if (m && found[m[1]]) found[m[1]].push(m[2])
+            else if (!m || !internal.has(m[1])) other.push(title)
+          }
+          let notes = ''
+          for (const [t, heading] of groups) if (found[t].length) notes += `## ${heading}\n\n${found[t].map((s) => `- ${s}`).join('\n')}\n\n`
+          if (other.length) notes += `## Other\n\n${other.map((s) => `- ${s}`).join('\n')}\n\n`
+          if (!notes) notes = prev ? 'Maintenance release.\n\n' : 'First release.\n\n'
+          notes += 'The FFmpeg in the Windows and macOS downloads and its source are described in the `-ffmpeg-source.tar` file.\n'
+          fs.writeFileSync('notes.md', notes)
+          EOF
+          cat notes.md
+
+      - name: Draft release
+        uses: softprops/action-gh-release@v3
+        with:
+          draft: true
+          body_path: notes.md
+          files: dist/*

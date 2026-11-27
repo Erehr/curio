@@ -1,0 +1,23 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "bundle": {
+    "targets": ["deb", "rpm", "appimage"],
+    "resources": {
+      "LICENSE": "LICENSE",
+      "LICENSING.md": "LICENSING.md"
+    },
+    "linux": {
+      "deb": {
+        "depends": ["ffmpeg", "xdg-utils", "gstreamer1.0-plugins-base", "gstreamer1.0-plugins-good"],
+        "recommends": ["gstreamer1.0-libav", "gstreamer1.0-plugins-bad"]
+      },
+      "rpm": {
+        "depends": ["webkit2gtk4.1", "gtk3", "/usr/bin/ffmpeg", "xdg-utils", "gstreamer1-plugins-base", "gstreamer1-plugins-good"],
+        "recommends": ["gstreamer1-plugin-libav", "gstreamer1-plugins-bad-free"]
+      },
+      "appimage": {
+        "bundleMediaFramework": true
+      }
+    }
+  }
+}

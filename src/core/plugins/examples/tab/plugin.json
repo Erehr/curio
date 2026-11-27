@@ -1,0 +1,10 @@
+{
+  "id": "example.tab",
+  "name": "Example tab",
+  "version": "1.0.0",
+  "author": "You",
+  "icon": "layout-grid",
+  "description": "Shows the best-rated pictures in a view beside the grid.",
+  "permissions": ["metadata.read", "files.read", "ui"],
+  "tabs": [{ "id": "best", "title": "Best pictures", "page": "index.html", "icon": "star" }]
+}

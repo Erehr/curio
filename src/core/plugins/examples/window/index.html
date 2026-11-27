@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Example window</title>
+  <link rel="stylesheet" href="/curio/ui/curio.css">
+  <script src="/curio/ui/curio.js"></script>
+  <script type="module" src="window.js"></script>
+</head>
+<body>
+  <div class="curio-page">
+    <header class="curio-page-head"><span class="title">Example window</span><span class="grow"></span><span class="faint" id="count"></span></header>
+    <main class="curio-page-body">
+      <p class="muted" id="hint">Open this window with items selected, or from an item's menu.</p>
+      <table id="table" hidden>
+        <thead><tr><th>Name</th><th>Kind</th><th>Size</th><th>File</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </main>
+    <footer class="curio-page-foot"><span class="grow faint" id="size"></span><button id="select" class="btn">Select in Curio</button><button id="notify" class="btn primary">Say hello</button></footer>
+  </div>
+</body>
+</html>

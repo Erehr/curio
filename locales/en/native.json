@@ -1,0 +1,39 @@
+{
+  "tray": {
+    "show": "Show {name}",
+    "showAll": "Show all windows",
+    "newWindow": "New window",
+    "settings": "Settings",
+    "quit": "Quit Curio"
+  },
+  "notice": {
+    "added": "Added: {count}",
+    "addedTo": "Added to {place}",
+    "failed": "Failed: {count}",
+    "already": "Already in the library",
+    "notAdded": "Not added",
+    "notAddedCount": "Not added: {count}",
+    "keepBoth": "Keep both",
+    "retry": "Retry"
+  },
+  "dialog": {
+    "libraryFolder": "Choose the folder that will hold {folder}",
+    "openLibrary": "Open a library folder",
+    "moveFiles": "Move the files to",
+    "eagleLibrary": "Choose an Eagle library (.library folder)",
+    "relink": "Where is this file now?",
+    "openWith": "Choose an app to open {name}",
+    "pluginFolder": "Choose a plugin folder",
+    "examplePlugin": "Where to make the example plugin",
+    "pictures": "Pictures",
+    "apps": "Apps",
+    "subtitles": "Subtitles",
+    "database": "Database"
+  },
+  "window": {
+    "settings": "Settings"
+  },
+  "autostart": {
+    "comment": "Keeps your libraries up to date from the tray"
+  }
+}

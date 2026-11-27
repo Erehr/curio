@@ -1,0 +1,283 @@
+[project]
+site_name = "Curio"
+site_description = "Local-first digital asset manager for Windows, Linux and macOS: feature guide, HTTP/MCP API and plugin documentation."
+site_url = "https://erehr.github.io/curio/"
+repo_url = "https://github.com/Erehr/curio"
+repo_name = "Erehr/curio"
+copyright = "Curio is free software under the GNU GPL v3."
+
+extra_css = ["stylesheets/extra.css"]
+
+nav = [
+  { "Home" = [
+    "index.md",
+    { "Start" = [
+      { "Install" = "start/install.md" },
+      { "First library" = "start/first-library.md" },
+      { "Window" = "start/window.md" },
+      { "Terms" = "start/terms.md" },
+    ] },
+  ] },
+  { "Features" = [
+    "features/index.md",
+    { "Libraries" = [
+      { "Manage" = "features/libraries/manage.md" },
+      { "Storage" = "features/libraries/storage.md" },
+      { "Locations" = "features/libraries/locations.md" },
+      { "Transfers" = "features/libraries/transfers.md" },
+      { "Windows" = "features/libraries/windows.md" },
+      { "Backup" = "features/libraries/backup.md" },
+    ] },
+    { "Import & Export" = [
+      { "Files" = "features/import/files.md" },
+      { "Links" = "features/import/links.md" },
+      { "Browser" = "features/import/browser.md" },
+      { "Auto-Import" = "features/import/auto.md" },
+      { "Eagle" = "features/import/eagle.md" },
+      { "Export" = "features/import/export.md" },
+    ] },
+    { "Organize" = [
+      { "Folders" = "features/organize/folders.md" },
+      { "Tags" = "features/organize/tags.md" },
+      { "Inspector" = "features/organize/inspector.md" },
+      { "Fields" = "features/organize/fields.md" },
+      { "Metadata" = "features/organize/metadata-readers.md" },
+      { "Grouped files" = "features/organize/grouped-files.md" },
+      { "File actions" = "features/organize/file-actions.md" },
+      { "Drag & drop" = "features/organize/drag-drop.md" },
+      { "Actions" = "features/organize/actions.md" },
+    ] },
+    { "Browse & Search" = [
+      { "Scopes" = "features/browse/scopes.md" },
+      { "Views" = "features/browse/views.md" },
+      { "Spectrum" = "features/browse/spectrum.md" },
+      { "Search" = "features/search/text.md" },
+      { "Filters" = "features/search/filters.md" },
+      { "Smart folders" = "features/search/smart-folders.md" },
+    ] },
+    { "Viewers" = [
+      { "Formats" = "features/viewer/formats.md" },
+      { "Navigation" = "features/viewer/navigation.md" },
+      { "Images" = "features/viewer/images.md" },
+      { "Video & audio" = "features/viewer/media.md" },
+      { "Text & links" = "features/viewer/text-links.md" },
+      { "Fonts" = "features/viewer/fonts.md" },
+      { "Reader" = "features/viewer/reader.md" },
+      { "3D models" = "features/viewer/models.md" },
+      { "AI metadata" = "features/viewer/ai.md" },
+    ] },
+    { "Tools" = [
+      { "Batch rename" = "features/tools/rename.md" },
+      { "Duplicates" = "features/tools/duplicates.md" },
+      { "Compare" = "features/tools/compare.md" },
+    ] },
+    { "Customize" = [
+      { "Layout" = "features/customize/layout.md" },
+      { "Appearance" = "features/customize/theme.md" },
+      { "Shortcuts" = "features/customize/shortcuts.md" },
+      { "Plugins" = "features/customize/plugins.md" },
+      { "Settings" = "features/customize/settings.md" },
+    ] },
+    { "Troubleshooting" = [
+      { "Recovery" = "features/help/storage.md" },
+      { "Performance" = "features/help/performance.md" },
+      { "Connections" = "features/help/connections.md" },
+    ] },
+  ] },
+  { "API" = [
+    "api/index.md",
+    { "Connect" = [
+      { "HTTP" = "api/connect/http.md" },
+      { "Authorization" = "api/connect/authorization.md" },
+      { "Launch & pair" = "api/connect/launch-pair.md" },
+      { "Routing" = "api/connect/routing.md" },
+      { "Client" = "api/connect/client.md" },
+      { "Files & uploads" = "api/connect/files.md" },
+      { "Events" = "api/connect/events.md" },
+      { "MCP" = "api/connect/mcp.md" },
+      { "Browser markup" = "api/connect/browser-markup.md" },
+      { "Errors" = "api/connect/errors.md" },
+      { "Recipes" = "api/connect/recipes.md" },
+    ] },
+    { "Query & Types" = [
+      { "Query syntax" = "api/query/syntax.md" },
+      { "Query fields" = "api/query/fields.md" },
+      { "Types overview" = "api/types/index.md" },
+      { "Items" = "api/types/item.md" },
+      { "Libraries" = "api/types/library.md" },
+      { "Organizing" = "api/types/organizing.md" },
+      { "Runtime" = "api/types/runtime.md" },
+      { "Client" = "api/types/client.md" },
+    ] },
+    { "Operations" = [
+      { "app" = "api/operations/app.md" },
+      { "token" = "api/operations/credentials.md" },
+      { "library" = "api/operations/libraries.md" },
+      { "library.grouping" = "api/operations/library-grouping.md" },
+      { "item (Read)" = "api/operations/item-reads.md" },
+      { "item.add" = "api/operations/item-add.md" },
+      { "item (Metadata)" = "api/operations/item-metadata.md" },
+      { "item (Files)" = "api/operations/item-files.md" },
+      { "item (Grouping)" = "api/operations/item-grouping.md" },
+      { "item (Lifecycle)" = "api/operations/item-lifecycle.md" },
+      { "item (Open)" = "api/operations/item-open.md" },
+      { "folder" = "api/operations/folder.md" },
+      { "smartFolder" = "api/operations/smart-folder.md" },
+      { "tag" = "api/operations/tag.md" },
+      { "tagGroup" = "api/operations/tag-group.md" },
+      { "field" = "api/operations/field.md" },
+      { "location" = "api/operations/location.md" },
+      { "query" = "api/operations/query.md" },
+      { "archive" = "api/operations/archive.md" },
+      { "duplicates" = "api/operations/duplicates.md" },
+      { "selection" = "api/operations/selection.md" },
+      { "view" = "api/operations/view.md" },
+      { "viewer" = "api/operations/viewer.md" },
+      { "ui" = "api/operations/ui.md" },
+      { "dialog" = "api/operations/dialog.md" },
+      { "clipboard" = "api/operations/clipboard.md" },
+      { "plugin" = "api/operations/plugin.md" },
+      { "job" = "api/operations/job.md" },
+      { "process" = "api/operations/process.md" },
+      { "tool" = "api/operations/tool.md" },
+    ] },
+    { "Events" = [
+      { "Libraries" = "api/events/libraries.md" },
+      { "Items" = "api/events/items.md" },
+      { "Scans" = "api/events/scans.md" },
+      { "Windows" = "api/events/windows.md" },
+      { "Jobs" = "api/events/jobs.md" },
+    ] },
+  ] },
+  { "Plugins" = [
+    "plugins/index.md",
+    { "Start" = [
+      { "First plugin" = "plugins/start/first-plugin.md" },
+      { "Loading" = "plugins/start/loading.md" },
+      { "Permissions" = "plugins/start/permissions.md" },
+    ] },
+    { "Contributions" = [
+      { "Fields" = "plugins/contributions/fields.md" },
+      { "Search" = "plugins/contributions/search.md" },
+      { "Display" = "plugins/contributions/display.md" },
+      { "Widgets" = "plugins/contributions/widgets.md" },
+      { "Surfaces" = "plugins/contributions/surfaces.md" },
+      { "Formats" = "plugins/contributions/formats.md" },
+      { "Companions" = "plugins/contributions/companions.md" },
+      { "Extractors" = "plugins/contributions/extractors.md" },
+      { "Actions" = "plugins/contributions/actions.md" },
+      { "URLs" = "plugins/contributions/urls.md" },
+    ] },
+    { "Pages" = [
+      { "Runtime" = "plugins/pages/runtime.md" },
+      { "Files" = "plugins/pages/files.md" },
+      { "State" = "plugins/pages/state.md" },
+      { "Appearance" = "plugins/pages/appearance.md" },
+      { "Overlays" = "plugins/pages/overlays.md" },
+      { "Viewer tools" = "plugins/pages/viewer-tools.md" },
+      { "Completions" = "plugins/pages/completions.md" },
+    ] },
+    { "Programs" = [
+      { "Runtime" = "plugins/programs/runtime.md" },
+      { "Actions & URLs" = "plugins/programs/action-url.md" },
+      { "File handlers" = "plugins/programs/file-handlers.md" },
+      { "Jobs" = "plugins/programs/jobs.md" },
+    ] },
+    { "Examples" = [
+      { "Starters" = "plugins/examples/starters.md" },
+      { "Curio plugins" = "plugins/examples/curio.md" },
+      { "Demos" = "plugins/examples/demos.md" },
+    ] },
+    { "Hooks" = [
+      { "Lifecycle" = "plugins/hooks/lifecycle.md" },
+      { "Interaction" = "plugins/hooks/interaction.md" },
+      { "Work" = "plugins/hooks/work.md" },
+    ] },
+    { "Manifest" = [
+      { "plugin.json" = "plugins/manifest/index.md" },
+      { "Fields" = "plugins/manifest/fields.md" },
+      { "Extractors" = "plugins/manifest/extractors.md" },
+      { "Widgets" = "plugins/manifest/widgets.md" },
+      { "Surfaces" = "plugins/manifest/surfaces.md" },
+      { "Discovery" = "plugins/manifest/discovery.md" },
+      { "Formats" = "plugins/manifest/formats.md" },
+      { "Viewers" = "plugins/manifest/viewers.md" },
+      { "Actions & URLs" = "plugins/manifest/actions.md" },
+    ] },
+  ] },
+]
+
+[project.theme]
+variant = "modern"
+language = "en"
+logo = "assets/logo.svg"
+favicon = "assets/favicon.png"
+features = [
+  "announce.dismiss",
+  "content.code.annotate",
+  "content.code.copy",
+  "content.code.select",
+  "content.footnote.tooltips",
+  "content.tabs.link",
+  "content.tooltips",
+  "navigation.footer",
+  "navigation.indexes",
+  "navigation.instant",
+  "navigation.instant.prefetch",
+  "navigation.path",
+  "navigation.sections",
+  "navigation.tabs",
+  "navigation.tabs.sticky",
+  "navigation.top",
+  "navigation.tracking",
+  "search.highlight",
+  "toc.follow",
+]
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme)"
+toggle.icon = "lucide/sun-moon"
+toggle.name = "Switch to light mode"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+scheme = "default"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to dark mode"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
+scheme = "slate"
+toggle.icon = "lucide/moon"
+toggle.name = "Switch to system preference"
+
+[project.markdown_extensions]
+abbr = {}
+admonition = {}
+attr_list = {}
+def_list = {}
+footnotes = {}
+md_in_html = {}
+tables = {}
+toc.permalink = true
+toc.toc_depth = 3
+pymdownx.betterem = {}
+pymdownx.caret = {}
+pymdownx.details = {}
+pymdownx.emoji.emoji_generator = "zensical.extensions.emoji.to_svg"
+pymdownx.emoji.emoji_index = "zensical.extensions.emoji.twemoji"
+pymdownx.highlight.anchor_linenums = true
+pymdownx.highlight.line_spans = "__span"
+pymdownx.highlight.pygments_lang_class = true
+pymdownx.inlinehilite = {}
+pymdownx.keys = {}
+pymdownx.magiclink = {}
+pymdownx.mark = {}
+pymdownx.smartsymbols = {}
+pymdownx.superfences.custom_fences = [
+  { name = "mermaid", class = "mermaid", format = "pymdownx.superfences.fence_code_format" },
+]
+pymdownx.tabbed.alternate_style = true
+pymdownx.tabbed.combine_header_slug = true
+pymdownx.tasklist.custom_checkbox = true
+pymdownx.tilde = {}

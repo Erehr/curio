@@ -1,0 +1,100 @@
+[package]
+name = "curio"
+# fixed: the version is tauri.conf.json's, which build.rs hands to the code as CURIO_VERSION
+version = "0.0.0"
+edition = "2021"
+description = "Local-first, filesystem-first digital asset manager"
+license = "GPL-3.0-only"
+
+[[bin]]
+name = "curio"
+path = "src/main.rs"
+
+[lib]
+name = "curio"
+path = "src/lib.rs"
+
+[dependencies]
+# unstable: a web view of its own inside a window, for a link's page in the viewer
+tauri = { version = "2", features = ["tray-icon", "unstable"] }
+base64 = "0.22"
+drag = "2.1"
+tiny_http = "0.12"
+url = "2"
+rusqlite = { version = "0.32", features = ["bundled", "functions"] }
+notify = "6.1"
+file-id = "0.2"
+walkdir = "2"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "gif", "webp", "tiff", "bmp", "ico", "tga", "hdr", "pnm", "qoi", "dds"] }
+png = "0.17"
+# fonts: their tables, and WOFF2's and WOFF's packing (src/core/metadata/fonts/)
+ttf-parser = { version = "0.25", default-features = false, features = ["std", "opentype-layout", "variable-fonts", "glyph-names"] }
+brotli-decompressor = "6"
+miniz_oxide = "0.8"
+imagesize = "0.13"
+# viewer previews: JPEG decoded at reduced size, SIMD resize and encode
+jpeg-decoder = { version = "0.3", default-features = false }
+jpeg-encoder = { version = "0.6", features = ["simd"] }
+fast_image_resize = "5"
+kamadak-exif = "0.5"
+resvg = "0.44"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+flate2 = "1"
+xxhash-rust = { version = "0.8", features = ["xxh3"] }
+blake3 = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+crossbeam-channel = "0.5"
+parking_lot = "0.12"
+dirs = "5"
+rfd = "0.15"
+arboard = "3"
+ureq = "2"
+opener = { version = "0.7", features = ["reveal"] }
+regex = "1"
+chrono = "0.4"
+fastrand = "2"
+uuid = { version = "1", features = ["v4", "v7"] }
+# parameter schemas of the API operations
+schemars = "0.8"
+lofty = "0.25.5"
+sevenz-rust = { version = "0.6.1", default-features = false }
+tauri-plugin-notification = "2.6.0"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[target.'cfg(windows)'.dependencies]
+winreg = "0.52"
+# the version wry uses, for its web view's own types
+webview2-com = "0.39"
+windows-core = "0.62"
+windows = { version = "0.62", features = ["Win32_Foundation", "Win32_System_Com", "Win32_UI_Shell", "Win32_Graphics_Gdi", "Win32_Storage_FileSystem", "Win32_Graphics_Dwm", "Win32_System_JobObjects", "Win32_Security", "Win32_UI_WindowsAndMessaging", "Win32_UI_HiDpi", "Win32_System_Ole", "Win32_System_SystemServices", "Win32_System_DataExchange", "Win32_System_Memory", "Win32_System_Com_StructuredStorage", "Win32_Globalization", "Win32_Media_Audio"] }
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+# the versions wry uses: the Trash and the installed fonts (src/core/system/filesystem.rs), Escape in a link's page (src/desktop/viewer_page.rs)
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+block2 = "0.6"
+objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "block2", "NSEvent", "NSResponder", "NSView", "NSWindow"] }
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSArray", "NSError", "NSFileManager", "NSString", "NSURL"] }
+objc2-core-foundation = { version = "0.3", default-features = false, features = ["std"] }
+objc2-core-text = { version = "0.3", default-features = false, features = ["std", "CTFontManager"] }
+
+# the versions wry uses, for its web view's own types
+[target.'cfg(target_os = "linux")'.dependencies]
+webkit2gtk = { version = "2.0", features = ["v2_40"] }
+gtk = "0.18"
+
+[profile.dev]
+opt-level = 1
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+opt-level = 2
+debug = false
+
+[profile.release]
+opt-level = 3

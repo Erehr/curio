@@ -1,0 +1,10 @@
+{
+  "id": "example.widget",
+  "name": "Example widget",
+  "version": "1.0.0",
+  "author": "You",
+  "icon": "layout-sidebar-right",
+  "description": "Rates every selected item from the Inspector.",
+  "permissions": ["metadata.read", "metadata.write"],
+  "widgets": [{ "id": "example.widget.page", "title": "Quick rating", "page": "widget.html", "height": 110, "selection": "some" }]
+}

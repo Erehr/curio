@@ -1,0 +1,11 @@
+{
+  "id": "example.url",
+  "name": "Example link handler",
+  "version": "1.0.0",
+  "author": "You",
+  "icon": "link",
+  "description": "Adds example.com addresses as links with a note.",
+  "permissions": ["metadata.read", "metadata.write", "ui"],
+  "windows": [{ "id": "links", "title": "Example links", "page": "index.html", "icon": "link", "width": 560, "height": 420 }],
+  "urls": [{ "id": "example", "title": "Add as example links", "patterns": ["https://example.com/*", "https://*.example.com/*"], "opens": "links" }]
+}

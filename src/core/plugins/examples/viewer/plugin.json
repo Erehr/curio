@@ -1,0 +1,11 @@
+{
+  "id": "example.viewer",
+  "name": "Example log viewer",
+  "version": "1.0.0",
+  "author": "You",
+  "icon": "file-text",
+  "description": "Shows .log files with warnings and errors marked.",
+  "permissions": ["files.read"],
+  "formats": [{ "exts": ["log"], "kind": "document", "viewer": "viewer.html", "screen": { "id": "logs", "title": "Logs", "icon": "file-text" } }],
+  "viewer_tools": [{ "id": "lines", "title": "Lines and problems", "icon": "list-numbers", "kind": "text" }, { "id": "problems", "title": "Only warnings and errors", "icon": "alert-triangle" }]
+}

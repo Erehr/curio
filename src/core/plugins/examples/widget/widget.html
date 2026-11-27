@@ -1,0 +1,20 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="/curio/ui/curio.css">
+  <script src="/curio/ui/curio.js"></script>
+  <script type="module" src="widget.js"></script>
+  <style>
+    body { padding: 0.28rem 0.14rem; display: flex; flex-direction: column; gap: 0.56rem; }
+    .line { display: flex; align-items: center; justify-content: space-between; gap: 0.56rem; }
+    .stars { display: inline-flex; gap: 0.14rem; }
+    .star { border: 0; background: transparent; padding: 0 0.1rem; font-size: 1.15rem; line-height: 1; color: color-mix(in srgb, var(--text) 22%, transparent); cursor: pointer; }
+    .star.on { color: var(--star); }
+  </style>
+</head>
+<body>
+  <div class="line"><span id="what" class="muted ellipsis">Nothing selected</span><div id="stars" class="stars"></div></div>
+  <div class="line"><span class="faint" id="size"></span><span class="faint">or press <span class="kbd">1</span> to <span class="kbd">5</span> in the grid</span></div>
+</body>
+</html>

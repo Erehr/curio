@@ -1,0 +1,39 @@
+/* What Curio's tools share in their windows: the page (side column, body, footer), tables drawn as the list view's rows, thumbnails, and the side column's rows of options. */
+.tool-page { display: flex; flex-direction: column; height: 100%; }
+.tool-page-main { display: flex; flex: 1; min-height: 0; border-top: 1px solid var(--border); }
+.tool-page-side { flex: none; width: round(23.08rem, 1px); border-right: 1px solid var(--border); overflow-y: auto; display: flex; flex-direction: column; background: var(--panel); }
+.tool-page-body { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+.tool-page-foot { display: flex; align-items: center; justify-content: flex-end; gap: calc(0.56rem * var(--g)); padding: calc(0.7rem * var(--g)) calc(1.12rem * var(--g)); border-top: 1px solid var(--border); flex: none; }
+:root.fx-see-through .tool-page-side { background: color-mix(in srgb, var(--panel) var(--fx-side), transparent); }
+
+.tool-check { display: flex; align-items: center; gap: calc(0.42rem * var(--g)); cursor: pointer; }
+
+.tool-table { font-size: 0.92rem; }
+.tool-table .p-datatable-thead > tr > th { background: transparent; color: var(--text-muted); font-weight: 500; border-color: var(--border); }
+.tool-table .p-datatable-tbody > tr { background: transparent; color: var(--text); }
+.tool-table .p-datatable-tbody > tr > td { border-color: transparent; }
+.tool-table { --p-datatable-row-striped-background: color-mix(in srgb, var(--hover) 45%, transparent); }
+.tool-table .p-datatable-tbody > tr:hover { background: var(--hover); }
+.tool-table .p-datatable-tbody > tr.p-datatable-row-selected, .tool-table .p-datatable-tbody > tr.p-datatable-row-selected:hover { background: var(--selection); color: var(--text); }
+.tool-table .p-datatable-tbody > tr.p-datatable-row-selected > td, .tool-table .p-datatable-tbody > tr:has(+ tr.p-datatable-row-selected) > td { border-color: transparent; }
+.tool-table .p-datatable-tbody > tr:focus-visible { outline: none; }
+.tool-table .p-datatable-tbody > tr:focus-visible > td:first-child { box-shadow: inset 2px 0 var(--accent); }
+
+.tool-thumb { display: flex; align-items: center; justify-content: center; background: var(--grid-item); border-radius: calc(6px * var(--r)); overflow: hidden; color: var(--text-faint); flex: none; }
+.tool-thumb img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+
+.tool-page .method { border-bottom: 1px solid var(--border); }
+.tool-page .method-head { display: flex; align-items: center; gap: calc(0.7rem * var(--g)); min-height: round(3.22rem, 1px); padding: calc(0.35rem * var(--g)) calc(0.84rem * var(--g)) calc(0.35rem * var(--g)) calc(0.98rem * var(--g)); cursor: default; }
+.tool-page .method-head:hover, .tool-page .method.open .method-head { background: var(--hover); }
+.tool-page .method-name { font-weight: 500; white-space: nowrap; }
+.tool-page .method:not(.on) .method-name { color: var(--text-muted); }
+.tool-page .method-sum { flex: 1; min-width: 0; font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tool-page .opt { display: flex; flex-direction: column; gap: 0.28rem; }
+.tool-page .side-label { color: var(--text-muted); font-size: 0.92rem; white-space: nowrap; }
+.tool-page .hint { margin: 0; font-size: 0.85rem; color: var(--text-faint); }
+.tool-page .add-pair { align-self: flex-start; }
+.tool-page .working { display: flex; align-items: center; gap: 0.84rem; padding: 0.7rem calc(0.98rem * var(--g)); color: var(--text-muted); font-size: 0.92rem; border-bottom: 1px solid var(--border); }
+.tool-page .working-text { min-width: 0; max-width: 55%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tool-page .working .p-progressbar { flex: 1; height: 0.42rem; }
+.tool-page .leave { visibility: hidden; flex: none; }
+.tool-page .thumb-cell { cursor: pointer; }

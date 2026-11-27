@@ -1,0 +1,10 @@
+{
+  "id": "example.program",
+  "name": "Example program",
+  "version": "1.0.0",
+  "author": "You",
+  "icon": "terminal-2",
+  "description": "A Python script that writes each item's size into its notes.",
+  "permissions": ["metadata.read", "metadata.write", "exec"],
+  "actions": [{ "id": "note-size", "title": "Note the size", "icon": "notes", "run": ["python", "program.py"], "where": ["item-menu", "step"] }]
+}

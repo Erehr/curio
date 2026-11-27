@@ -1,0 +1,81 @@
+/* What several pages of Settings share; each page and the shell take it scoped, so it reaches only their own elements. */
+.search-in { flex: none; margin-bottom: calc(0.56rem * var(--g)); }
+/* Borderless surface-elevation grammar */
+.s-section { display: flex; flex-direction: column; gap: calc(0.49rem * var(--g)); flex: none; width: 100%; }
+.s-section-head { display: flex; align-items: center; justify-content: space-between; gap: calc(0.56rem * var(--g)); padding: 0 calc(0.14rem * var(--g)); min-height: round(1.54rem, 1px); }
+.s-section-title { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.055em; color: var(--text-muted); display: inline-flex; align-items: center; gap: calc(0.42rem * var(--g)); }
+.s-section-actions { display: flex; align-items: center; gap: calc(0.42rem * var(--g)); flex-wrap: wrap; }
+.s-card { background: var(--surface-2); border-radius: calc(8px * var(--r)); overflow: hidden; flex: none; width: 100%; }
+.s-card-pad { padding: calc(0.91rem * var(--g)) calc(1.05rem * var(--g)); display: flex; flex-direction: column; gap: calc(0.77rem * var(--g)); }
+.s-row { display: flex; align-items: center; justify-content: space-between; gap: calc(1.12rem * var(--g)); padding: calc(0.7rem * var(--g)) calc(1.05rem * var(--g)); min-height: round(3.08rem, 1px); }
+.s-row.top { align-items: flex-start; }
+.s-row.indented { padding-left: calc(1.89rem * var(--g)); position: relative; }
+.s-row.indented::before { content: ''; position: absolute; left: calc(1.05rem * var(--g)); top: calc(0.56rem * var(--g)); bottom: calc(0.56rem * var(--g)); border-left: 2px solid var(--border-strong); }
+.s-row.disabled { opacity: 0.5; }
+.s-meta { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: calc(0.14rem * var(--g)); }
+.s-label { font-size: 0.96rem; font-weight: 500; color: var(--text); display: flex; align-items: center; gap: calc(0.42rem * var(--g)); flex-wrap: wrap; line-height: 1.35; }
+.s-desc { font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; }
+.s-ctrl { flex: none; display: flex; align-items: center; gap: calc(0.56rem * var(--g)); }
+.s-ctrl.w-sm { width: round(9.8rem, 1px); }
+.s-ctrl.w-md { width: round(15.4rem, 1px); }
+.s-ctrl.w-lg { width: round(24.5rem, 1px); }
+.s-ctrl.w-sm > :deep(.p-select), .s-ctrl.w-md > :deep(.p-select), .s-ctrl.w-lg > :deep(.p-select), .s-ctrl.w-sm > :deep(.p-inputtext), .s-ctrl.w-md > :deep(.p-inputtext), .s-ctrl.w-lg > :deep(.p-inputtext), .s-ctrl.w-lg > :deep(.p-inputgroup) { width: 100%; }
+.s-subblock { padding: calc(0.77rem * var(--g)) calc(1.05rem * var(--g)); display: flex; flex-direction: column; gap: calc(0.63rem * var(--g)); }
+.s-subblock.disabled { opacity: 0.5; }
+.s-nested { background: var(--surface-3); border-radius: calc(7px * var(--r)); padding: calc(0.77rem * var(--g)) calc(0.91rem * var(--g)); display: flex; flex-direction: column; gap: calc(0.63rem * var(--g)); }
+.s-check-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: calc(0.77rem * var(--g)) calc(1.4rem * var(--g)); }
+.s-check-grid.cols3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.s-slider-wrap { display: flex; align-items: center; gap: calc(0.7rem * var(--g)); width: round(15.4rem, 1px); }
+.s-slider-wrap :deep(.p-slider) { flex: 1; }
+.s-slider-val { font-family: var(--mono-font); font-size: 0.85rem; color: var(--text-muted); min-width: round(4.4rem, 1px); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.s-exp-list { display: flex; flex-direction: column; background: var(--surface-2); border-radius: calc(8px * var(--r)); overflow: hidden; flex: none; width: 100%; }
+.s-exp-item { background: transparent; overflow: hidden; transition: background 0.12s; flex: none; }
+.s-exp-item.open { background: var(--surface-3); }
+.s-exp-head { display: flex; align-items: center; gap: calc(0.63rem * var(--g)); padding: calc(0.63rem * var(--g)) calc(1.05rem * var(--g)); min-height: round(3.08rem, 1px); cursor: pointer; user-select: none; }
+.s-exp-head:hover { background: var(--hover); }
+.s-exp-chev { color: var(--text-muted); transition: transform 0.14s; flex: none; }
+.s-exp-item.open > .s-exp-head .s-exp-chev { transform: rotate(90deg); }
+.s-exp-body { padding: calc(0.35rem * var(--g)) calc(1.05rem * var(--g)) calc(0.91rem * var(--g)); display: flex; flex-direction: column; gap: calc(0.77rem * var(--g)); }
+.s-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: calc(0.7rem * var(--g)); }
+.s-field { display: flex; flex-direction: column; gap: calc(0.28rem * var(--g)); min-width: 0; }
+.s-field-label { font-size: 0.8rem; font-weight: 500; color: var(--text-muted); }
+.s-toolbar { display: flex; align-items: center; justify-content: space-between; gap: calc(0.56rem * var(--g)); flex-wrap: wrap; width: 100%; }
+.s-actions { display: flex; align-items: center; gap: calc(0.42rem * var(--g)); flex-wrap: wrap; }
+.s-mono { font-family: var(--mono-font); font-size: 0.85rem; }
+.s-empty { padding: calc(0.98rem * var(--g)) calc(1.05rem * var(--g)); color: var(--text-muted); font-size: 0.92rem; }
+.s-card p, .s-subblock p { margin: 0; }
+/* Shared helpers */
+.opt { display: inline-flex; align-items: center; gap: calc(0.42rem * var(--g)); line-height: round(1.4rem, 1px); cursor: pointer; }
+.token-row { display: flex; align-items: center; gap: calc(0.56rem * var(--g)); min-width: 0; min-height: round(2.24rem, 1px); }
+.token-row :deep(.p-colorpicker-preview) { width: round(1.82rem, 1px); height: round(1.68rem, 1px); border: 1px solid var(--input-border); border-radius: calc(5px * var(--r)); }
+.gap { gap: calc(0.56rem * var(--g)); }
+.wrap { flex-wrap: wrap; }
+.small { font-size: 0.85rem; }
+.lay-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(10.49rem, 1fr)); gap: calc(0.7rem * var(--g)); }
+.lcard { display: flex; flex-direction: column; align-items: center; gap: calc(0.35rem * var(--g)); padding: calc(0.56rem * var(--g)); border-radius: calc(8px * var(--r)); border: 1.5px solid transparent; background: var(--surface-3); color: inherit; font: inherit; cursor: pointer; transition: background 0.12s, border-color 0.12s; }
+.lcard:hover { background: var(--hover); }
+.lcard.sel { border-color: var(--accent); background: var(--accent-subtle); }
+.lpic { height: round(5.59rem, 1px); display: flex; justify-content: center; }
+.lcard-foot { display: flex; align-items: center; justify-content: center; gap: calc(0.28rem * var(--g)); width: 100%; }
+.lname { font-size: 0.88rem; font-weight: 500; text-align: center; }
+.lcard-check { color: var(--accent); flex: none; }
+.ok { color: var(--success); }
+.sel { user-select: text; }
+.warn { color: var(--warning); }
+/* Narrow Settings window: sidebar collapses to icons; rows adapt to actual pane width */
+.prefs.slim :is(.nav-l, .nav-group, .nav-cnt, .search-in) { display: none; }
+@container (max-width: 44rem) {
+  .s-form-grid { grid-template-columns: 1fr; gap: calc(0.49rem * var(--g)); }
+  .s-check-grid.cols3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .s-row:has(> .s-ctrl.w-lg) { flex-direction: column; align-items: stretch; gap: calc(0.49rem * var(--g)); }
+  .s-row:has(> .s-ctrl.w-lg) > .s-ctrl.w-lg { width: 100%; }
+}
+@container (max-width: 31rem) {
+  .s-check-grid, .s-check-grid.cols3 { grid-template-columns: 1fr; gap: calc(0.49rem * var(--g)); }
+  .s-row:not(.sc-row):not(:has(> .s-ctrl > .p-toggleswitch:only-child)):not(:has(> :nth-child(3))) { flex-direction: column; align-items: stretch; gap: calc(0.49rem * var(--g)); }
+  .s-row:not(.sc-row):not(:has(> .s-ctrl > .p-toggleswitch:only-child)):not(:has(> :nth-child(3))) > .s-ctrl { width: auto; justify-content: flex-start; flex-wrap: wrap; }
+  .s-row:not(.sc-row):not(:has(> .s-ctrl > .p-toggleswitch:only-child)):not(:has(> :nth-child(3))) > .s-ctrl.w-sm { width: round(9.8rem, 1px); }
+  .s-row:not(.sc-row):not(:has(> .s-ctrl > .p-toggleswitch:only-child)):not(:has(> :nth-child(3))) .s-slider-wrap { width: 100%; }
+}
+/* a button in a row with fields stands as tall as they do */
+.row:has(.p-inputtext, .p-select) > .p-button-sm { height: var(--control-h); min-width: var(--control-h); }

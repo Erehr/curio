@@ -1,0 +1,3692 @@
+{
+  "meta": {
+    "name": "English"
+  },
+  "app": {
+    "windowControls": {
+      "alwaysOnTop": "Always on top",
+      "minimize": "Minimize",
+      "maximize": "Maximize",
+      "close": "Close"
+    },
+    "toasts": {
+      "undo": "Undo"
+    },
+    "drops": {
+      "theFolder": "the folder",
+      "thisFolder": "this folder",
+      "restore": "Restore {count} item to {name} | Restore {count} items to {name}",
+      "copy": "Copy {count} item to {name} | Copy {count} items to {name}",
+      "moveIn": "Move {count} item into {name} (Shift to link, Ctrl to copy) | Move {count} items into {name} (Shift to link, Ctrl to copy)",
+      "link": "Link {count} item into {name} (Ctrl to copy) | Link {count} items into {name} (Ctrl to copy)",
+      "linkKeeping": "Link {count} item into {name}, keeping it in {from} | Link {count} items into {name}, keeping them in {from}",
+      "move": "Move {count} item from {from} to {name} (Shift to link, Ctrl to copy) | Move {count} items from {from} to {name} (Shift to link, Ctrl to copy)",
+      "tag": "Tag {count} item {name} | Tag {count} items {name}",
+      "trash": "Move {count} item to the Trash | Move {count} items to the Trash",
+      "plugin": "Send {count} item to the plugin | Send {count} items to the plugin",
+      "nowhere": "{count} item: drop on a folder or tag, or outside to copy files | {count} items: drop on a folder or tag, or outside to copy files",
+      "openLibrary": "Open this library",
+      "copyInto": "Copy into {name}",
+      "copyIntoLibrary": "Copy into the library"
+    },
+    "copiedPaths": "Copied {count} path | Copied {count} paths",
+    "restore": {
+      "title": "There is a problem with this library",
+      "body": "{problems} Continue to see its backups and restore one, or cancel to keep working with it as it is."
+    },
+    "dropLinksOnLibrary": "Drop links on a library window",
+    "ask": {
+      "headers": {
+        "confirm": "Confirm",
+        "prompt": "Enter text",
+        "field": "Choose a field",
+        "color": "Choose a color",
+        "pair": "Connect extension"
+      },
+      "perms": {
+        "libraryRead": "see the library list",
+        "metadataRead": "read items, folders and tags",
+        "metadataWrite": "edit tags, notes and ratings",
+        "organize": "make folders and tags",
+        "filesWrite": "add files",
+        "filesOutside": "reach files elsewhere on this computer"
+      },
+      "askedBy": "Asked by {name}",
+      "filter": "Filter",
+      "nothing": "Nothing to choose",
+      "pair": {
+        "wants": "{name} wants to add to your libraries.",
+        "code": "Allow only if the extension shows this code.",
+        "may": "It may {perms}.",
+        "all": "All libraries",
+        "some": "Only these",
+        "allow": "Allow",
+        "deny": "Deny"
+      }
+    },
+    "example": {
+      "kinds": {
+        "window": {
+          "label": "Window",
+          "hint": "A page in its own window, opened with the selected items."
+        },
+        "tab": {
+          "label": "Tab",
+          "hint": "A view beside the grid. Shows the best-rated pictures."
+        },
+        "widget": {
+          "label": "Widget",
+          "hint": "A page in the Inspector. Rates the selected items."
+        },
+        "viewer": {
+          "label": "Format viewer",
+          "hint": "Shows files of its extensions in the viewer. Opens .log files."
+        },
+        "program": {
+          "label": "Program",
+          "hint": "A script run on the selected items. Needs Python."
+        },
+        "url": {
+          "label": "URL handler",
+          "hint": "Handles addresses dropped or pasted into Curio. Takes example.com links."
+        }
+      },
+      "title": "New example plugin",
+      "kind": "Kind",
+      "about": "Creates a working plugin in the folder you choose and switches it on.",
+      "choose": "Choose a folder"
+    },
+    "icons": {
+      "title": "Choose an icon",
+      "search": "Search {n} icon | Search {n} icons",
+      "showing": "Showing {n}",
+      "default": "Default icon"
+    },
+    "autoTag": {
+      "title": "Auto-tag",
+      "folder": "Folder",
+      "tags": "Tags",
+      "newTag": "New tag",
+      "about": "Saving also adds them to what is in the folder now."
+    },
+    "links": {
+      "title": "Add web addresses",
+      "placeholder": "One link per line",
+      "found": "{count} link found. | {count} links found.",
+      "about": "Pictures are downloaded; web pages are saved as bookmarks.",
+      "import": "Import",
+      "importCount": "Import {count}"
+    },
+    "libName": {
+      "rename": "Rename library",
+      "new": "New library",
+      "renameAbout": "Its folder becomes {name}.curio, in the same place. Items, settings and ids stay as they are.",
+      "newAbout": "Next, choose the folder that will hold {name}.curio.",
+      "renameButton": "Rename",
+      "chooseFolder": "Choose folder",
+      "renamed": "Renamed to {name}"
+    },
+    "name": {
+      "name": "Name"
+    },
+    "rated": "Rated {count} star | Rated {count} stars"
+  },
+  "settings": {
+    "general": {
+      "language": {
+        "label": "Language",
+        "system": "System ({language})"
+      },
+      "appearance": {
+        "title": "Window & interface",
+        "zoom": "Zoom",
+        "material": "Window material",
+        "materials": {
+          "off": "None",
+          "mica": "Mica",
+          "acrylic": "Acrylic"
+        },
+        "transparency": "Transparency",
+        "transparencies": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        },
+        "keepMaterial": "Keep when inactive",
+        "sidebarCounts": "Sidebar counts",
+        "windowButtons": "Window buttons",
+        "windowButtonsOff": "When off, Always on top stays in the main menu."
+      },
+      "startup": {
+        "title": "Startup & system",
+        "autostart": "Start with system",
+        "portable": "Portable copy: skipped while its drive is disconnected.",
+        "onClose": "On close",
+        "toTray": "Minimize to tray",
+      "toTrayMac": "Keep in menu bar",
+        "quit": "Quit",
+        "gpu": "GPU acceleration",
+        "restart": "Restart required"
+      },
+      "noLibrary": "Open a library to change its settings.",
+      "indexing": {
+        "title": "Indexing & hashing",
+        "allTypes": "Index all file types in locations",
+        "watch": "Watch folders"
+      },
+      "hashing": {
+        "title": "Content hashing",
+        "policies": {
+          "OnDemand": "On demand",
+          "SmallFiles": "Small files",
+          "Always": "Always"
+        },
+        "limitLabel": "Small file limit",
+        "mb": "{size} MB"
+      },
+      "background": {
+        "title": "Background work",
+        "workersLabel": "Thumbnail workers",
+        "onReopen": "Applies on reopen",
+        "maintenanceLabel": "Maintenance interval",
+        "minutes": "{minutes} min",
+        "duplicateNames": "Duplicate names",
+        "exampleName": "photo"
+      }
+    },
+    "notifications": {
+      "sound": {
+        "title": "Sound effects",
+        "enable": "Enable sound effects",
+        "events": {
+          "import": "Imports & downloads",
+          "deleteItem": "Delete item",
+          "deleteFolder": "Delete folder",
+          "error": "Errors",
+          "other": "Other notices"
+        },
+        "os": "System notifications",
+        "test": "Test sound"
+      },
+      "system": {
+        "title": "System notifications",
+        "imports": "Import notifications",
+        "when": {
+          "all": "Always",
+          "background": "In background",
+          "failures": "Failures only",
+          "off": "Off"
+        },
+        "backgroundHint": "In background: only while no Curio window is focused."
+      }
+    },
+    "about": {
+      "appName": "Curio",
+      "portable": "Portable",
+      "detailsTitle": "Details",
+      "configDir": "Settings folder",
+      "pathCopied": "Path copied",
+      "stackLabel": "Built with",
+      "creditsLabel": "Credits",
+      "tagline": "Local-first digital asset manager.",
+      "built": "Window: Tauri + Vue 3 + Vite + OpenVue · icons: Tabler (MIT) · engine: Rust + SQLite",
+      "credits": "Fonts: the system's own · Video and sound: FFmpeg (GPL-3.0)"
+    },
+    "api": {
+      "perms": {
+        "library": {
+          "read": "List libraries and their info",
+          "manage": "Switch, make and rename libraries"
+        },
+        "metadata": {
+          "read": "Read items, folders, tags and fields",
+          "write": "Edit items and the trash"
+        },
+        "organize": "Make, rename and delete folders, tags and fields",
+        "files": {
+          "read": "Read file paths and contents",
+          "write": "Add files and downloads",
+          "outside": "Export, and add or index files from this computer"
+        },
+        "ui": "Use windows, dialogs and the clipboard"
+      },
+      "presets": {
+        "readOnly": "Read only",
+        "readAdd": "Read and add",
+        "all": "Everything"
+      },
+      "delete": {
+        "title": "Delete the token \"{name}\"?",
+        "body": "Scripts and extensions using it stop working.",
+        "ok": "Delete"
+      },
+      "reach": {
+        "forgotten": "a forgotten library",
+        "everyLibrary": "Every library",
+        "anyOrigin": "any origin",
+        "made": "made {date}"
+      },
+      "copied": "Token copied",
+      "urlCopied": "Endpoint copied",
+      "service": {
+        "title": "Scripts and extensions",
+        "enable": "Enable API",
+        "endpoint": "Endpoint",
+        "port": "Port",
+        "servedHere": "this window",
+        "servedElsewhere": "another window or program",
+        "local": "Local only (127.0.0.1). Every call needs a token below.",
+        "browserStartHint": "curio:// links start Curio in the tray",
+      "browserStartHintMac": "curio:// links start Curio in the menu bar",
+        "browserStart": "Open from the browser",
+        "browserStartOff": "Unavailable in portable and debug builds."
+      },
+      "tokens": {
+        "title": "Tokens",
+        "new": "New token",
+        "secret": "{name}: copy this token now. It won't be shown again.",
+        "copy": "Copy",
+        "done": "Done",
+        "name": "Name",
+        "namePlaceholder": "Browser extension",
+        "allow": "Allow",
+        "libraries": "Libraries",
+        "origins": "Origins",
+        "originsPlaceholder": "Any, or space-separated origins",
+        "make": "Make token",
+        "none": "No tokens yet.",
+        "permCount": "{count} permission | {count} permissions",
+        "librariesHint": "Libraries appear here once opened."
+      }
+    },
+    "appearance": {
+      "slots": {
+        "dark": "Dark",
+        "light": "Light"
+      },
+      "copyName": "{name} custom",
+      "edit": {
+        "noName": "Enter a name",
+        "taken": "A theme with this name already exists",
+        "title": "Edit theme",
+        "livePreview": "Live preview",
+        "name": "Name",
+        "dark": "Dark theme",
+        "save": "Save theme"
+      },
+      "corners": {
+        "none": "None",
+        "small": "Small",
+        "normal": "Rounded"
+      },
+      "spacing": {
+        "compact": "Compact",
+        "normal": "Normal",
+        "expanded": "Expanded"
+      },
+      "scrollbars": {
+        "overlay": "Overlay",
+        "beside": "Beside content"
+      },
+      "interface": {
+        "systemFont": "System font",
+        "title": "Interface & density",
+        "font": "Font",
+        "searchFonts": "Search fonts",
+        "corners": "Corners",
+        "spacing": "Spacing",
+        "scrollbars": "Scrollbars"
+      },
+      "editTheme": "Edit {name}",
+      "deleteTheme": "Delete {name}",
+      "theme": {
+        "title": "Color theme",
+        "followSystem": "Follow system",
+        "duplicate": "Duplicate theme",
+        "default": "Default"
+      },
+      "files": {
+        "export": "Export current theme",
+        "import": "Import theme"
+      },
+      "follow": {
+        "title": "Follow a .css file",
+        "hint": "Applied over the theme and reloaded when the window regains focus.",
+        "none": "No file chosen",
+        "choose": "Choose",
+        "stop": "Stop"
+      },
+      "userCss": {
+        "sectionTitle": "Custom CSS",
+        "title": "User CSS",
+        "hint": "Applied after the theme. Start with {flag} to skip it."
+      }
+    },
+    "autoImport": {
+      "serviceTitle": "Auto-import service",
+      "foldersTitle": "Watched folders",
+      "empty": "No watched folders yet.",
+      "errorTag": "Error",
+      "optionsTitle": "Options",
+      "optionsDefault": "Using defaults: no folder, flatten subfolders, originals moved to .imported.",
+      "addOption": "Add option",
+      "removeOption": "Remove option",
+      "options": {
+        "folder": "Destination",
+        "tags": "Tags",
+        "subfolders": "Subfolders",
+        "after": "Originals",
+        "extensions": "File types",
+        "ignore": "Ignore"
+      },
+      "fields": {
+        "name": "Base name",
+        "filename": "File name",
+        "ext": "Extension",
+        "relpath": "Subfolder path",
+        "fullpath": "Full path",
+        "size": "File size",
+        "width": "Width (px)",
+        "height": "Height (px)",
+        "ageDays": "Age (days)"
+      },
+      "ops": {
+        "contains": "contains",
+        "notcontains": "does not contain",
+        "is": "is",
+        "isnot": "is not",
+        "startswith": "starts with",
+        "endswith": "ends with",
+        "regex": "matches regex",
+        "notregex": "does not match regex"
+      },
+      "subfolders": {
+        "off": "Ignore",
+        "flat": "Flatten",
+        "mirror": "Mirror as folders",
+        "match": "Existing folders only"
+      },
+      "after": {
+        "move": "Move to .imported",
+        "delete": "Move to Recycle Bin",
+        "keep": "Leave in place"
+      },
+      "summary": {
+        "to": "to {folder}",
+        "noFolder": "no folder",
+        "tags": "{count} tag | {count} tags",
+        "rules": "{count} rule | {count} rules",
+        "after": {
+          "move": "originals moved aside",
+          "delete": "originals recycled",
+          "keep": "originals left in place"
+        }
+      },
+      "rule": {
+        "editTitle": "Edit import rule",
+        "createTitle": "New import rule",
+        "nameLabel": "Rule name",
+        "save": "Save rule",
+        "condCount": "{count} condition | {count} conditions",
+        "stopShort": "stop",
+        "removeCondition": "Remove condition",
+        "addCondition": "Add condition",
+        "addAction": "Add action",
+        "removeAction": "Remove action",
+        "noActions": "No actions yet. Files matching this rule will use the folder defaults.",
+        "actions": {
+          "folder": "Move to folder",
+          "tags": "Add tags",
+          "rating": "Set rating",
+          "note": "Set note"
+        },
+        "untitled": "Rule {n}",
+        "noRating": "No rating",
+        "matching": {
+          "all": "all",
+          "any": "any"
+        },
+        "when": "If {choice} of these are true:",
+        "unchanged": "Unchanged",
+        "up": "Move up",
+        "down": "Move down",
+        "remove": "Remove rule",
+        "name": "Rule name (optional)",
+        "then": "Then",
+        "skip": "Skip file",
+        "note": "Note",
+        "stop": "Stop after this rule"
+      },
+      "watch": {
+        "untitled": "New folder",
+        "chooseFolder": "Choose a folder",
+        "name": "Name",
+        "source": "Source",
+        "sourcePlaceholder": "Folder to watch",
+        "choose": "Choose",
+        "allTypes": "All types"
+      },
+      "enabled": "Enabled",
+      "addFolder": "Add folder",
+      "waiting": "Waiting for permission",
+      "paused": "Paused until allowed on this computer.",
+      "allow": "Allow",
+      "rules": {
+        "title": "Rules",
+        "add": "Add rule",
+        "order": "Run top to bottom. The last match sets the folder; tags add up."
+      },
+      "stopWatching": "Stop watching"
+    },
+    "controls": {
+      "viewerSection": "Viewer controls",
+      "gridSection": "Grid & mouse actions",
+      "wheel": {
+        "title": "Mouse wheel in the viewer",
+        "navigate": "Previous / next item",
+        "zoom": "Zoom",
+        "pan": "Pan",
+        "ctrl": "Ctrl + wheel always zooms."
+      },
+      "space": {
+        "title": "Space",
+        "toggle": "Toggle viewer",
+        "hold": "Hold to preview",
+        "play": "Play / pause",
+        "scroll": "Scroll"
+      },
+      "doubleClick": {
+        "title": "Double-click",
+        "here": "Open here"
+      },
+      "openApp": "Open with default app",
+      "middleClick": {
+        "title": "Middle click",
+        "window": "New window",
+        "none": "Nothing"
+      },
+      "rightClick": {
+        "dragZoom": "Right-click drag to zoom"
+      },
+      "sideButtons": {
+        "title": "Mouse side buttons",
+        "history": "Back / forward",
+        "navigate": "Previous / next item",
+        "none": "Nothing"
+      },
+      "animated": {
+        "title": "Animated images",
+        "hover": "Play on hover",
+        "always": "Always play"
+      }
+    },
+    "fields": {
+      "failed": "{count} failed | {count} failed",
+      "nothingToRescan": "Nothing to rescan",
+      "rescan": {
+        "missing": "Missing only",
+        "all": "Everything"
+      },
+      "kinds": {
+        "auto": "Auto ({kind})",
+        "list": "List",
+        "range": "Range",
+        "text": "Keywords",
+        "has": "Yes / No"
+      },
+      "types": {
+        "text": "Text",
+        "integer": "Whole number",
+        "float": "Decimal number",
+        "boolean": "Yes / No",
+        "date": "Date",
+        "datetime": "Date and time",
+        "single_select": "Single choice",
+        "multi_select": "Multiple choice",
+        "json": "JSON",
+        "url": "URL",
+        "file_ref": "File reference"
+      },
+      "created": "Field \"{name}\" created",
+      "delete": {
+        "title": "Delete field \"{name}\"?",
+        "body": "Its values are removed from every item.",
+        "ok": "Delete"
+      },
+      "off": {
+        "pinned": "Pinned filter · {name}",
+        "column": "List column · {name}",
+        "sort": "Current sort · {name}",
+        "title": "Switch off {name}?",
+        "pair": "{name} goes with it.",
+        "body": "Its values are kept for when it's back on; queries can't use it meanwhile.",
+        "namedBy": "Named by"
+      },
+      "clean": {
+        "nothing": "Nothing to clean up",
+        "removed": "Removed {count} value | Removed {count} values",
+        "pluginGone": "plugin gone",
+        "remove": "Remove {n}",
+        "button": "Clean up",
+        "body": "Removes values read from files. Manual values stay."
+      },
+      "own": {
+        "title": "Custom",
+        "deleteField": "Delete field",
+        "label": "Label",
+        "key": "key (auto)",
+        "create": "Create",
+        "delete": "Delete"
+      },
+      "waiting": "{count} waiting | {count} waiting",
+      "pairedFilter": "In the {name} filter, beside each value",
+      "pluginGone": "Plugin gone",
+      "kept": "{count} value kept for fields switched off | {count} values kept for fields switched off",
+      "on": {
+        "title": "Switch on {name}?",
+        "body": "New and changed files are always scanned.",
+        "now": "Scan now",
+        "later": "Later"
+      },
+      "row": {
+        "key": "Key",
+        "shown": "Shown",
+        "inspector": "Inspector and columns",
+        "filter": "Filter",
+        "listed": "Listed",
+        "mainFilters": "With the main filters",
+        "about": "About",
+        "notScanned": "Not scanned · Scan now",
+        "switchOff": "Switch off"
+      },
+      "group": {
+        "stop": "Stop",
+        "rescan": "Rescan"
+      },
+      "failures": {
+        "title": "Failed files",
+        "none": "None",
+        "retry": "Try again",
+        "close": "Close"
+      }
+    },
+    "grouping": {
+      "sectionTitle": "Automatic grouping",
+      "rawPairs": {
+        "off": "Off",
+        "jpeg": "Show JPEG",
+        "raw": "Show RAW"
+      },
+      "roles": {
+        "motion": "Live Photo",
+        "edits": "Edits",
+        "metadata": "Sidecars",
+        "preview": "Previews",
+        "materials": "Materials",
+        "buffers": "Buffers"
+      },
+      "byHand": "By hand",
+      "rawJpeg": "RAW + JPEG",
+      "groupingLater": "Grouping in the background",
+      "grouped": "Grouped {count} file | Grouped {count} files",
+      "nothing": "Nothing to group",
+      "split": {
+        "title": "Split everything {rule} grouped?",
+        "body": "Each file becomes a separate item again.",
+        "ok": "Split"
+      },
+      "splittingLater": "Splitting in the background",
+      "splitDone": "Split {count} file off | Split {count} files off",
+      "noLibrary": "Open a library to change its settings.",
+      "splitAll": "Split all",
+      "check": "Check",
+      "groupExisting": "Group existing",
+      "groupCount": "Group {count} file | Group {count} files"
+    },
+    "layout": {
+      "slots": {
+        "horizontal": "Landscape",
+        "vertical": "Portrait"
+      },
+      "libraryPlaces": {
+        "left": "Left",
+        "right": "Right"
+      },
+      "inspectorPlaces": {
+        "left": "Left",
+        "right": "Right",
+        "bottom": "Under the grid",
+        "tabs": "Library tab",
+        "split": "Below the Library"
+      },
+      "dockLayouts": {
+        "column": "Single column",
+        "grid": "Grid",
+        "masonry": "Masonry",
+        "row": "Single row"
+      },
+      "edit": {
+        "noName": "Enter a name",
+        "taken": "A layout with this name already exists",
+        "title": "Edit layout",
+        "name": "Name",
+        "library": "Library",
+        "inspector": "Inspector",
+        "underGrid": "Under the grid",
+        "itemWidth": "{n} px wide",
+        "columns": "{count} column | {count} columns",
+        "filterBar": "Filter bar",
+        "widgetsHint": "Place widgets in the edit window.",
+        "done": "Done"
+      },
+      "title": "Layout",
+      "windowShape": "Window shape",
+      "editLayout": "Edit {name}",
+      "duplicate": "Duplicate",
+      "restore": "Restore",
+      "reset": "Reset",
+      "delete": "Delete",
+      "all": {
+        "title": "All layouts",
+        "railOpen": {
+          "hover": "Open on hover",
+          "click": "Open on click"
+        },
+        "edgeHover": "Show hidden sidebars on edge hover",
+        "perLibrary": "Per-library layout",
+        "perLibraryHint": "Each library keeps its own layouts, view, sort and pinned filters, while themes stay shared."
+      },
+      "compact": "Compact"
+    },
+    "mcp": {
+      "service": {
+        "title": "MCP service",
+        "enable": "Enable MCP",
+        "active": "Active",
+        "token": "Assistants send an API token as {header}; its permissions limit the tools."
+      },
+      "tools": {
+        "title": "Tools",
+        "hint": "Turn off unused tools to save the assistant's tokens."
+      },
+      "families": {
+        "app": "App",
+        "item": "Item",
+        "folder": "Folder",
+        "smartFolder": "Smart Folder",
+        "tag": "Tag",
+        "tagGroup": "Tag Group",
+        "field": "Field",
+        "location": "Location",
+        "query": "Query"
+      }
+    },
+    "plugins": {
+      "tabs": {
+        "format": "Formats",
+        "widget": "Widgets",
+        "window": "Windows",
+        "tools": "Tools"
+      },
+      "tools": {
+        "locate": "Locate {name}",
+        "notFound": "not found",
+        "usedBy": "{about} · used by {plugins}",
+        "download": "Download",
+        "choose": "Choose",
+        "autoDetect": "Auto-detect",
+        "note": "Programs used by plugins. Choose any Curio doesn't find.",
+        "about": {
+          "ffmpeg": "converts and reads video and sound",
+          "ffprobe": "reads what video and sound files hold; comes with FFmpeg",
+          "yt-dlp": "downloads video from YouTube and many other sites",
+          "gallery-dl": "downloads pictures from galleries and social sites",
+          "exiftool": "reads and writes metadata in pictures and video",
+          "magick": "converts and edits pictures",
+          "7z": "packs and unpacks archives"
+        }
+      },
+      "rescan": {
+        "title": "Rescan all for {name}?",
+        "body": "Thumbnails and metadata are rebuilt, replacing manual edits.",
+        "ok": "Rescan"
+      },
+      "perms": {
+        "metadata": {
+          "read": "Read items, folders, tags and fields",
+          "write": "Change names, notes, ratings, tags, folders and field values"
+        },
+        "organize": "Make, rename and delete folders, tags and fields",
+        "files": {
+          "read": "Read files and thumbnails, and receive file paths",
+          "write": "Add, replace, rename and delete the library's files",
+          "outside": "Read and write files elsewhere on this computer: export, add from a path, index a folder"
+        },
+        "ui": "Use the window's selection, dialogs and notifications",
+        "exec": "Run its own programs",
+        "network": "Connect to the internet from its pages"
+      },
+      "addFolder": "Add plugin",
+      "remove": "Remove plugin (keeps files on disk)",
+      "example": "New example plugin",
+      "reload": "Reload",
+      "none": "No plugins installed.",
+      "builtIn": "Built in",
+      "issueTag": "Issue",
+      "more": {
+        "plays": "Plays {codecs}.",
+        "notPlays": "Not: {codecs}.",
+        "ffmpegFolder": "Custom FFmpeg folder",
+        "ffmpegDownload": "Download FFmpeg",
+        "overridden": "Shown by another plugin: {list}. Turn off the listed plugins to use this one for those formats.",
+        "overriddenEach": "{exts} by {plugin}",
+        "network": "Its pages connect to {sites}.",
+        "networkAny": "Its pages connect to any https: site.",
+        "allow": "Allow",
+        "open": "Open {title}",
+        "urls": "Takes over addresses: {list}",
+        "rescanMissing": "Rescan missing",
+        "rescanAll": "Rescan all",
+        "version": "Version {version}",
+        "counts": {
+          "widgets": "{count} widget | {count} widgets",
+          "fields": "{count} field | {count} fields",
+          "actions": "{count} action | {count} actions",
+          "filters": "{count} filter | {count} filters",
+          "formats": "{count} format | {count} formats"
+        },
+        "permissions": "Permissions:"
+      },
+      "core": "core"
+    },
+    "preview": {
+      "image": {
+        "title": "Image viewer",
+        "filmstrip": "Strip",
+        "strip": {
+          "left": "Left",
+          "bottom": "Below",
+          "right": "Right"
+        },
+        "upscaling": "Upscaling",
+        "pixelated": "Pixelated",
+        "smooth": "Smooth",
+        "zoom": "Default zoom",
+        "fit": "Fit",
+        "original": "Original size",
+        "rotation": "Rotation",
+        "viewOnly": "View only",
+        "saveToFile": "Save to file",
+        "transparency": "Transparency",
+        "checkerboard": "Checkerboard",
+        "solid": "Solid",
+        "rememberZoom": "Remember zoom"
+      },
+      "video": {
+        "title": "Video & audio playback",
+        "wheel": "Mouse wheel",
+        "seek": "Seek",
+        "volume": "Volume",
+        "navigate": "Previous / next item",
+        "hoverPlay": "Play on hover",
+        "stretch": "Stretch to fill",
+        "autoplay": "Autoplay",
+        "resume": "Resume playback"
+      },
+      "links": {
+        "title": "Web links",
+        "previews": "Link previews",
+        "hint": "Fetches link thumbnails from their sites. Local network addresses are skipped."
+      }
+    },
+    "shortcuts": {
+      "pluginViewer": "{plugin} viewer",
+      "yourActions": "Your actions",
+      "also": "Also: {names}",
+      "custom": "Custom",
+      "recording": "Press keys (Esc cancels)",
+      "remove": "Remove shortcut",
+      "default": "Default: {key}",
+      "noDefault": "Default: none",
+      "resetAll": "Reset all shortcuts",
+      "taken": "\"{name}\" no longer has a shortcut"
+    },
+    "storage": {
+      "backups": {
+        "kinds": {
+          "manual": "By hand",
+          "scheduled": "Automatic",
+          "pre-migration": "Before an upgrade",
+          "before-restore": "Set aside by a restore",
+          "unknown": "Older backup"
+        },
+        "schema": "schema v{n}",
+        "every": {
+          "manual": "By hand only",
+          "daily": "Daily",
+          "weekly": "Weekly"
+        },
+        "sectionTitle": "Database backups",
+        "snapshotLabel": "Backup snapshot",
+        "now": "Back up now",
+        "hide": "Hide backups",
+        "restore": "Restore a backup",
+        "integrity": "Check integrity",
+        "optimize": "Optimize",
+        "eagle": "Import Eagle library",
+        "eagleLocation": "Add Eagle library as location",
+        "none": "No backups found.",
+        "otherLibrary": "other library",
+        "chooseFile": "Choose file",
+        "auto": "Back up automatically",
+        "keepLabel": "Keep backups",
+        "keepAllShort": "All",
+        "folderLabel": "Backup folder",
+        "change": "Change",
+        "last": "Last backup {date}",
+        "noneYet": "No backup made yet.",
+        "failed": "Backup failed {date}: {error}",
+        "hint": "Backups hold the library database and a JSON metadata export, not your files. Automatic backups run only after changes."
+      },
+      "maintenance": {
+        "title": "Maintenance",
+        "integrityLabel": "Database integrity",
+        "integrityHint": "Verify database structure and indexes.",
+        "optimizeLabel": "Database optimization",
+        "optimizeHint": "Compact unused space and refresh query statistics."
+      },
+      "import": {
+        "title": "Import",
+        "eagleLabel": "Eagle .library"
+      },
+      "restore": {
+        "title": "Restore this backup?",
+        "ok": "Restore",
+        "body": "The library returns to {date} and Curio restarts. The current database is kept.",
+        "bodyOther": "The library returns to {date} and Curio restarts. The current database is kept. This backup is from another library."
+      },
+      "hints": {
+        "network": {
+          "label": "Network",
+          "tip": "Network drive: may go offline, and others may change its files."
+        },
+        "removable": {
+          "label": "Removable",
+          "tip": "Removable drive: offline while unplugged."
+        },
+        "read_only_media": {
+          "label": "Read-only media",
+          "tip": "This drive can't be written. Set the location to Read-only."
+        }
+      },
+      "access": {
+        "read_only": {
+          "label": "Read-only",
+          "tip": "Never writes files here."
+        },
+        "full": {
+          "label": "Edit files",
+          "tip": "Can edit files, but not rename or move them."
+        },
+        "organize": {
+          "label": "Edit and organize",
+          "tip": "Can also rename and move files."
+        }
+      },
+      "locations": {
+        "title": "Locations",
+        "empty": "No external locations indexed yet.",
+        "rescanAll": "Rescan all",
+        "add": "Add location",
+        "rescan": "Rescan",
+        "relocate": "Relocate"
+      },
+      "library": {
+        "sectionTitle": "Library & thumbnail cache",
+        "title": "Library",
+        "schema": "Database schema v{n}",
+        "ids": "Library ID · installation ID"
+      },
+      "cache": {
+        "title": "Thumbnail cache",
+        "limitLabel": "Cache limit",
+        "mb": "{size} MB",
+        "move": "Move cache to",
+        "clearLabel": "Clear thumbnail cache",
+        "clearHint": "Thumbnails are rebuilt as needed.",
+        "clear": "Clear thumbnails",
+        "clearTitle": "Clear thumbnail cache?",
+        "clearBody": "Generated thumbnails are deleted and rebuilt as you browse. Your files and metadata stay untouched."
+      },
+      "files": {
+        "title": "Files",
+        "orphans": "{count} file in the library's own folder belongs to no item, for example after a crash during an import. | {count} files in the library's own folder belong to no item, for example after a crash during an import.",
+        "more": "and {count} more; the buttons act on the ones shown.",
+        "hide": "Hide",
+        "show": "Show",
+        "adopt": "Add back to library",
+        "recycle": "Send to Recycle Bin",
+        "pending": "{count} deleted copy is on its way to the Recycle Bin. | {count} deleted copies are on their way to the Recycle Bin.",
+        "failed": "{count} file couldn't be dealt with and was left where it is. | {count} files couldn't be dealt with and were left where they are.",
+        "retry": "Retry",
+        "forget": "Forget",
+        "cancel": "Cancel",
+        "retryAll": "Retry all",
+        "forgetAll": "Forget all"
+      },
+      "defaultLocation": "Default location"
+    },
+    "title": "Settings",
+    "search": "Search",
+    "results": "Search results",
+    "noMatch": "No settings match.",
+    "groups": {
+      "preferences": "Preferences",
+      "files": "Files & metadata",
+      "extensions": "Extensions & connect"
+    },
+    "pages": {
+      "general": "General",
+      "notifications": "Notifications",
+      "appearance": "Appearance",
+      "layout": "Layout",
+      "controls": "Controls",
+      "preview": "Preview",
+      "shortcuts": "Shortcuts",
+      "storage": "Storage",
+      "backup": "Backup",
+      "autoimport": "Auto-Import",
+      "grouping": "Grouped files",
+      "fields": "Fields",
+      "plugins": "Plugins",
+      "api": "API",
+      "mcp": "MCP",
+      "about": "About"
+    },
+    "reset": {
+      "label": "Reset to default",
+      "title": "Reset every setting?",
+      "body": "Settings, layouts and shortcuts are reset. Libraries, custom themes and recent lists stay, and so do the API, its port, Start with system and Open from the browser.",
+      "ok": "Reset",
+      "done": "Settings reset"
+    }
+  },
+  "common": {
+    "edit": "Edit",
+    "duplicate": "Duplicate",
+    "remove": "Remove",
+    "selectFirst": "Select items first",
+    "saveChanges": "Save Changes",
+    "cancel": "Cancel",
+    "ok": "OK",
+    "save": "Save",
+    "continue": "Continue"
+  },
+  "actions": {
+    "copyName": "{name} copy",
+    "new": "New action",
+    "button": "Actions",
+    "steps": {
+      "folders_add": "Add folders",
+      "folders_clear": "Clear folders",
+      "tags_add": "Add tags",
+      "tags_clear": "Clear tags",
+      "rating": "Rating",
+      "tags_remove": "Remove tags",
+      "folders_remove": "Remove from folders",
+      "note_set": "Set notes",
+      "note_append": "Add to notes",
+      "url_set": "Set source URL",
+      "field_set": "Set field",
+      "rotate": "Rotate",
+      "thumb_refresh": "Refresh thumbnail",
+      "colors_refresh": "Refresh colors",
+      "trash": "Move to Trash"
+    },
+    "done": "{name}: done on {count} item | {name}: done on {count} items",
+    "dialog": {
+      "editTitle": "Edit Action",
+      "createTitle": "Create Action",
+      "name": "Name",
+      "icon": "Icon",
+      "namePlaceholder": "Add \"Design\" tag",
+      "shortcut": "Shortcut",
+      "pressKeys": "Press keys",
+      "keyTaken": "{key} is already used by {names}; saving moves it to this action.",
+      "steps": "Steps",
+      "addStep": "Add step",
+      "chooseTags": "Choose tags",
+      "chooseFolders": "Choose folders",
+      "noRating": "No rating",
+      "field": "Field",
+      "value": "Value",
+      "removeStep": "Remove step",
+      "addBelow": "Add step below"
+    }
+  },
+  "shortcuts": {
+    "actions": {
+      "panel": {
+        "left": "Cycle Library",
+        "right": "Cycle Inspector",
+        "both": "Toggle both panels"
+      },
+      "go": {
+        "all": "All",
+        "uncategorized": "Uncategorized",
+        "untagged": "Untagged",
+        "recent": "Recently used",
+        "random": "Random",
+        "tags": "Tag manager",
+        "trash": "Trash"
+      },
+      "layout": {
+        "grid": "Grid",
+        "justified": "Justified",
+        "masonry": "Masonry",
+        "list": "List",
+        "spectrum": "Spectrum"
+      },
+      "look": {
+        "gray": "Black and white"
+      },
+      "cards": {
+        "larger": "Zoom in",
+        "smaller": "Zoom out"
+      },
+      "scroll": {
+        "top": "Scroll to top",
+        "bottom": "Scroll to bottom"
+      },
+      "nav": {
+        "back": "Back",
+        "forward": "Forward"
+      },
+      "search": {
+        "focus": "Search"
+      },
+      "filters": {
+        "toggle": "Toggle filters",
+        "clear": "Clear filters"
+      },
+      "sidebar": {
+        "filter": "Filter Library"
+      },
+      "item": {
+        "toFolders": "Add to folders",
+        "open": "Preview",
+        "actions": "Actions",
+        "openExternal": "Open with default app",
+        "reveal": "Show in file manager",
+        "newWindow": "Open in new window",
+        "toLastFolder": "Add to last folder",
+        "duplicate": "Duplicate",
+        "copy": "Copy files",
+        "export": "Export files",
+        "rename": "Rename",
+        "copyPath": "Copy file path",
+        "selectAll": "Select all",
+        "paste": "Paste",
+        "trash": "Delete"
+      },
+      "thumb": {
+        "fromFile": "Thumbnail from file",
+        "fromClipboard": "Thumbnail from clipboard",
+        "refresh": "Refresh thumbnail"
+      },
+      "folder": {
+        "defaultTags": "Folder auto-tags",
+        "new": "New folder",
+        "newInside": "New subfolder"
+      },
+      "viewer": {
+        "rotate": "Turn",
+        "flip": "Mirror",
+        "fileBack": "Previous file in the item",
+        "fileAhead": "Next file in the item",
+        "zoomReset": "Fit or actual size"
+      },
+      "text": {
+        "mode": "Next Markdown view",
+        "wrap": "Wrap lines",
+        "lines": "Line numbers"
+      },
+      "player": {
+        "copyFrame": "Copy this frame",
+        "saveFrame": "Save frame as image",
+        "louder": "Volume up",
+        "quieter": "Volume down",
+        "seekAhead": "Skip forward",
+        "seekBack": "Skip back",
+        "faster": "Faster",
+        "slower": "Slower",
+        "frameBack": "Previous frame",
+        "frameAhead": "Next frame",
+        "tenBack": "Back 10 frames",
+        "tenAhead": "Forward 10 frames"
+      },
+      "tags": {
+        "copy": "Copy tags",
+        "paste": "Paste tags",
+        "add": "Add tags",
+        "pick": "Tags"
+      },
+      "folders": {
+        "pick": "Folders",
+        "openAll": "Expand / collapse all folders"
+      },
+      "rating": {
+        "0": "No rating",
+        "1": "Rate 1 star",
+        "2": "Rate 2 stars",
+        "3": "Rate 3 stars",
+        "4": "Rate 4 stars",
+        "5": "Rate 5 stars",
+        "favorite": "Toggle favorite",
+        "explicit": "Toggle explicit"
+      },
+      "smart": {
+        "new": "New smart folder"
+      },
+      "links": {
+        "add": "Add web addresses"
+      },
+      "library": {
+        "choose": "Switch library"
+      },
+      "app": {
+        "settings": "Settings",
+        "quit": "Quit Curio"
+      }
+    },
+    "groups": {
+      "view": "View",
+      "find": "Find",
+      "items": "Items",
+      "player": "Player",
+      "file": "File",
+      "app": "App"
+    }
+  },
+  "filters": {
+    "smart": {
+      "newName": "New smart folder",
+      "title": "Edit rules",
+      "name": "Smart Folder Name",
+      "noRules": "Without rules it collects what its subfolders find.",
+      "noRulesGrouped": "Without rules it groups all items into subfolders.",
+      "collects": "Collects items that match the rules.",
+      "collectsWithin": "Collects items that match the rules within {path}.",
+      "groupBy": "Automatic subfolders",
+      "groupNone": "None",
+      "groups": {
+        "builtin": "Built-in",
+        "yearAdded": "Date added (Year)",
+        "monthAdded": "Date added (Month)",
+        "yearCreated": "Date created (Year)",
+        "monthCreated": "Date created (Month)",
+        "yearModified": "Date modified (Year)",
+        "monthModified": "Date modified (Month)",
+        "rating": "Rating",
+        "kind": "Type",
+        "ext": "Extension",
+        "tag": "Tag"
+      },
+      "found": "{n} item | {n} items"
+    },
+    "shapes": {
+      "landscape": "Landscape",
+      "portrait": "Portrait",
+      "square": "Square",
+      "wide": "Wide panorama",
+      "tall": "Tall panorama"
+    },
+    "kinds": {
+      "image": "Image",
+      "video": "Video",
+      "audio": "Audio",
+      "document": "Document",
+      "code": "Code",
+      "link": "Link",
+      "archive": "Archive",
+      "font": "Font",
+      "model": "3D model",
+      "other": "Other"
+    },
+    "props": {
+      "__text": "Any text",
+      "name": "Name",
+      "tag": "Tags",
+      "folder": "Folders",
+      "ext": "Extension",
+      "kind": "Type",
+      "rating": "Rating",
+      "color": "Color",
+      "shape": "Shape",
+      "width": "Width",
+      "height": "Height",
+      "aspect": "Aspect ratio",
+      "animated": "Animated",
+      "size": "File size",
+      "duration": "Length",
+      "pages": "Pages",
+      "added": "Added",
+      "created": "Created",
+      "modified": "Modified",
+      "annotation": "Note",
+      "url": "Source link",
+      "tag_count": "Number of tags",
+      "folder_color": "Folder color",
+      "part": "Grouped files",
+      "__query": "Other condition",
+      "__field": "Custom field"
+    },
+    "ops": {
+      "text": {
+        "contains": "contains",
+        "doesNotContain": "does not contain",
+        "is": "is",
+        "isNot": "is not",
+        "startsWith": "starts with",
+        "endsWith": "ends with",
+        "matchesRegex": "matches regex",
+        "isEmpty": "is empty",
+        "isNotEmpty": "is not empty"
+      },
+      "tags": {
+        "anyOf": "any of",
+        "allOf": "all of",
+        "exactly": "exactly",
+        "noneOf": "none of",
+        "hasOneWith": "has one with",
+        "hasNoneWith": "has none with",
+        "isEmpty": "is empty",
+        "isNotEmpty": "is not empty"
+      },
+      "folders": {
+        "anyOf": "any of",
+        "allOf": "all of",
+        "noneOf": "none of",
+        "hasOneWith": "has one with",
+        "hasNoneWith": "has none with",
+        "isEmpty": "is empty",
+        "isNotEmpty": "is not empty"
+      },
+      "num": {
+        "is": "is",
+        "isNot": "is not",
+        "atLeast": "at least",
+        "atMost": "at most",
+        "moreThan": "more than",
+        "lessThan": "less than",
+        "between": "between",
+        "isEmpty": "is empty",
+        "isNotEmpty": "is not empty"
+      },
+      "size": {
+        "atLeast": "at least",
+        "atMost": "at most",
+        "moreThan": "more than",
+        "lessThan": "less than",
+        "between": "between"
+      },
+      "duration": {
+        "atLeast": "at least",
+        "atMost": "at most",
+        "moreThan": "more than",
+        "lessThan": "less than",
+        "between": "between",
+        "none": "none",
+        "hasOne": "has one"
+      },
+      "rating": {
+        "is": "is",
+        "isNot": "is not",
+        "atLeast": "at least",
+        "atMost": "at most"
+      },
+      "color": {
+        "similar": "similar",
+        "accurate": "accurate"
+      },
+      "shape": {
+        "is": "is",
+        "isNot": "is not"
+      },
+      "kind": {
+        "is": "is",
+        "isNot": "is not"
+      },
+      "date": {
+        "inTheLast": "in the last",
+        "after": "after",
+        "onOrAfter": "on or after",
+        "before": "before",
+        "onOrBefore": "on or before",
+        "on": "on",
+        "between": "between"
+      },
+      "bool": {
+        "is": "is"
+      },
+      "select": {
+        "is": "is",
+        "isNot": "is not",
+        "contains": "contains",
+        "doesNotContain": "does not contain",
+        "isEmpty": "is empty",
+        "isNotEmpty": "is not empty"
+      },
+      "words": {
+        "contains": "contains",
+        "doesNotContain": "does not contain"
+      },
+      "yesno": {
+        "is": "is"
+      },
+      "foldercolor": {
+        "is": "is",
+        "isNot": "is not",
+        "isEmpty": "is empty",
+        "isNotEmpty": "is not empty"
+      },
+      "query": {
+        "matches": "matches"
+      }
+    },
+    "scopes": {
+      "name": "Name",
+      "folder": "Folder Name",
+      "ext": "Extension",
+      "tag": "Tags",
+      "url": "URL",
+      "annotation": "Note"
+    },
+    "owners": {
+      "user": "Your fields",
+      "image": "Images",
+      "video": "Video",
+      "audio": "Audio",
+      "document": "Documents",
+      "archive": "Archives",
+      "format": "Formats"
+    },
+    "rules": {
+      "match": {
+        "all": "all",
+        "any": "any"
+      },
+      "sentence": "{match} of the following are {truth}",
+      "truth": {
+        "true": "true",
+        "false": "false"
+      },
+      "and": "and",
+      "groupsTitle": "Rule groups",
+      "addGroup": "Add a group of rules",
+      "removeGroup": "Remove this group",
+      "field": "Field",
+      "remove": "Remove this rule",
+      "addBelow": "Add a rule below"
+    },
+    "value": {
+      "none": "None",
+      "yes": "Yes",
+      "no": "No",
+      "kept": "Kept as it was saved",
+      "min": "Min",
+      "max": "Max",
+      "from": "{name} from",
+      "to": "{name} to",
+      "chooseTags": "Choose tags",
+      "chooseFolders": "Choose folders",
+      "words": "Words to find"
+    },
+    "units": {
+      "KB": "KB",
+      "MB": "MB",
+      "GB": "GB",
+      "sec": "sec",
+      "min": "min",
+      "hour": "hour",
+      "days": "days",
+      "weeks": "weeks",
+      "years": "years"
+    },
+    "bar": {
+      "color": "Color",
+      "tags": "Tags",
+      "folder": "Folder",
+      "folderColor": "Folder color",
+      "shape": "Shape",
+      "rating": "Rating",
+      "types": "Types",
+      "ext": "Extension",
+      "dimensions": "Dimensions",
+      "duration": "Duration",
+      "size": "Size",
+      "pages": "Pages",
+      "note": "Note",
+      "url": "URL",
+      "added": "Date added",
+      "modified": "Date modified",
+      "created": "Date created",
+      "fields": "Custom fields",
+      "presets": "Presets",
+      "customShape": "Custom",
+      "stars": "{n} of 5",
+      "nothingFound": "Nothing found",
+      "anyColor": "Any color",
+      "accuracy": "Accuracy",
+      "grayscale": "Grayscale",
+      "noFolderColor": "No folder has a color",
+      "animated": "Animated",
+      "favorite": "Favorite",
+      "explicit": "Explicit",
+      "hasNote": "Has a note",
+      "hasUrl": "Has a URL",
+      "keywords": "Keywords, comma-separated",
+      "addCondition": "Add condition",
+      "nothingHere": "Nothing here",
+      "hasValue": "Has a value",
+      "noPresets": "No presets yet."
+    },
+    "kindNames": {
+      "image": "Image",
+      "video": "Video",
+      "audio": "Audio",
+      "document": "Document",
+      "code": "Code",
+      "link": "Link",
+      "archive": "Archive",
+      "font": "Font",
+      "model": "Model",
+      "other": "Other"
+    },
+    "within": {
+      "d1": "Today",
+      "d7": "Last 7 days",
+      "d30": "Last 30 days",
+      "d90": "Last 3 months",
+      "d365": "Last year",
+      "days": "{count} day | {count} days",
+      "from": "from {day}",
+      "until": "until {day}"
+    },
+    "conditions": {
+      "contains": "contains",
+      "empty": "is empty",
+      "notEmpty": "is not empty"
+    },
+    "chips": {
+      "animatedExt": "{ext} animated",
+      "animated": "Animated",
+      "favorite": "Favorite",
+      "explicit": "Explicit",
+      "set": "Set",
+      "empty": "Empty",
+      "untagged": "Untagged"
+    },
+    "saved": {
+      "saveTitle": "Save filters",
+      "rename": "Rename",
+      "renameTitle": "Rename saved filters",
+      "update": "Update to current filters",
+      "remove": "Remove",
+      "saveCurrent": "Save current filters",
+      "saveSmart": "Save as smart folder"
+    },
+    "tips": {
+      "clearOne": "Clear filter",
+      "more": "More filters",
+      "saved": "Saved filters",
+      "unlock": "Unlock filter",
+      "lock": "Lock filter",
+      "clear": "Clear filters",
+      "unpin": "Unpin",
+      "pin": "Pin"
+    }
+  },
+  "layout": {
+    "parts": {
+      "gap": {
+        "label": "Gap",
+        "hint": "Fixed empty space"
+      },
+      "spacer": {
+        "label": "Elastic gap",
+        "hint": "Fills the remaining space"
+      },
+      "separator": {
+        "label": "Separator",
+        "hint": "Divider line"
+      },
+      "row": {
+        "label": "Row",
+        "hint": "Holds buttons in a sidebar"
+      },
+      "pin": {
+        "top": {
+          "label": "End of the pinned top"
+        },
+        "bottom": {
+          "label": "Start of the pinned bottom"
+        }
+      },
+      "b": {
+        "menu": {
+          "label": "Menu"
+        },
+        "add": {
+          "label": "Add"
+        },
+        "libswitch": {
+          "label": "Switch library"
+        },
+        "prefs": {
+          "label": "Settings"
+        },
+        "edit": {
+          "label": "Edit layout"
+        },
+        "library": {
+          "label": "Library",
+          "hint": "Full, compact or hidden"
+        },
+        "inspector": {
+          "label": "Inspector",
+          "hint": "Full, compact or hidden"
+        },
+        "ontop": {
+          "label": "Always on top",
+          "hint": "Keep this window above others"
+        },
+        "duplicates": {
+          "label": "Find duplicates"
+        },
+        "rename": {
+          "label": "Batch rename"
+        },
+        "compare": {
+          "label": "Compare"
+        }
+      },
+      "m": {
+        "quick": {
+          "label": "Browse menu",
+          "hint": "Views such as All and Trash in one menu"
+        },
+        "favorites": {
+          "label": "Pinned menu"
+        },
+        "smart": {
+          "label": "Smart Folders menu"
+        },
+        "folders": {
+          "label": "Folders menu"
+        },
+        "tags": {
+          "label": "Tags menu"
+        },
+        "locations": {
+          "label": "Locations menu"
+        },
+        "libraries": {
+          "label": "Libraries menu"
+        }
+      },
+      "header": {
+        "label": "Menu and add buttons"
+      },
+      "libswitcher": {
+        "label": "Library switcher"
+      },
+      "libcard": {
+        "label": "Library card",
+        "hint": "File count and total size"
+      },
+      "q": {
+        "all": {
+          "label": "All"
+        },
+        "uncategorized": {
+          "label": "Uncategorized"
+        },
+        "untagged": {
+          "label": "Untagged"
+        },
+        "recent": {
+          "label": "Recently used"
+        },
+        "random": {
+          "label": "Random"
+        },
+        "missing": {
+          "label": "Missing & offline",
+          "hint": "Shows only while files are missing or offline"
+        },
+        "tags": {
+          "label": "All tags"
+        },
+        "trash": {
+          "label": "Trash"
+        }
+      },
+      "favorites": {
+        "label": "Pinned"
+      },
+      "smart": {
+        "label": "Smart Folders"
+      },
+      "folders": {
+        "label": "Folders"
+      },
+      "tags": {
+        "label": "Tags"
+      },
+      "locations": {
+        "label": "Locations"
+      },
+      "libraries": {
+        "label": "Libraries"
+      },
+      "panels": {
+        "label": "Plugin panels"
+      },
+      "libfilter": {
+        "label": "Library filter"
+      },
+      "librarytoggle": {
+        "label": "Show Library button"
+      },
+      "nav": {
+        "label": "Back and forward"
+      },
+      "title": {
+        "label": "Current view name"
+      },
+      "shuffle": {
+        "label": "Shuffle again",
+        "hint": "Shows only in the Random view"
+      },
+      "breadcrumb": {
+        "label": "Breadcrumb",
+        "hint": "Clickable path to the current view"
+      },
+      "tagview": {
+        "label": "Tags as grid or list"
+      },
+      "tagsort": {
+        "label": "Sort tags"
+      },
+      "zoom": {
+        "label": "Thumbnail size"
+      },
+      "plugins": {
+        "label": "Plugins button"
+      },
+      "actions": {
+        "label": "Actions button"
+      },
+      "layout": {
+        "label": "Layout button"
+      },
+      "filtertoggle": {
+        "label": "Filters button"
+      },
+      "search": {
+        "label": "Search"
+      },
+      "fontsample": {
+        "label": "Font sample text",
+        "hint": "What the Font sample column and the font viewer write"
+      },
+      "filters": {
+        "label": "Filters"
+      },
+      "inspectortoggle": {
+        "label": "Show Inspector button"
+      },
+      "v": {
+        "back": {
+          "label": "Close the item"
+        },
+        "count": {
+          "label": "Position"
+        },
+        "group": {
+          "label": "Files",
+          "hint": "Steps through files grouped into the item by hand"
+        },
+        "zoom": {
+          "label": "Zoom"
+        },
+        "reveal": {
+          "label": "Show in file manager"
+        },
+        "open": {
+          "label": "Open with default app"
+        },
+        "flip": {
+          "label": "Mirror"
+        },
+        "rotate": {
+          "label": "Turn"
+        },
+        "actual": {
+          "label": "Actual size"
+        },
+        "fit": {
+          "label": "Fit"
+        },
+        "strip": {
+          "label": "Strip"
+        },
+        "live": {
+          "label": "Live Photo"
+        },
+        "pair": {
+          "label": "RAW / JPEG"
+        }
+      },
+      "t": {
+        "mode": {
+          "label": "Markdown view",
+          "hint": "Rendered, source, or both side by side"
+        },
+        "wrap": {
+          "label": "Wrap lines"
+        },
+        "lines": {
+          "label": "Line numbers"
+        },
+        "best": {
+          "label": "Top rated"
+        }
+      },
+      "w": {
+        "preview": {
+          "label": "Preview"
+        },
+        "palette": {
+          "label": "Colors"
+        },
+        "name": {
+          "label": "Name"
+        },
+        "annotation": {
+          "label": "Notes"
+        },
+        "url": {
+          "label": "URL"
+        },
+        "tags": {
+          "label": "Tags"
+        },
+        "folders": {
+          "label": "Folders"
+        },
+        "properties": {
+          "label": "Properties"
+        },
+        "rating": {
+          "label": "Rating"
+        },
+        "dimensions": {
+          "label": "Dimensions"
+        },
+        "duration": {
+          "label": "Duration"
+        },
+        "pages": {
+          "label": "Pages"
+        },
+        "size": {
+          "label": "File size"
+        },
+        "type": {
+          "label": "File type"
+        },
+        "added": {
+          "label": "Added"
+        },
+        "created": {
+          "label": "Date created"
+        },
+        "modified": {
+          "label": "Date modified"
+        },
+        "export": {
+          "label": "Export button"
+        },
+        "file": {
+          "label": "File and location"
+        },
+        "parts": {
+          "label": "Files"
+        },
+        "batch": {
+          "label": "Batch edit"
+        },
+        "summary": {
+          "label": "Summary"
+        },
+        "spectrum": {
+          "label": "Spectrum map",
+          "hint": "A small map of the Spectrum view; click it to go there"
+        }
+      }
+    },
+    "screens": {
+      "main": "Main",
+      "folder": "Folder",
+      "tags": "Tags",
+      "image": "Image",
+      "video": "Video",
+      "other": "Other files"
+    },
+    "zones": {
+      "toolbar": "Toolbar",
+      "filterbar": "Filter bar",
+      "library": "Library",
+      "inspector": "Inspector",
+      "dropHere": "Drop widgets here",
+      "dropHereIn": "Drop widgets here: {zone}"
+    },
+    "groups": {
+      "layout": "Layout",
+      "buttons": "Buttons",
+      "actions": "Your actions",
+      "toolbar": "Toolbar",
+      "viewer": "Viewer",
+      "browse": "Browse",
+      "item": "Selected item",
+      "tags": "Tags",
+      "property": "Single properties",
+      "field": "Fields and plugins"
+    },
+    "builtin": {
+      "Default": "Default",
+      "Vertical": "Vertical",
+      "Focus": "Focus",
+      "Minimal": "Minimal",
+      "Compact": "Compact",
+      "Merged": "Merged",
+      "Split": "Split"
+    },
+    "copyName": "{name} copy",
+    "editor": {
+      "windowHint": "Opens this window for the selected items",
+      "actionHint": "Runs this action on the selected items",
+      "allSources": "All sources",
+      "allWidgets": "All widgets",
+      "tiles": "Tiles",
+      "list": "List",
+      "shared": "{name} (both shapes use it)",
+      "landscape": "Landscape: {name}",
+      "portrait": "Portrait: {name}",
+      "screen": "Screen",
+      "source": "Source",
+      "group": "Group",
+      "search": "Search widgets",
+      "searchTile": "Search",
+      "none": "No widgets match",
+      "about": "Drag widgets onto the window; drop them here to remove.",
+      "done": "Done",
+      "resetTip": "Reset layout",
+      "reset": "Reset"
+    },
+    "pinTop": "Pinned above · scrolls below",
+    "pinBottom": "Scrolls above · pinned below",
+    "views": {
+      "masonry": "Masonry",
+      "justified": "Justified",
+      "grid": "Grid",
+      "list": "List",
+      "spectrum": "Spectrum"
+    },
+    "sorts": {
+      "imported": "Date added",
+      "modified": "Date modified",
+      "created": "Date created",
+      "name": "Name",
+      "ext": "Extension",
+      "size": "File size",
+      "resolution": "Dimensions",
+      "rating": "Rating",
+      "duration": "Duration",
+      "random": "Random",
+      "manual": "Manual",
+      "notIndexed": "{name} (not indexed)"
+    },
+    "groupBy": {
+      "none": "None",
+      "kind": "Type",
+      "ext": "Extension",
+      "imported": "Date added",
+      "modified": "Date modified",
+      "created": "Date created",
+      "rating": "Rating",
+      "size": "File size",
+      "name": "Name",
+      "location": "Location"
+    },
+    "toggles": {
+      "showName": "Show name",
+      "showExt": "Show extension",
+      "showInfo": "Show dimensions",
+      "showNote": "Show note",
+      "showSubfolders": "Show subfolders",
+      "subfolders": "Show subfolder contents"
+    },
+    "sides": {
+      "full": "Full",
+      "icons": "Compact",
+      "hidden": "Hidden"
+    },
+    "tags": {
+      "grid": "Grid",
+      "list": "List",
+      "sorts": {
+        "az": "A > Z",
+        "za": "Z > A",
+        "high": "Count (High→Low)",
+        "low": "Count (Low→High)"
+      },
+      "groupBy": "Group by",
+      "alphabet": "Alphabet",
+      "groups": "Groups",
+      "sortTip": "Sort and group"
+    },
+    "textModes": {
+      "rendered": "Rendered",
+      "source": "Source",
+      "split": "Side by side"
+    },
+    "crumbs": {
+      "all": "All",
+      "allTags": "All tags",
+      "results": "Search results ({n})",
+      "label": "Breadcrumb"
+    },
+    "tips": {
+      "showLibrary": "Show Library",
+      "previousItem": "Previous item",
+      "nextItem": "Next item",
+      "back": "Back",
+      "forward": "Forward",
+      "close": "Close",
+      "previousFile": "Previous file in the item",
+      "nextFile": "Next file in the item",
+      "files": "Files",
+      "zoom": "Zoom",
+      "reveal": "Show in file manager",
+      "openExternal": "Open with default app",
+      "live": "Live Photo",
+      "pair": "RAW / JPEG",
+      "mirror": "Mirror",
+      "turn": "Turn",
+      "actualSize": "Actual size",
+      "fit": "Fit",
+      "toggleZoom": "Switch between fit and actual size",
+      "wrap": "Wrap lines",
+      "lines": "Line numbers",
+      "strip": "Strip",
+      "settings": "Settings",
+      "editLayout": "Edit layout",
+      "shuffle": "Shuffle again",
+      "onTop": "Always on top",
+      "showInspector": "Show Inspector",
+      "hideInspector": "Hide Inspector",
+      "compactInspector": "Compact",
+      "plugins": "Plugins",
+      "layout": "Layout",
+      "filters": "Filters"
+    },
+    "pop": {
+      "layout": "Layout",
+      "resetTo": "Reset to {name}",
+      "size": "Size",
+      "sortBy": "Sort by",
+      "groupBy": "Group by",
+      "color": "Color",
+      "lightMiddle": "Light in the middle",
+      "darkMiddle": "Dark in the middle",
+      "ascending": "Ascending",
+      "descending": "Descending",
+      "badges": "Show format badges",
+      "library": "Library",
+      "inspector": "Inspector",
+      "edit": "Edit layout",
+      "more": "More layout options"
+    },
+    "search": {
+      "scope": "Search scope",
+      "placeholder": "Search",
+      "clear": "Clear search",
+      "in": "Search in:",
+      "selectAll": "Select all",
+      "selectNone": "Select none",
+      "recent": "Recent searches"
+    },
+    "fontSample": {
+      "placeholder": "Font sample text",
+      "clear": "Clear font sample text"
+    }
+  },
+  "library": {
+    "rescanning": "Rescanning {count} file | Rescanning {count} files",
+    "nothingToRescan": "Nothing to rescan",
+    "copiedTag": "Copied tag \"{name}\"",
+    "copiedTags": "Copied {count} tag | Copied {count} tags",
+    "trashed": "{count} item moved to the Trash. | {count} items moved to the Trash.",
+    "restored": "{count} item restored. | {count} items restored.",
+    "purge": {
+      "title": "Delete this item permanently? | Delete {count} items permanently?",
+      "body": "Their tags and notes are lost. Imported copies go to the Recycle Bin; linked files stay on disk.",
+      "ok": "Delete permanently"
+    },
+    "folders": {
+      "added": "{count} item added to \"{name}\". | {count} items added to \"{name}\".",
+      "takenOut": "{count} item taken out of \"{name}\". | {count} items taken out of \"{name}\".",
+      "moved": "{count} item moved to \"{name}\". | {count} items moved to \"{name}\".",
+      "removed": "\"{name}\" is removed."
+    },
+    "renamed": "Renamed \"{name}\" to \"{to}\"",
+    "restoredTo": "{count} item restored to \"{name}\". | {count} items restored to \"{name}\".",
+    "movedToLibrary": "Moved to {name}. The originals are in the Trash.",
+    "copiedToLibrary": "Copied to {name}",
+    "moveIn": {
+      "title": "Move the file into the library? | Move {count} files into the library?",
+      "intoFolder": "They move into \"{name}\" in the library's folder. Tags, notes and folders stay.",
+      "intoLibrary": "They move into the library's folder, laid out like its folders. Tags, notes and folders stay.",
+      "ok": "Move"
+    },
+    "copiedTo": "{count} item copied to \"{name}\". | {count} items copied to \"{name}\".",
+    "newSmartName": "Smart folder",
+    "newFolderName": "New folder",
+    "newGroupName": "New group",
+    "noRecentFolder": "No recent folder",
+    "thumbnailChanged": "Thumbnail changed",
+    "filesCopied": "{count} file copied | {count} files copied",
+    "duplicating": "Duplicating",
+    "imagePasted": "Image pasted",
+    "nothingToPaste": "No image, link or path to paste",
+    "exportTo": "Export the files to",
+    "exported": "{count} file exported | {count} files exported",
+    "locateFolder": "Locate folder",
+    "savingLinks": "Saving link | Saving {count} links",
+    "handed": "Sent to a plugin | {count} links sent to plugins",
+    "clash": {
+      "title": "A file with this name exists | {count} file names already exist",
+      "inFolder": "{names} in \"{name}\". Replace keeps the existing items' tags and folders.",
+      "inLibrary": "{names} in the library. Replace keeps the existing items' tags and folders.",
+      "keep": "Keep both",
+      "replace": "Replace",
+      "skip": "Skip"
+    },
+    "firstName": "My Library",
+    "offline": "Storage offline: {name}",
+    "missing": "File missing: {name}",
+    "allTags": "All Tags ({count})",
+    "plugin": "Plugin",
+    "views": {
+      "all": "All",
+      "favorites": "Favorites",
+      "uncategorized": "Uncategorized",
+      "untagged": "Untagged",
+      "recent": "Recently used",
+      "random": "Random",
+      "trash": "Trash",
+      "missing": "Missing & offline",
+      "folder": "Folder",
+      "smart": "Smart folder",
+      "tag": "tag",
+      "root": "Location",
+      "folders": "{count} folder | {count} folders",
+      "roots": "{count} location | {count} locations"
+    },
+    "menu": {
+      "replace": {
+        "title": "Replace this file?",
+        "body": "Replaced with {name}. The old file goes to the Recycle Bin; tags and notes stay.",
+        "ok": "Replace",
+        "done": "File replaced"
+      },
+      "grouped": "Grouped as one item",
+      "openThese": "Open these in a window",
+      "ratingNone": "No rating",
+      "sidecars": {
+        "title": "Write sidecar files next to originals?",
+        "body": "Creates a .curio.json file beside each file. Originals stay unchanged.",
+        "ok": "Write"
+      },
+      "copied": {
+        "path": "Path copied",
+        "folder": "Folder path copied",
+        "name": "Name copied",
+        "link": "Link copied",
+        "notes": "Notes copied"
+      },
+      "splitDone": "Split into files",
+      "colorsUpdated": "Colors updated",
+      "backdrops": {
+        "auto": "Automatic",
+        "dark": "Dark",
+        "light": "Light"
+      },
+      "items": {
+        "openWindow": "Open in a window",
+        "showInFolder": "Show in folder",
+        "openExternal": "Open with default app",
+        "openIn": "Open with",
+        "reveal": "Show in file manager",
+        "openHere": "Open here",
+        "openBrowser": "Open in browser",
+        "plugins": "Plugins",
+        "toLastFolder": "Add to last folder",
+        "toFolders": "Add to folders",
+        "newFolder": "New folder from selection",
+        "addTags": "Add tags",
+        "copyTo": "Copy to another library",
+        "moveTo": "Move to another library",
+        "rating": "Rating",
+        "export": "Export",
+        "exportFiles": "Files",
+        "json": "Metadata as JSON",
+        "csv": "Metadata as CSV",
+        "sidecarFolder": "Sidecars to folder",
+        "sidecarBeside": "Sidecars beside files",
+        "storage": "Storage",
+        "copyIn": "Copy into the library",
+        "moveIn": "Move into the library",
+        "toDiskFolder": "Move to folder on disk",
+        "rename": "Rename",
+        "renameAll": "Rename all",
+        "findDuplicates": "Find duplicates",
+        "compare": "Compare",
+        "copy": "Copy",
+        "copyFiles": "Files",
+        "copyPath": "Path",
+        "copyFolder": "Containing folder",
+        "copyName": "Name",
+        "copyLink": "Source link",
+        "copyNotes": "Notes",
+        "copyTags": "Tags",
+        "pasteTags": "Paste tags",
+        "removeTags": "Remove all tags",
+        "duplicate": "Duplicate",
+        "group": "Group as one item",
+        "split": "Split",
+        "allowGrouping": "Allow grouping",
+        "backdrop": "Backdrop",
+        "gray": "Black and white",
+        "more": "More",
+        "thumbFile": "Thumbnail from file",
+        "thumbClipboard": "Thumbnail from clipboard",
+        "thumbRefresh": "Refresh thumbnail",
+        "refreshColors": "Refresh colors",
+        "rescan": "Rescan metadata",
+        "replaceFile": "Replace file",
+        "locate": "Locate missing file",
+        "newSubfolder": "New subfolder",
+        "restore": "Restore",
+        "purge": "Delete permanently",
+        "trash": "Move to Trash"
+      }
+    },
+    "jobs": {
+      "cancel": "Cancel",
+      "cancelNamed": "Cancel {name}",
+      "adding": "Adding files {n}",
+      "stop": "Stop adding",
+      "titles": {
+        "metadata": "Reading metadata",
+        "duplicates": "Looking for duplicates"
+      }
+    },
+    "welcome": {
+      "about": "Organize your files in a local library.",
+      "create": "Create new library",
+      "open": "Open an existing library",
+      "drop": "You can also drop folders or files onto this window.",
+      "safeMode": "Safe mode: customisations are off."
+    }
+  },
+  "sidebar": {
+    "colors": {
+      "none": "None",
+      "accent": "Accent",
+      "red": "Red",
+      "orange": "Orange",
+      "yellow": "Yellow",
+      "green": "Green",
+      "teal": "Teal",
+      "blue": "Blue",
+      "purple": "Purple",
+      "pink": "Pink"
+    },
+    "delete": {
+      "folder": "Delete folder \"{name}\"?",
+      "folders": "Delete {count} folder? | Delete {count} folders?",
+      "folderBody": "Subfolders go too, and items move to the trash unless they are in another folder. Restoring an item restores its folder.",
+      "smart": "Delete smart folder \"{name}\"?",
+      "smarts": "Delete {count} smart folder? | Delete {count} smart folders?",
+      "smartBody": "Items are not affected.",
+      "location": "Remove location \"{name}\"?",
+      "locations": "Remove {count} location? | Remove {count} locations?",
+      "locationBody": "Their items, tags and notes leave the library. Files on disk stay.",
+      "ok": "Delete",
+      "remove": "Remove"
+    },
+    "clash": {
+      "title": "\"{name}\" already exists here",
+      "body": "Merge combines their contents. Keep both adds a number to \"{name}\".",
+      "merge": "Merge",
+      "keep": "Keep both"
+    },
+    "hiddenByFilters": "Hidden by the current filters",
+    "lists": {
+      "favorites": "Pinned",
+      "libraries": "Libraries",
+      "quick": "Browse",
+      "smart": "Smart Folders",
+      "folders": "Folders",
+      "tags": "Tags",
+      "locations": "Locations",
+      "panels": "Plugin panels"
+    },
+    "library": "Library",
+    "forgotten": "{name} is off the list. Its files are untouched; \"Open library folder\" brings it back.",
+    "newLibraryName": "New Library",
+    "menu": {
+      "settings": "Settings",
+      "deleteSmarts": "Delete {count} smart folder | Delete {count} smart folders",
+      "deleteWithSubfolders": "Delete with its subfolders",
+      "delete": "Delete",
+      "removeLocations": "Remove {count} location | Remove {count} locations",
+      "watch": "Watch for changes",
+      "unwatch": "Stop watching for changes",
+      "filesHere": "Files here",
+      "removeFromList": "Remove from list",
+      "rename": "Rename",
+      "importFolder": "Import folder",
+      "addLocation": "Add location",
+      "importFiles": "Import files",
+      "importLinks": "Import from links",
+      "editLayout": "Edit layout",
+      "fields": "Fields",
+      "plugins": "Plugins",
+      "duplicates": "Find duplicates",
+      "newWindow": "New window",
+      "onTop": "Always on top",
+      "exportJson": "Export metadata (JSON)",
+      "exportCsv": "Export metadata (CSV)",
+      "exportSidecars": "Export sidecars",
+      "editRules": "Edit rules",
+      "newSubfolder": "New subfolder",
+      "changeIcon": "Change icon",
+      "relocate": "Relocate",
+      "icon": "Icon",
+      "removeFromLibrary": "Remove from library",
+      "openNewWindow": "Open in new window",
+      "newLibrary": "New library",
+      "openLibraryFolder": "Open library folder",
+      "newSmart": "New smart folder",
+      "rescan": "Rescan",
+      "reveal": "Show in file manager",
+      "copyIn": "Copy into the library",
+      "newFolder": "New folder",
+      "removeFolders": "Remove {count} folder | Remove {count} folders",
+      "pin": "Pin",
+      "unpin": "Unpin",
+      "removeFolder": "Remove folder",
+      "moveTo": "Move to",
+      "moveToTop": "Move to top",
+      "autoTag": "Auto-tag",
+      "orderFolders": "Order folders",
+      "sortLevelAz": "This level, A to Z",
+      "sortLevelZa": "This level, Z to A",
+      "sortAllAz": "Everywhere, A to Z",
+      "sortAllZa": "Everywhere, Z to A",
+      "sortLevelCount": "This level, by count",
+      "sortLevelCountUp": "This level, by count ascending",
+      "sortAllCount": "Everywhere, by count",
+      "sortSubAz": "Subfolders, A to Z",
+      "sortSubZa": "Subfolders, Z to A",
+      "sortSubCount": "Subfolders, by count",
+      "expand": "Expand / collapse",
+      "expandLevel": "Expand / collapse level",
+      "expandAll": "Expand / collapse all",
+      "duplicate": "Duplicate",
+      "exportFiles": "Export files",
+      "copyTo": "Copy to another library",
+      "moveToLibrary": "Move to another library",
+      "subfolders": "Show subfolder contents",
+      "importEagle": "Import Eagle library",
+      "addEagle": "Add Eagle library as location",
+      "quit": "Quit Curio"
+    },
+    "access": {
+      "read_only": "Read-only",
+      "full": "Edit files",
+      "organize": "Edit and organize"
+    },
+    "tips": {
+      "menu": "Menu",
+      "add": "Add",
+      "switchLibrary": "Switch library",
+      "hideLibrary": "Hide Library",
+      "compact": "Compact",
+      "addLibrary": "Add library",
+      "openElsewhere": "Open in new window",
+      "newSmart": "New smart folder",
+      "newFolder": "New folder",
+      "addLocation": "Add location"
+    },
+    "filter": {
+      "tip": "Filter",
+      "none": "Nothing matches",
+      "placeholder": "Filter"
+    },
+    "libCard": "{n} file · {size} | {n} files · {size}",
+    "sections": {
+      "favorites": "Pinned ({n})",
+      "libraries": "Libraries ({n})",
+      "smart": "Smart Folders ({n})",
+      "folders": "Folders ({n})",
+      "tags": "Tags",
+      "locations": "Locations ({n})"
+    },
+    "folderName": "Folder name",
+    "scanning": "Scanning",
+    "offline": "Offline",
+    "quick": {
+      "all": "All",
+      "favorites": "Favorites",
+      "uncategorized": "Uncategorized",
+      "untagged": "Untagged",
+      "recent": "Recently used",
+      "random": "Random",
+      "missing": "Missing & offline",
+      "tags": "All tags",
+      "trash": "Trash"
+    },
+    "subfolderName": "Subfolder name",
+    "scope": {
+      "folders": "Folders",
+      "empty": "Empty folders",
+      "color": "Color"
+    },
+    "trash": {
+      "empty": "Empty trash",
+      "title": "Empty the trash?",
+      "body": "Imported copies go to the Recycle Bin; linked files stay on disk."
+    },
+    "heading": "{name} ({n})"
+  },
+  "tags": {
+    "picker": {
+      "selected": "Selected",
+      "allTags": "All tags",
+      "uncategorized": "Uncategorized",
+      "starred": "Starred",
+      "recent": "Recent",
+      "untagged": "Untagged",
+      "others": "Others",
+      "rules": {
+        "OR": "Any of these tags",
+        "AND": "All of these tags",
+        "EQUAL": "Exactly these tags"
+      },
+      "tabs": {
+        "all": "All folders",
+        "recent": "Recently used",
+        "selected": "Selected"
+      },
+      "toggles": {
+        "sidebar": "Tag groups",
+        "starred": "Starred",
+        "recent": "Recent"
+      },
+      "search": "Search",
+      "create": "Create \"{name}\"",
+      "noTags": "No tags yet. Type to create one.",
+      "noRecentFolders": "No recently used folders",
+      "nothingSelected": "Nothing selected",
+      "noFolders": "No folders yet. Type to create one."
+    },
+    "view": {
+      "uncategorized": "Uncategorized",
+      "starred": "Starred",
+      "allTags": "All tags",
+      "titleSelected": "{name} ({n} selected)",
+      "titleCount": "{name} ({n})",
+      "deleteTags": "Delete {count} tag | Delete {count} tags",
+      "deleteTag": "Delete tag",
+      "confirm": {
+        "one": "Delete tag \"{name}\"?",
+        "many": "Delete {count} tag? | Delete {count} tags?",
+        "body": "They are removed from all items. The items stay."
+      },
+      "removeGroup": {
+        "title": "Remove group \"{name}\"?",
+        "body": "Its tags stay."
+      },
+      "groups": "Groups ({n})",
+      "newGroup": "New group",
+      "groupName": "Group name",
+      "newTag": "New tag",
+      "description": "Description",
+      "tagName": "Tag name",
+      "noMatch": "No tags match",
+      "emptyGroup": "No tags yet. Drag tags here or press +.",
+      "empty": "No tags here yet",
+      "menu": {
+        "showItems": "Show items",
+        "star": "Star",
+        "unstar": "Unstar",
+        "rename": "Rename",
+        "addToGroup": "Add to group",
+        "moveToGroup": "Move to group",
+        "removeFromGroup": "Remove from group",
+        "removeFromAll": "Remove from all groups",
+        "changeIcon": "Change icon",
+        "remove": "Remove",
+        "copyTo": "Copy to another library"
+      },
+      "copied": "{count} item copied to {name} | {count} items copied to {name}"
+    },
+    "best": {
+      "count": "{count} tag | {count} tags",
+      "starred": "Starred tags",
+      "none": "Select tags to see their best-rated items.",
+      "nothing": "Nothing rated carries this tag yet. | Nothing rated carries these tags yet.",
+      "title": "Best rated",
+      "titleOf": "Best rated · {name}"
+    }
+  },
+  "shared": {
+    "search": "Search",
+    "nothingHere": "Nothing here",
+    "chip": {
+      "remove": "Remove"
+    },
+    "menu": {
+      "nothingFound": "Nothing found",
+      "more": "More"
+    },
+    "searchField": {
+      "where": "Where to look"
+    },
+    "compare": {
+      "zoom": "Zoom",
+      "link": "Link views",
+      "unlink": "Unlink views",
+      "actualSize": "Actual size",
+      "fit": "Fit",
+      "empty": "Nothing to compare",
+      "divider": "Divider",
+      "opacity": "Opacity"
+    },
+    "sizes": {
+      "bytes": "{n} B",
+      "kb": "{n} KB",
+      "mb": "{n} MB",
+      "gb": "{n} GB",
+      "tb": "{n} TB"
+    },
+    "keys": {
+      "Ctrl": "Ctrl",
+      "Shift": "Shift",
+      "Alt": "Alt",
+      "Space": "Space",
+      "Delete": "Delete",
+      "Backspace": "Backspace",
+      "Escape": "Escape",
+      "Enter": "Enter",
+      "Tab": "Tab",
+      "Insert": "Insert",
+      "Home": "Home",
+      "End": "End",
+      "PageUp": "PageUp",
+      "PageDown": "PageDown",
+      "ArrowUp": "ArrowUp",
+      "ArrowDown": "ArrowDown",
+      "ArrowLeft": "ArrowLeft",
+      "ArrowRight": "ArrowRight"
+    },
+    "keysMac": {
+      "Ctrl": "⌘",
+      "Shift": "⇧",
+      "Alt": "⌥",
+      "Backspace": "⌫",
+      "Delete": "⌦",
+      "Enter": "↩",
+      "Escape": "⎋",
+      "Tab": "⇥",
+      "Home": "↖",
+      "End": "↘",
+      "PageUp": "⇞",
+      "PageDown": "⇟",
+      "ArrowUp": "↑",
+      "ArrowDown": "↓",
+      "ArrowLeft": "←",
+      "ArrowRight": "→"
+    }
+  },
+  "grid": {
+    "menu": {
+      "selectAll": "Select all",
+      "emptyTrash": "Empty trash",
+      "pasteInto": "Paste into folder",
+      "paste": "Paste",
+      "newSubfolder": "New subfolder",
+      "newFolder": "New folder",
+      "subfolders": "Show subfolder contents",
+      "sortSubfolders": "Sort subfolders",
+      "titleAz": "Title A to Z",
+      "titleZa": "Title Z to A"
+    },
+    "emptyTrash": {
+      "title": "Empty the trash?",
+      "body": "Imported copies go to the Recycle Bin; linked files stay on disk.",
+      "ok": "Empty the trash"
+    },
+    "empty": {
+      "trash": "Trash is empty",
+      "noMatches": "No matches",
+      "nothing": "Nothing here yet. Drop files to add them."
+    },
+    "badges": {
+      "parts": "{count} file grouped in | {count} files grouped in",
+      "offline": "Storage offline",
+      "missing": "File missing"
+    },
+    "header": {
+      "name": "Name",
+      "hideColumn": "Hide {name}",
+      "hide": "Hide",
+      "fit": "Fit column",
+      "fitAll": "Fit all columns",
+      "autoFit": "Auto-fit columns",
+      "columns": "Columns"
+    },
+    "subfolders": {
+      "title": "Subfolders",
+      "include": "Show subfolder contents",
+      "items": "{count} item | {count} items",
+      "kind": "Folder"
+    },
+    "groups": {
+      "contents": "Contents",
+      "selectGroup": "Select items in group",
+      "collapse": "Collapse",
+      "expand": "Expand",
+      "collapseAll": "Collapse all groups",
+      "expandAll": "Expand all groups",
+      "unrated": "Unrated",
+      "rating": "{count} star | {count} stars",
+      "library": "Library",
+      "linked": "Linked files",
+      "location": "Location",
+      "empty": "Unspecified",
+      "kinds": {
+        "image": "Images",
+        "video": "Videos",
+        "audio": "Audio",
+        "document": "Documents",
+        "code": "Code",
+        "link": "Links",
+        "archive": "Archives",
+        "font": "Fonts",
+        "model": "3D models",
+        "other": "Other"
+      },
+      "dates": {
+        "later": "Later",
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "thisWeek": "Earlier this week",
+        "lastWeek": "Last week",
+        "thisMonth": "Earlier this month",
+        "lastMonth": "Last month",
+        "thisYear": "Earlier this year",
+        "unknown": "Unknown date"
+      },
+      "sizes": {
+        "empty": "Empty (0 B)",
+        "tiny": "Tiny (< 100 KB)",
+        "small": "Small (100 KB - 1 MB)",
+        "medium": "Medium (1 MB - 16 MB)",
+        "large": "Large (16 MB - 128 MB)",
+        "huge": "Huge (> 128 MB)"
+      }
+    },
+    "spectrum": {
+      "empty": "No items with colors here",
+      "map": "Map of the spectrum",
+      "missing": "{count} without colors isn't shown | {count} without colors aren't shown"
+    },
+    "columns": {
+      "preview": "Preview",
+      "tags": "Tags",
+      "dimensions": "Dimensions",
+      "rating": "Rating",
+      "ext": "Extension",
+      "size": "File size",
+      "added": "Date added",
+      "modified": "Date modified",
+      "created": "Date created",
+      "duration": "Duration",
+      "colors": "Colors",
+      "folders": "Folders",
+      "note": "Note",
+      "url": "URL",
+      "kind": "Type",
+      "path": "Path"
+    }
+  },
+  "inspector": {
+    "headings": {
+      "tags": "Tags",
+      "folders": "Folders",
+      "properties": "Properties",
+      "file": "File & location",
+      "parts": "Files"
+    },
+    "kindCounts": {
+      "image": "{count} image | {count} images",
+      "video": "{count} video | {count} videos",
+      "audio": "{count} audio | {count} audio",
+      "document": "{count} document | {count} documents",
+      "code": "{count} code | {count} code",
+      "link": "{count} link | {count} links",
+      "archive": "{count} archive | {count} archives",
+      "font": "{count} font | {count} fonts",
+      "model": "{count} 3D model | {count} 3D models",
+      "other": "{count} other | {count} other"
+    },
+    "tagMenu": {
+      "copyAll": "Copy tags",
+      "paste": "Paste tags",
+      "removeAll": "Remove all tags",
+      "rename": "Rename tag",
+      "copy": "Copy tag",
+      "remove": "Remove"
+    },
+    "export": {
+      "button": "Export",
+      "files": "Export files",
+      "json": "Metadata as JSON",
+      "csv": "Metadata as CSV"
+    },
+    "copied": "Copied to clipboard",
+    "storage": {
+      "label": "Storage",
+      "managed": "Copied into the library",
+      "linked": "Linked in {place} · {access}",
+      "readOnly": "read-only",
+      "organize": "edit and organize",
+      "edit": "edit files"
+    },
+    "status": {
+      "label": "Status",
+      "ok": "Available",
+      "offline": "Storage offline",
+      "missing": "Missing"
+    },
+    "newTag": "New tag",
+    "addToFolders": "Add to folders",
+    "selected": "item selected | items selected",
+    "displayName": "Display name",
+    "notes": "Notes",
+    "notesDiffer": "Different notes; typing sets them for all",
+    "urlsDiffer": "multiple URLs",
+    "openUrl": "Open in browser",
+    "onAll": "On all selected",
+    "containsAll": "Contains all selected",
+    "reveal": "Show in file manager",
+    "copyPath": "Copy path",
+    "pathCopied": "Path copied",
+    "relink": "Relink",
+    "favorite": "Favorite",
+    "explicit": "Explicit",
+    "props": {
+      "dimensions": "Dimensions",
+      "duration": "Duration",
+      "pages": "Pages",
+      "size": "Size",
+      "type": "Type",
+      "types": "Types",
+      "added": "Date added",
+      "created": "Date created",
+      "modified": "Date modified"
+    },
+    "parts": {
+      "item": "item · {size}",
+      "roles": {
+        "metadata": "metadata",
+        "preview": "preview",
+        "buffers": "buffers",
+        "materials": "materials"
+      },
+      "offline": "{name} (offline)",
+      "missing": "{name} (missing)",
+      "open": "Open",
+      "detach": "Detach",
+      "forget": "Forget",
+      "total": "Total",
+      "split": "Split",
+      "detached": "{name} is an item of its own again",
+      "forgotten": "{name} forgotten",
+      "splitDone": "Split into its files"
+    },
+    "field": {
+      "choose": "Choose a field",
+      "restoreTip": "Edited · Restore file value",
+      "restore": "Restore file value",
+      "find": "Find items",
+      "copy": "Copy",
+      "notIndexed": "Not indexed",
+      "add": "add",
+      "clearAll": "Clear for all selected",
+      "number": "number",
+      "path": "path"
+    },
+    "batch": {
+      "setField": "Set field",
+      "restore": "Restore all",
+      "purge": "Delete all permanently",
+      "trash": "Move all to trash"
+    },
+    "summary": {
+      "filtered": "{view} · filtered",
+      "items": "Items",
+      "unavailable": "Unavailable"
+    }
+  },
+  "viewer": {
+    "menu": {
+      "frameThumbnail": "Set frame as thumbnail",
+      "copyFrame": "Copy this frame",
+      "saveFrame": "Save frame as image",
+      "loadSubtitles": "Load subtitles"
+    },
+    "strip": {
+      "left": "Left",
+      "bottom": "Below",
+      "right": "Right"
+    }
+  },
+  "formats": {
+    "fontSample": "The quick brown fox jumps over the lazy dog",
+    "player": {
+      "pause": "Pause",
+      "play": "Play",
+      "playOnHover": "Play on hover",
+      "mute": "Mute",
+      "unmute": "Unmute",
+      "previous": "Previous item",
+      "next": "Next item",
+      "loopStart": "Set loop start",
+      "loopEnd": "Set loop end",
+      "speed": "Playback speed",
+      "captions": "Captions",
+      "captionsOff": "Captions off",
+      "fullScreen": "Full screen",
+      "end": {
+        "repeat": "Repeat",
+        "next": "Play next",
+        "stop": "Stop"
+      }
+    },
+    "preview": {
+      "offline": "Storage offline",
+      "missing": "File missing",
+      "none": "No built-in preview for .{ext}"
+    },
+    "link": {
+      "inApp": "Open in app",
+      "browser": "Browser"
+    },
+    "video": {
+      "cantPlay": "Can't play .{ext} files here. Use Open with default app.",
+      "cantPlayLinux": "Can't play .{ext} files here. Installing gst-libav and gst-plugins-bad may help. Use Open with default app."
+    },
+    "subtitles": {
+      "notSavedWhy": "Loaded, not saved. {why}",
+      "readOnly": "Loaded, not saved: the folder is read-only",
+      "taken": "Loaded, not saved: another subtitle file is already there"
+    },
+    "font": {
+      "views": {
+        "sample": "Sample text",
+        "waterfall": "Waterfall",
+        "glyphs": "Glyphs",
+        "details": "Details"
+      },
+      "looks": {
+        "theme": "Theme",
+        "paper": "Paper",
+        "ink": "Ink",
+        "blue": "Blue",
+        "yellow": "Yellow"
+      },
+      "look": {
+        "appearance": "Appearance",
+        "background": "Background",
+        "axes": "Variable axes",
+        "namedStyle": "Named style",
+        "face": "Face",
+        "size": "Text size"
+      },
+      "copy": "Copy",
+      "glyphName": "Glyph {name}",
+      "details": {
+        "family": "Family",
+        "style": "Style",
+        "fullName": "Full name",
+        "postscriptName": "PostScript name",
+        "version": "Version",
+        "designer": "Designer",
+        "foundry": "Foundry",
+        "license": "License",
+        "copyright": "Copyright",
+        "trademark": "Trademark",
+        "format": "Format",
+        "outlines": "Outlines",
+        "faces": "Faces",
+        "glyphs": "Glyphs",
+        "characters": "Characters",
+        "scripts": "Scripts",
+        "category": "Category",
+        "weight": "Weight",
+        "width": "Width",
+        "italic": "Italic",
+        "variableAxes": "Variable axes",
+        "namedStyles": "Named styles",
+        "features": "Features",
+        "colorGlyphs": "Color glyphs",
+        "embedding": "Embedding",
+        "vendorId": "Vendor ID",
+        "unitsPerEm": "Units per em",
+        "yes": "Yes",
+        "no": "No",
+        "axisRange": "{name} {min} to {max}",
+        "description": "Description",
+        "licenseText": "License text"
+      },
+      "problem": "This font can't be shown: {error}"
+    }
+  },
+  "plugins": {
+    "menu": {
+      "filters": {
+        "all": "All",
+        "window": "Windows",
+        "tab": "Tabs",
+        "widget": "Widgets",
+        "format": "Formats",
+        "action": "Actions"
+      },
+      "kinds": {
+        "window": "window",
+        "tab": "tab",
+        "widget": "Inspector widget",
+        "action": "actions"
+      },
+      "pinned": "Pinned",
+      "recent": "Recent",
+      "all": "All plugins",
+      "open": "Open {title}",
+      "show": "Show {title}",
+      "pin": "Pin",
+      "unpin": "Unpin",
+      "settings": "Settings",
+      "reveal": "Show in file manager",
+      "switchOff": "Switch off",
+      "more": "More",
+      "search": "Search plugins",
+      "noMatches": "No matches.",
+      "none": "No plugins enabled.",
+      "addFolder": "Add plugin",
+      "remove": "Remove plugin",
+      "example": "New example plugin",
+      "manage": "Manage plugins"
+    },
+    "builtin": {
+      "builtin-format-archive": {
+        "name": "Archives",
+        "description": "Picture thumbnails for ZIP and 7z archives."
+      },
+      "builtin-format-audio": {
+        "name": "Audio",
+        "description": "Covers, waveforms, playback and audio metadata.",
+        "widgets": {
+          "audio": {
+            "tags": "Song",
+            "info": "Audio"
+          }
+        },
+        "fields": {
+          "title": {
+            "label": "Title"
+          },
+          "genre": {
+            "label": "Genre"
+          },
+          "audio_codec": {
+            "label": "Audio codec"
+          },
+          "bit_rate": {
+            "label": "Bit rate (kb/s)"
+          },
+          "channels": {
+            "label": "Channels"
+          },
+          "sample_rate": {
+            "label": "Sample rate (Hz)"
+          },
+          "album": {
+            "label": "Album"
+          },
+          "album_artist": {
+            "label": "Album artist"
+          },
+          "track": {
+            "label": "Track"
+          },
+          "disc": {
+            "label": "Disc"
+          },
+          "year": {
+            "label": "Year"
+          },
+          "composer": {
+            "label": "Composer"
+          }
+        }
+      },
+      "builtin-format-code": {
+        "name": "Code",
+        "description": "HTML, JSON, XML, scripts and source code files."
+      },
+      "builtin-format-design": {
+        "name": "Design projects",
+        "description": "Files from Affinity, InDesign, XD, CorelDRAW, SketchUp, Clip Studio and others."
+      },
+      "builtin-format-document": {
+        "name": "Documents",
+        "description": "PDF, text, Markdown, office files and spreadsheets."
+      },
+      "builtin-format-link": {
+        "name": "Links",
+        "description": "Saved web links and internet shortcuts."
+      },
+      "builtin-format-font": {
+        "name": "Fonts",
+        "description": "Previews fonts and their glyphs, and reads their weight, category and scripts for filters.",
+        "fields": {
+          "font_family": {
+            "label": "Font family",
+            "description": "The family the font belongs to"
+          },
+          "font_style": {
+            "label": "Font style",
+            "description": "The style within its family, such as Bold Italic"
+          },
+          "font_weight": {
+            "label": "Font weight",
+            "description": "100 (thin) to 900 (black); 400 is regular, 700 bold"
+          },
+          "font_width": {
+            "label": "Font width"
+          },
+          "font_italic": {
+            "label": "Italic"
+          },
+          "font_class": {
+            "label": "Font category",
+            "description": "Worked out from the font's own data and name; empty when neither tells"
+          },
+          "font_scripts": {
+            "label": "Scripts",
+            "description": "Writing systems the font has the letters for"
+          },
+          "font_axes": {
+            "label": "Variable axes",
+            "description": "What a variable font can change, such as its weight or width"
+          },
+          "glyphs": {
+            "label": "Glyphs"
+          },
+          "font_faces": {
+            "label": "Faces",
+            "description": "The fonts a collection file holds"
+          },
+          "designer": {
+            "label": "Designer"
+          },
+          "foundry": {
+            "label": "Foundry",
+            "description": "The company that made the font"
+          },
+          "font_version": {
+            "label": "Font version"
+          },
+          "font_license": {
+            "label": "Font license",
+            "description": "A common licence by its short name, such as OFL-1.1, else the first sentence of the font's own"
+          }
+        },
+        "widgets": {
+          "curio": {
+            "fonts": {
+              "info": "Font"
+            }
+          }
+        },
+        "sorts": {
+          "font_weight": "Font weight"
+        },
+        "viewerTools": {
+          "sample": "Sample text",
+          "waterfall": "Waterfall",
+          "glyphs": "Glyphs",
+          "details": "Details",
+          "size": "Text size",
+          "face": "Face",
+          "look": "Appearance"
+        },
+        "viewerKeys": {
+          "sample": "Sample text",
+          "waterfall": "Waterfall",
+          "glyphs": "Glyphs",
+          "details": "Details"
+        },
+        "columns": {
+          "sample": "Font sample"
+        },
+        "screens": {
+          "fonts": "Fonts"
+        }
+      },
+      "builtin-format-image": {
+        "name": "Images",
+        "description": "Photos, drawings, camera raw and layered files, with their EXIF data.",
+        "widgets": {
+          "exif": {
+            "camera": "Camera"
+          }
+        },
+        "fields": {
+          "camera": {
+            "label": "Camera"
+          },
+          "lens": {
+            "label": "Lens"
+          },
+          "iso": {
+            "label": "ISO"
+          },
+          "aperture": {
+            "label": "Aperture",
+            "description": "f-number"
+          },
+          "shutter": {
+            "label": "Shutter",
+            "description": "exposure time"
+          },
+          "focal_length": {
+            "label": "Focal length",
+            "description": "mm"
+          },
+          "taken_at": {
+            "label": "Date taken"
+          },
+          "artist": {
+            "label": "Artist"
+          },
+          "copyright": {
+            "label": "Copyright"
+          },
+          "gps_lat": {
+            "label": "Latitude",
+            "description": "Degrees, south negative"
+          },
+          "gps_lon": {
+            "label": "Longitude",
+            "description": "Degrees, west negative"
+          },
+          "gps_alt": {
+            "label": "Altitude",
+            "description": "Metres above sea level"
+          }
+        }
+      },
+      "builtin-format-model": {
+        "name": "3D models",
+        "description": "STL, 3MF, OBJ, glTF, PLY, FBX and other 3D files."
+      },
+      "builtin-format-scene": {
+        "name": "3D scenes",
+        "description": "Blender and Cinema 4D files, shown by the preview they carry."
+      },
+      "builtin-format-video": {
+        "name": "Video",
+        "description": "Thumbnails, hover preview and playback.",
+        "widgets": {
+          "video": {
+            "info": "Video"
+          }
+        },
+        "fields": {
+          "video_codec": {
+            "label": "Video codec",
+            "description": "Such as H.264 or AV1"
+          },
+          "audio_codec": {
+            "label": "Audio codec",
+            "description": "Such as AAC or Opus"
+          },
+          "frame_rate": {
+            "label": "Frame rate",
+            "description": "Frames per second"
+          },
+          "bit_rate": {
+            "label": "Bit rate (kb/s)",
+            "description": "For the whole file"
+          },
+          "channels": {
+            "label": "Channels",
+            "description": "1 mono, 2 stereo, 6 surround"
+          },
+          "sample_rate": {
+            "label": "Sample rate (Hz)"
+          }
+        }
+      }
+    }
+  },
+  "tools": {
+    "titles": {
+      "duplicates": "Duplicates",
+      "rename": "Batch rename",
+      "compare": "Compare"
+    },
+    "duplicates": {
+      "ways": {
+        "content": {
+          "title": "Identical assets",
+          "hint": "The same bytes, whatever the name or format."
+        },
+        "looks": {
+          "title": "Similar pictures",
+          "hint": "Resized or converted copies, by thumbnail. Not crops, turns or mirror images."
+        },
+        "video": {
+          "title": "Similar videos",
+          "hint": "The same clip at another size or format."
+        },
+        "sound": {
+          "title": "Similar sounds",
+          "hint": "The same recording at another bit rate or format."
+        },
+        "archive": {
+          "title": "Same archive contents",
+          "hint": "ZIP, CBZ, EPUB and 7z files holding the same files."
+        }
+      },
+      "use": "Use {way}",
+      "show": {
+        "all": "All",
+        "identical": "Identical",
+        "similar": "Similar"
+      },
+      "modes": {
+        "side": "Side by side",
+        "slider": "Slider",
+        "difference": "Difference"
+      },
+      "scope": {
+        "label": "Scan",
+        "library": "Library",
+        "shown": "Current folder",
+        "selected": "Selected",
+        "selectedCount": "Selected ({n})",
+        "folder": "Choose folder",
+        "pick": "Scan a folder",
+        "other": "Other folder"
+      },
+      "folder": "Folder",
+      "against": {
+        "label": "Compare with",
+        "each": "Each other",
+        "library": "Library"
+      },
+      "similarity": "Similarity",
+      "similarityAt": "Similarity {percent}",
+      "covers": "Covers of other files",
+      "minSize": "Skip files under",
+      "find": "Find duplicates",
+      "scanning": "Scanning",
+      "starting": "Starting",
+      "searching": "Searching",
+      "stop": "Stop",
+      "failed": "The search failed",
+      "keep": {
+        "label": "Keep",
+        "rule": "Keep in each group",
+        "pick": "Keep the copies in a folder",
+        "inFolder": "In {folder}",
+        "rules": {
+          "biggest": "Biggest picture",
+          "largest": "Largest file",
+          "smallest": "Smallest file",
+          "oldest": "Added first",
+          "newest": "Added last",
+          "rated": "Best rated",
+          "store": "Copied into the library",
+          "linked": "Linked in place",
+          "folder": "In a folder"
+        },
+        "this": "Keep this",
+        "kept": "Kept",
+        "named": "Keep {name}",
+        "keptNamed": "Kept: {name}"
+      },
+      "sorts": {
+        "label": "Order",
+        "space": "Most space first",
+        "copies": "Most copies first",
+        "alike": "Least alike first",
+        "name": "By name"
+      },
+      "confirm": {
+        "title": "Move {count} duplicate to the trash? | Move {count} duplicates to the trash?",
+        "combine": "The kept items take their tags, folders and ratings first. Restore any of them from the trash.",
+        "plain": "Restore any of them from the trash.",
+        "ok": "Move to trash"
+      },
+      "moving": "Moving {count} duplicate to the trash | Moving {count} duplicates to the trash",
+      "movingGroups": "Moving to the trash: {done} of {count} group | Moving to the trash: {done} of {count} groups",
+      "moved": "{count} duplicate moved to the trash | {count} duplicates moved to the trash",
+      "loading": "Loading {count} item | Loading {count} items",
+      "problems": {
+        "stopped": "Stopped early: these are the groups found until then.",
+        "missing": "{count} file missing or offline wasn't compared. | {count} files missing or offline weren't compared.",
+        "noThumbnail": "{count} item has no thumbnail yet, so its looks weren't compared. Find again once thumbnails are made. | {count} items have no thumbnail yet, so their looks weren't compared. Find again once thumbnails are made.",
+        "noFfmpeg": "{count} video or sound needs FFmpeg to be compared. | {count} videos and sounds need FFmpeg to be compared.",
+        "plain": "{count} picture is too plain to tell apart, such as blank pages. | {count} pictures are too plain to tell apart, such as blank pages.",
+        "unreadable": "{count} file couldn't be read: {list}. | {count} files couldn't be read: {list}.",
+        "unreadableMore": "{list} and more"
+      },
+      "outcome": {
+        "moved": "Moved {count} duplicate to the trash. | Moved {count} duplicates to the trash.",
+        "reason": "{count} item: {why} | {count} items: {why}",
+        "left": "Left as they were: {list}."
+      },
+      "results": {
+        "includeAll": "Include every group shown",
+        "groups": "{count} group | {count} groups",
+        "details": "Details",
+        "include": "Include this group",
+        "skip": "Skip"
+      },
+      "group": {
+        "identical": "Identical",
+        "alike": "{percent} alike",
+        "copies": "{count} copy | {count} copies",
+        "frees": "frees {size}"
+      },
+      "match": {
+        "kept": "Kept",
+        "alike": "Alike",
+        "identical": "Identical",
+        "samePages": "Same pages",
+        "ways": {
+          "looks": "Looks alike, {percent}",
+          "video": "Plays alike, {percent}",
+          "sound": "Sounds alike, {percent}",
+          "archive": "Same pages, {percent}"
+        },
+        "sameFile": "{match}, same file"
+      },
+      "detail": {
+        "empty": "No group shown.",
+        "compare": "Compare",
+        "select": "Select in Curio",
+        "notShown": "{count} item isn't in what the window shows | {count} items aren't in what the window shows",
+        "linked": "Linked in place"
+      },
+      "columns": {
+        "keep": "Keep",
+        "name": "Name",
+        "size": "Size",
+        "added": "Added",
+        "remove": "Remove",
+        "removeNamed": "Remove {name}"
+      },
+      "empty": {
+        "none": "No duplicates found.",
+        "start": "Choose where to look and how to compare, then find duplicates.",
+        "more": "A lower similarity or other ways to compare may find more."
+      },
+      "summary": {
+        "none": "No group is included",
+        "toTrash": "{count} duplicate to the trash | {count} duplicates to the trash",
+        "freed": "{size} freed once the trash is emptied",
+        "stay": "{count} file linked in place stays where it is | {count} files linked in place stay where they are"
+      },
+      "foot": {
+        "combine": "Combine tags, folders and ratings",
+        "combineHint": "The kept item also takes notes, a source address and user fields it has none of. Its own values stay.",
+        "close": "Close",
+        "cancel": "Cancel",
+        "apply": "Move {count} duplicate to the trash | Move {count} duplicates to the trash",
+        "applyNone": "Move to the trash"
+      }
+    },
+    "rename": {
+      "methods": {
+        "newName": "New name",
+        "add": "Add",
+        "replace": "Replace",
+        "list": "List replace",
+        "remove": "Remove",
+        "trim": "Trim",
+        "case": "Case"
+      },
+      "use": "Use {method}",
+      "methodsHint": "Methods run top to bottom on the name without its extension.",
+      "resetAll": "Reset all",
+      "insertTag": "Insert tag",
+      "matchCase": "Match case",
+      "regex": "Regex",
+      "fromEnd": "From the end",
+      "find": "Find",
+      "replace": "Replace",
+      "replaceWith": "Replace with",
+      "replaceGroup": "$1 puts back the first group.",
+      "badRegex": "That regular expression isn't valid.",
+      "which": {
+        "all": "All",
+        "first": "First",
+        "last": "Last"
+      },
+      "newName": {
+        "name": "Name",
+        "hint": "Tags fill in each item: {tag} counts 001, 002, 003."
+      },
+      "add": {
+        "text": "Add",
+        "where": "Where",
+        "places": {
+          "start": "At the start",
+          "end": "At the end",
+          "position": "At a position",
+          "before": "Before text",
+          "after": "After text"
+        },
+        "afterCharacter": "After character",
+        "find": "Text",
+        "firstMatch": "Uses the first match."
+      },
+      "list": {
+        "addPair": "Add",
+        "removePair": "Remove pair",
+        "pairs": "{count} pair | {count} pairs"
+      },
+      "remove": {
+        "what": "Remove",
+        "types": {
+          "text": "Text",
+          "position": "Position",
+          "chars": "Characters",
+          "digits": "Digits",
+          "symbols": "Symbols",
+          "accents": "Accents",
+          "brackets": "Brackets"
+        },
+        "text": "Text",
+        "textPlaceholder": "Text, * for anything",
+        "from": "From",
+        "count": "Count",
+        "characters": "Characters",
+        "symbolsHint": "All but letters, digits and spaces.",
+        "accentsHint": "é becomes e, ñ n.",
+        "bracketsHint": "Including the brackets."
+      },
+      "trim": {
+        "characters": "Characters",
+        "hint": "Removed from the ends of the name.",
+        "where": {
+          "both": "Both ends",
+          "start": "Start",
+          "end": "End"
+        }
+      },
+      "case": {
+        "name": "Name",
+        "names": {
+          "lower": "lower case",
+          "upper": "UPPER CASE",
+          "title": "Title Case",
+          "sentence": "Sentence case",
+          "invert": "iNVERT cASE"
+        },
+        "keep": "Keep as written",
+        "keepPlaceholder": "of, and, DVD",
+        "extension": "Extension",
+        "extKeep": "Keep"
+      },
+      "tags": {
+        "name": "Name",
+        "ext": "Extension",
+        "word": "A word; -1 the last",
+        "substr": "Characters: from, count",
+        "incNr": "Counter; :001:2 pads, steps",
+        "incNrDir": "Counter per folder",
+        "incAlpha": "a to z, then aa; :A capitals",
+        "numItems": "Items renamed",
+        "numFiles": "Of them in its folder",
+        "folderName": "First folder",
+        "folders": "All folders",
+        "tags": "Tags",
+        "kind": "Kind",
+        "width": "Width; :4 pads",
+        "height": "Height",
+        "rating": "Rating",
+        "field": "Custom field",
+        "date": "Today; :yyyymmdd",
+        "time": "Now, hh-nn-ss",
+        "added": "Date added",
+        "modified": "File changed"
+      },
+      "tagGroups": {
+        "name": "Name",
+        "number": "Number",
+        "item": "Item",
+        "date": "Date"
+      },
+      "states": {
+        "dup": "Same as another item's",
+        "long": "Over 255 characters"
+      },
+      "presets": {
+        "preset": "Preset",
+        "name": "Preset name",
+        "save": "Save preset",
+        "delete": "Delete preset"
+      },
+      "columns": {
+        "current": "Current name",
+        "new": "New name",
+        "skip": "Skip",
+        "skipNamed": "Skip {name}"
+      },
+      "job": {
+        "renaming": "Renaming {count} item | Renaming {count} items",
+        "undoing": "Undoing {count} rename | Undoing {count} renames"
+      },
+      "notify": {
+        "stopped": "Stopped after renaming {count} item | Stopped after renaming {count} items",
+        "renamed": "{count} item renamed | {count} items renamed",
+        "undone": "Renames undone"
+      },
+      "loading": "Loading {count} item | Loading {count} items",
+      "progress": "Renaming {done} of {total}",
+      "done": "Renamed {count} item. | Renamed {count} items.",
+      "foot": {
+        "items": "{count} item | {count} items",
+        "itemsLeft": "{count} item, {left} left out | {count} items, {left} left out",
+        "includeAll": "Include all",
+        "undo": "Undo",
+        "close": "Close",
+        "cancel": "Cancel",
+        "rename": "Rename {count} item | Rename {count} items",
+        "nothing": "Nothing to rename yet"
+      }
+    },
+    "compare": {
+      "modes": {
+        "slider": "Slider",
+        "side": "Side by side",
+        "overlay": "Overlay",
+        "difference": "Difference"
+      },
+      "props": {
+        "name": "Name",
+        "dimensions": "Dimensions",
+        "megapixels": "Megapixels",
+        "fileSize": "File size",
+        "format": "Format",
+        "rating": "Rating",
+        "tags": "Tags",
+        "folders": "Folders",
+        "added": "Added"
+      },
+      "noRating": "None",
+      "empty": "Drop two pictures here, or one on each side. Or select two and choose Compare from their menu.",
+      "dropHere": "Drop a picture here as {side}",
+      "dropAs": "Drop as {side}",
+      "properties": "Properties",
+      "sameSize": "Both are the same size.",
+      "morePixels": "{side} has more pixels.",
+      "differences": "{count} difference | {count} differences",
+      "nothing": "Nothing to compare yet",
+      "rating": "Rating of {side}"
+    }
+  },
+  "results": {
+    "add": {
+      "added": "Added {count} item | Added {count} items",
+      "addedTo": "Added {count} item to {folder} | Added {count} items to {folder}"
+    },
+    "saved": {
+      "one": "Saved {name}",
+      "many": "Saved {count} item | Saved {count} items"
+    },
+    "maintenance": {
+      "done": "Maintenance finished"
+    },
+    "backup": {
+      "saved": "Backup saved to {folder}"
+    },
+    "autoImport": {
+      "added": "Auto-import: added {count} item | Auto-import: added {count} items"
+    },
+    "scan": {
+      "summary": "{location}: checked {count} file in {seconds} s. New: {added}, changed: {changed}, moved: {moved}, missing: {missing}. | {location}: checked {count} files in {seconds} s. New: {added}, changed: {changed}, moved: {moved}, missing: {missing}."
+    },
+    "locations": {
+      "offline": "{location} is offline; its items are marked unavailable"
+    },
+    "orphans": {
+      "adopted": "{count} file added back to the library | {count} files added back to the library",
+      "recycled": "{count} file moved to the Recycle Bin | {count} files moved to the Recycle Bin"
+    },
+    "transfer": {
+      "linked": "{count} item brought into the library as a hard link, taking no extra space | {count} items brought into the library as hard links, taking no extra space",
+      "partlyLinked": "{count} item brought into the library, {linked} as hard links | {count} items brought into the library, {linked} as hard links",
+      "copied": "{count} item copied into the library | {count} items copied into the library",
+      "movedIn": "{count} item moved into the library | {count} items moved into the library",
+      "moved": "{count} item moved | {count} items moved",
+      "allThere": "Every item there is already in the library"
+    },
+    "export": {
+      "done": "Exported {count} item | Exported {count} items",
+      "someSkipped": "Exported {count} item; skipped in read-only locations: {skipped} | Exported {count} items; skipped in read-only locations: {skipped}"
+    },
+    "eagle": {
+      "imported": "Imported {count} item from the Eagle library. | Imported {count} items from the Eagle library.",
+      "linked": "Linked the Eagle library in place: {count} item. | Linked the Eagle library in place: {count} items.",
+      "folders": "Folders: {folders}, smart folders: {smart}.",
+      "hardLinked": "Its files are hard-linked, so they take no extra space.",
+      "copied": "Its files were copied: hard links can't reach its drive.",
+      "already": "{count} item was already here. | {count} items were already here.",
+      "unreadable": "{count} item couldn't be read. | {count} items couldn't be read.",
+      "smartSkipped": "{count} smart folder uses rules Curio doesn't have. | {count} smart folders use rules Curio doesn't have."
+    }
+  },
+  "errors": {
+    "more": "(and {count} more, listed in curio.log)",
+    "plugins": {
+      "disabled": "Plugin {plugin} was disabled after {count} failure | Plugin {plugin} was disabled after {count} failures"
+    },
+    "watch": {
+      "notFollowed": "A change made in the library's folder couldn't be followed: {error}"
+    },
+    "autoImport": {
+      "choose": "Choose a folder to watch",
+      "invalidPath": "This path isn't valid on this computer",
+      "missing": "This folder doesn't exist right now",
+      "drive": "A whole drive can't be watched",
+      "library": "A folder containing this library, or inside it, can't be watched",
+      "otherLibrary": "A folder inside another library can't be watched",
+      "home": "Your home folder can't be watched; choose a folder inside it",
+      "system": "A system folder can't be watched"
+    },
+    "store": {
+      "notMoved": "Some files couldn't be moved to match their folders: {error}",
+      "notRecycled": "{count} deleted copy couldn't go to the Recycle Bin. See Settings › Storage & backup. | {count} deleted copies couldn't go to the Recycle Bin. See Settings › Storage & backup."
+    },
+    "jobs": {
+      "failed": "A background job failed unexpectedly. Details are in curio.log."
+    },
+    "backup": {
+      "failed": "Backup failed: {error}"
+    },
+    "library": {
+      "noName": "The library needs a name",
+      "exists": "{name} already exists",
+      "folderFailed": "Couldn't make the library's folder: {error}",
+      "unreachable": "{name} can't be reached at {path}",
+      "opening": "That library is being opened; try again",
+      "stillOpening": "{name} is still opening; try again shortly",
+      "alreadyThere": "The items are already in that library",
+      "existsAt": "{path} already exists. Choose another name, or use Open library folder.",
+      "needsVersion": "This library needs Curio {version} or newer.",
+      "tooNew": "This library was saved by a newer version of Curio."
+    },
+    "files": {
+      "missing": "This item's file is missing or offline",
+      "missingNamed": "{name}'s file is missing or offline",
+      "allMissing": "Those files are missing or offline",
+      "noneReachable": "None of these items' files can be reached",
+      "none": "There is no file at {path}",
+      "cantRotate": ".{ext} files can't be turned; JPG, PNG, BMP and still WebP can",
+      "sameType": "Choose a .{ext} file: the item keeps its type"
+    },
+    "folders": {
+      "none": "There is no folder at {path}"
+    },
+    "locations": {
+      "inStore": "That folder is inside a library's own store"
+    },
+    "trash": {
+      "notInTrash": "Only items in the trash can be deleted for good; move them to the trash first"
+    }
+  }
+}

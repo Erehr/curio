@@ -1,0 +1,11 @@
+{
+  "id": "example.window",
+  "name": "Example window",
+  "version": "1.0.0",
+  "author": "You",
+  "icon": "app-window",
+  "description": "Lists the selected items with their sizes.",
+  "permissions": ["metadata.read", "files.read", "ui"],
+  "windows": [{ "id": "main", "title": "Example window", "page": "index.html", "icon": "app-window", "width": 640, "height": 520 }],
+  "actions": [{ "id": "open", "title": "Open in the example window", "icon": "app-window", "opens": "main", "where": ["item-menu", "toolbar"], "selection": "any" }]
+}
