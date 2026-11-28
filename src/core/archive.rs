@@ -13,7 +13,7 @@ use std::time::{Duration, Instant, SystemTime};
 pub const ENTRY_LIMIT: u64 = 256 << 20;
 const PICTURES: &[&str] = &["jpg", "jpeg", "png", "webp", "gif", "bmp", "avif", "jxl", "tif", "tiff"];
 /// How many archives stay open, and for how long unused: an open file can't be deleted outright on Windows.
-const KEEP_OPEN: usize = 8;
+const KEEP_OPEN: usize = 32;
 const IDLE: Duration = Duration::from_secs(30);
 /// A 7z is unpacked whole the first time an entry is read, unless what it holds is larger than this.
 const UNPACK_LIMIT: u64 = 4 << 30;
@@ -124,6 +124,58 @@ fn open_7z(path: &Path) -> Result<sevenz_rust::SevenZReader<std::fs::File>, Stri
 
 /// Small reads are served from this much read ahead: a ZIP's index is read a few bytes at a time, thousands of calls to the system for a comic of 200 pages without it.
 const READ_AHEAD: usize = 64 << 10;
+
+/// Every entry but folders, with its size, read from the ZIP's central directory in one piece. Asking the zip crate for an entry's size reads that entry's own header inside the file too: a read at every page of a comic, all over the disk.
+/// The names are the crate's (a Unicode name from its extra field, an old one decoded from its code page), in the directory's order; none when the directory doesn't read as the crate read it (a name twice, a layout it isn't), and the crate is asked instead.
+fn central_entries(reader: &PosFile, z: &zip::ZipArchive<PosFile>, len: u64) -> Option<Vec<(String, u64)>> {
+    let start = z.central_directory_start();
+    let size = len.checked_sub(start).filter(|n| *n <= 64 << 20)? as usize;
+    let mut dir = vec![0u8; size];
+    let mut got = 0;
+    while got < size {
+        let n = reader.read_at(&mut dir[got..], start + got as u64).ok()?;
+        if n == 0 {
+            return None;
+        }
+        got += n;
+    }
+    let le16 = |b: &[u8], at: usize| u16::from_le_bytes([b[at], b[at + 1]]) as usize;
+    let le32 = |b: &[u8], at: usize| u32::from_le_bytes([b[at], b[at + 1], b[at + 2], b[at + 3]]);
+    let mut out = Vec::with_capacity(z.len());
+    let mut at = 0;
+    for i in 0..z.len() {
+        let head = dir.get(at..at + 46)?;
+        if le32(head, 0) != 0x0201_4b50 {
+            return None;
+        }
+        let (name_len, extra_len, comment_len) = (le16(head, 28), le16(head, 30), le16(head, 32));
+        let extra = dir.get(at + 46 + name_len..at + 46 + name_len + extra_len)?;
+        // as many records as the crate kept, in its order (checked after the loop), so the i-th is its i-th name
+        let name = z.name_for_index(i)?;
+        let mut size = le32(head, 24) as u64;
+        if size == 0xFFFF_FFFF {
+            // ZIP64: the real size leads its extra field
+            let mut e = 0;
+            size = loop {
+                let field = extra.get(e..e + 4)?;
+                let (id, n) = (le16(field, 0), le16(field, 2));
+                if id == 1 {
+                    break u64::from_le_bytes(extra.get(e + 4..e + 12)?.try_into().ok()?);
+                }
+                e += 4 + n;
+            };
+        }
+        if !name.ends_with('/') && !name.ends_with('\\') {
+            out.push((name.to_string(), size));
+        }
+        at += 46 + name_len + extra_len + comment_len;
+    }
+    // no more entries than the crate counted: one named twice it keeps once
+    if dir.get(at..at + 4).is_some_and(|sig| le32(sig, 0) == 0x0201_4b50) {
+        return None;
+    }
+    Some(out)
+}
 
 /// A file read at positions of its own, so clones read one open file at once from several threads; each clone reads ahead on its own.
 struct PosFile {
@@ -270,18 +322,22 @@ impl Archive {
         let file = std::fs::File::open(path).map_err(|e| e.to_string())?;
         let mut head = [0u8; 6];
         let mut file = PosFile::new(file, stamp.0);
-        if file.read_exact(&mut head).is_ok() && head == SEVEN_Z {
+        // straight from the file: through the read ahead, these six bytes would cost 64 KB
+        if file.read_at(&mut head, 0).is_ok_and(|n| n == 6) && head == SEVEN_Z {
             let z = open_7z(path)?;
             a.entries = z.archive().files.iter().filter(|e| !e.is_directory && e.has_stream && !is_noise(&e.name)).map(|e| Entry { name: e.name.clone(), size: e.size, picture: is_picture(&e.name) }).collect();
         } else {
             file.pos = 0;
+            let reader = file.clone();
             let mut z = zip::ZipArchive::new(file).map_err(|e| format!("Not an archive Curio reads: {e}"))?;
-            for i in 0..z.len() {
-                let Ok(e) = z.by_index_raw(i) else { continue };
-                if e.is_dir() || is_noise(e.name()) {
-                    continue;
+            let listed: Vec<(String, u64)> = match central_entries(&reader, &z, stamp.0) {
+                Some(l) => l,
+                None => (0..z.len()).filter_map(|i| z.by_index_raw(i).ok().filter(|e| !e.is_dir()).map(|e| (e.name().to_string(), e.size()))).collect(),
+            };
+            for (name, size) in listed {
+                if !is_noise(&name) {
+                    a.entries.push(Entry { picture: is_picture(&name), name, size });
                 }
-                a.entries.push(Entry { name: e.name().to_string(), size: e.size(), picture: is_picture(e.name()) });
             }
             a.zip = Some(z);
         }
@@ -517,6 +573,10 @@ pub fn read(path: &Path, name: &str) -> Result<Vec<u8>, String> {
 pub fn first_picture(path: &Path) -> Option<Vec<u8>> {
     let a = open(path).ok()?;
     let first = a.entries.iter().find(|e| e.picture && e.size <= 64 << 20)?;
+    // a 7z is read up to that entry alone: reading an entry otherwise unpacks the whole archive, as turning pages wants
+    if a.zip.is_none() && a.unpack.get().is_none() {
+        return read_7z_entry(path, &first.name, first.size).ok();
+    }
     a.read_entry(&first.name).ok()
 }
 
