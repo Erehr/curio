@@ -55,9 +55,13 @@ export function afterOpen(target = null) {
   return p
 }
 
+// each opening counts up, so one overtaken by a later switch stops where it is
+let openSeq = 0
 async function runAfterOpen() {
+  const seq = ++openSeq
   refreshLibraries()
   const st = await call('startup')
+  if (seq !== openSeq) return
   setMediaBase(st.mediaBase)
   S.startup = { ...S.startup, ...st, current: st.current }
   S.libOpen = !!st.current
@@ -75,16 +79,20 @@ async function runAfterOpen() {
     S.sidebar = { counts: {}, folders: [], tags: [], tagGroups: [], smart: [], roots: [], fields: [], history: [], favorites: [] }
     return
   }
+  // the sidebar starts at once, beside the layout and the search, rather than after them
+  const sidebar = refreshSidebar()
   // this library's own layout, which the app's other windows take too
   if (S.ui.layoutPerLibrary && !S.prefsWindow) {
-    S.ui = await withLibraryUi(toRaw(S.ui))
+    const ui = await withLibraryUi(toRaw(S.ui))
+    if (seq !== openSeq) return
+    S.ui = ui
     sendUi()
   }
-  await refreshSidebar()
-  await loadSavedFilters()
-  await loadActions()
+  await Promise.all([loadSavedFilters(), loadActions()])
+  if (seq !== openSeq) return
   refreshTheme()
   requestSearch()
+  await sidebar
 }
 
 // ------------------------------------------------------------------ boot

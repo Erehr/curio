@@ -29,7 +29,10 @@ const rootStamp = (id) => {
   const r = S.sidebar.roots.find((x) => x.id === id)
   return r ? `${r.asset_count}:${r.last_scan}` : ''
 }
+// counts up when the library changes, so a list asked for in the one before is dropped
+let rootDirsGen = 0
 export function clearRootDirs() {
+  rootDirsGen++
   for (const k of Object.keys(rootDirsMap)) delete rootDirsMap[k]
   rootDirsStamp.clear()
   rootDirsPending.clear()
@@ -38,8 +41,10 @@ export async function loadRootDirs(id, force = false) {
   const stamp = rootStamp(id)
   if (!force && rootDirsMap[id] && rootDirsStamp.get(id) === stamp) return rootDirsMap[id]
   if (rootDirsPending.has(id)) return rootDirsPending.get(id)
+  const gen = rootDirsGen
   const p = call('root_dirs', { id })
     .then((list) => {
+      if (gen !== rootDirsGen) return list
       rootDirsMap[id] = list
       rootDirsStamp.set(id, stamp)
       return list
@@ -92,11 +97,15 @@ export function listedRoot(r) {
 let rawFields = null
 let rawContrib = null
 
+// each refresh counts up, so an answer overtaken by a later one, or from the library before a switch, is dropped
+let sidebarSeq = 0
 export async function refreshSidebar() {
   if (!S.libOpen) return
+  const seq = ++sidebarSeq
   try {
     const before = rootAccessKey()
     const sidebar = await call('sidebar')
+    if (seq !== sidebarSeq || sidebar.library !== S.startup.current) return
     rawFields = sidebar.fields
     S.sidebar = { ...sidebar, fields: localizeFields(rawFields) }
     const ids = new Set(sidebar.roots.map((r) => String(r.id)))
@@ -110,7 +119,9 @@ export async function refreshSidebar() {
     }
     // cached items carry their location's read-only flag
     if (before !== null && before !== rootAccessKey()) invalidateItems([...S.items.keys()])
-    rawContrib = await call('contributions')
+    const contrib = await call('contributions')
+    if (seq !== sidebarSeq) return
+    rawContrib = contrib
     S.contrib = localizeContrib(rawContrib)
     setFormatsOff(S.contrib.disabledExts)
     setPagedExts(S.contrib.pageThumbExts)

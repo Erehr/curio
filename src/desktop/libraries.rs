@@ -32,6 +32,7 @@ pub(super) fn library_title(path: &Path) -> String {
 }
 
 pub(super) fn close_library_inner(app: &tauri::AppHandle, state: &AppState) {
+    let _one = state.switching.lock();
     *state.lib_gen.lock() += 1;
     if let Some(old) = state.lib.lock().take() {
         old.shutdown();
@@ -51,6 +52,7 @@ pub(super) fn close_library_inner(app: &tauri::AppHandle, state: &AppState) {
 }
 
 pub(super) fn open_library_inner(app: &tauri::AppHandle, state: &AppState, path: PathBuf, create: bool) -> R<()> {
+    let _one = state.switching.lock();
     let already = state.db_path.read().as_ref().and_then(|p| p.parent().map(Path::to_path_buf));
     if already.as_deref() == Some(path.as_path()) && state.lib.lock().is_some() {
         return Ok(());

@@ -91,6 +91,8 @@ pub struct AppState {
     window_seq: AtomicU64,
     /// The API asks the person one thing at a time.
     asking: Mutex<()>,
+    /// One library opens or closes at a time: two switches side by side would each set half of the state.
+    switching: Mutex<()>,
     /// The item the viewer shows, and the file: its own or one grouped into it; the last one for `viewer.closed`.
     viewer_shown: Mutex<Option<(String, String)>>,
     /// The main window's page listens for the API's calls (see web/src/app/windowRequests.js).
@@ -445,6 +447,7 @@ pub fn run(mut opts: StartOptions) {
         window_calls: Mutex::new(HashMap::new()),
         window_seq: AtomicU64::new(1),
         asking: Mutex::new(()),
+        switching: Mutex::new(()),
         viewer_shown: Mutex::new(None),
         window_ready: AtomicBool::new(false),
         theme: Mutex::new(None),

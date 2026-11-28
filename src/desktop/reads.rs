@@ -284,6 +284,8 @@ pub(super) async fn sidebar(state: tauri::State<'_, AppState>) -> R<serde_json::
             j
         }).collect();
         Ok(serde_json::json!({
+            // the library these lists are from, so the window can drop an answer that comes after a switch
+            "library": db.path.parent(),
             "counts": db.counts()?,
             "folders": db.folders()?,
             "tags": db.tags()?,
