@@ -45,6 +45,8 @@ Open the **Appearance** toolbar panel or cycle themes with ++k++:
 - **Reflowable ebooks**: Choose installed system fonts, font size, line height, margins, column width, justification and reading color themes (light, sepia, dark or your active Curio theme).
 - **PDFs**: Apply page color filters and inversion for dark-mode reading without modifying the PDF file.
 
+Comics, picture archives, PDFs and ebooks each remember their own layout and theme: the next file of the same kind opens as you left the last one. PDFs start in their original colors, ebooks in your Curio theme.
+
 ## Navigation
 
 - **Sidebar** (++t++): Toggles the slide-out panel with the **Table of Contents**, **Bookmarks** and search hits.
