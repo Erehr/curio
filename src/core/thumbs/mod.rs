@@ -180,11 +180,6 @@ pub fn write_bytes(bytes: &[u8], dest: &Path) -> Result<(), String> {
 pub fn generate_with(src: &Path, ext: &str, kind: AssetKind, dest: &Path, handlers: &[ExternalHandler], tmp_dir: &Path, link: Option<&str>) -> Result<ThumbResult, String> {
     let max = THUMBNAIL_SIZE;
     let (img, mut res) = decode_full(src, ext, kind, max, handlers, tmp_dir, link)?;
-    let (w, h) = img.dimensions();
-    if res.dims.is_none() && kind == AssetKind::Image {
-        // images without a readable header take their dimensions from the decoded picture
-        res.dims = Some((w as i64, h as i64));
-    }
     let thumb = crate::core::thumbs::previews::fit_fast(img, max);
     let (tw, th) = thumb.dimensions();
     if res.dims.is_none() && tw > 0 && th > 0 {

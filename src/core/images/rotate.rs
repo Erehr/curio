@@ -64,28 +64,46 @@ fn encode_jpeg(img: &DynamicImage, original: &[u8]) -> Result<Vec<u8>, String> {
     Ok(insert_jpeg_metadata(out, &jpeg_metadata(original)))
 }
 
-/// EXIF, ICC, Photoshop and comment segments of a JPEG. The stored turn is reset, since the pixels now
-/// carry it.
+/// EXIF, ICC, Photoshop and comment segments of a JPEG. The stored turn is reset, since the pixels now carry it.
 pub fn jpeg_metadata(b: &[u8]) -> Vec<u8> {
+    if b.len() < 4 || b[0] != 0xFF || b[1] != 0xD8 {
+        return Vec::new();
+    }
     let mut keep = Vec::new();
     let mut i = 2;
-    while i + 4 <= b.len() && b[i] == 0xFF {
-        let m = b[i + 1];
-        if m == 0xDA {
+    while i < b.len() && b[i] == 0xFF {
+        while i < b.len() && b[i] == 0xFF {
+            i += 1;
+        }
+        if i >= b.len() {
             break;
         }
-        let len = u16::from_be_bytes([b[i + 2], b[i + 3]]) as usize;
-        if i + 2 + len > b.len() {
+        let m = b[i];
+        i += 1;
+        if m == 0xDA || m == 0xD9 {
+            break;
+        }
+        if m == 0x00 || m == 0x01 || (0xD0..=0xD8).contains(&m) {
+            continue;
+        }
+        if i + 2 > b.len() {
+            break;
+        }
+        let len = u16::from_be_bytes([b[i], b[i + 1]]) as usize;
+        if len < 2 || i.checked_add(len).is_none_or(|end| end > b.len()) {
             break;
         }
         if matches!(m, 0xE1 | 0xE2 | 0xED | 0xFE) {
-            let mut seg = b[i..i + 2 + len].to_vec();
+            let mut seg = Vec::with_capacity(2 + len);
+            seg.push(0xFF);
+            seg.push(m);
+            seg.extend_from_slice(&b[i..i + len]);
             if m == 0xE1 && seg.len() > 10 && &seg[4..10] == b"Exif\0\0" {
                 reset_orientation(&mut seg[10..]);
             }
             keep.extend_from_slice(&seg);
         }
-        i += 2 + len;
+        i += len;
     }
     keep
 }
@@ -95,16 +113,20 @@ fn reset_orientation(tiff: &mut [u8]) {
     if tiff.len() < 8 {
         return;
     }
-    let le = &tiff[..2] == b"II";
+    let le = match &tiff[..2] {
+        b"II" => true,
+        b"MM" => false,
+        _ => return,
+    };
     let u16_at = |t: &[u8], at: usize| if le { u16::from_le_bytes([t[at], t[at + 1]]) } else { u16::from_be_bytes([t[at], t[at + 1]]) };
     let ifd = if le { u32::from_le_bytes([tiff[4], tiff[5], tiff[6], tiff[7]]) } else { u32::from_be_bytes([tiff[4], tiff[5], tiff[6], tiff[7]]) } as usize;
-    if ifd + 2 > tiff.len() {
+    if ifd.checked_add(2).is_none_or(|end| end > tiff.len()) {
         return;
     }
     let count = u16_at(tiff, ifd) as usize;
     for n in 0..count {
-        let at = ifd + 2 + n * 12;
-        if at + 12 > tiff.len() {
+        let Some(at) = ifd.checked_add(2).and_then(|x| n.checked_mul(12).and_then(|o| x.checked_add(o))) else { return };
+        if at.checked_add(12).is_none_or(|end| end > tiff.len()) {
             return;
         }
         if u16_at(tiff, at) == 0x0112 {
@@ -143,17 +165,33 @@ fn encode_png(img: &DynamicImage, original: &[u8]) -> Result<Vec<u8>, String> {
     Ok(insert_png_chunks(out, &png_metadata(original)))
 }
 
-/// Text, EXIF, colour profile and density chunks of a PNG, whole.
+/// Text, EXIF, colour profile and density chunks of a PNG; EXIF orientation is reset since the pixels now carry the turn.
 pub fn png_metadata(b: &[u8]) -> Vec<u8> {
+    if b.len() < 8 || &b[..8] != b"\x89PNG\r\n\x1a\n" {
+        return Vec::new();
+    }
+    // encode_png writes RGB/RGBA; copying a grayscale ICC profile into an RGB PNG produces an invalid file
+    let grayscale = b.len() >= 26 && &b[12..16] == b"IHDR" && matches!(b[25], 0 | 4);
     let mut keep = Vec::new();
     let mut i = 8;
     while i + 12 <= b.len() {
         let len = u32::from_be_bytes([b[i], b[i + 1], b[i + 2], b[i + 3]]) as usize;
-        let end = i + 12 + len;
+        let Some(end) = i.checked_add(12).and_then(|x| x.checked_add(len)) else { break };
         if end > b.len() {
             break;
         }
-        if matches!(&b[i + 4..i + 8], b"tEXt" | b"zTXt" | b"iTXt" | b"eXIf" | b"iCCP" | b"pHYs") {
+        let ctype = &b[i + 4..i + 8];
+        if ctype == b"eXIf" {
+            let mut data = b[i + 8..i + 8 + len].to_vec();
+            reset_orientation(&mut data);
+            let mut crc = flate2::Crc::new();
+            crc.update(ctype);
+            crc.update(&data);
+            keep.extend_from_slice(&(data.len() as u32).to_be_bytes());
+            keep.extend_from_slice(ctype);
+            keep.extend_from_slice(&data);
+            keep.extend_from_slice(&crc.sum().to_be_bytes());
+        } else if matches!(ctype, b"tEXt" | b"zTXt" | b"iTXt" | b"pHYs") || (ctype == b"iCCP" && !grayscale) {
             keep.extend_from_slice(&b[i..end]);
         }
         i = end;

@@ -99,11 +99,14 @@ impl Db {
 
     /// File content changed in place: keep identity and user metadata, invalidate derived data.
     pub fn update_scanned(&self, id: AssetId, f: &ScannedFile) -> DbResult<()> {
-        let aspect = aspect_of(f.width, f.height);
+        let aspect = match (f.width, f.height) {
+            (Some(w), Some(h)) if w > 0 && h > 0 => Some(w as f64 / h as f64),
+            _ => None,
+        };
         self.conn
             .execute(
                 "UPDATE assets SET size = ?, mtime = ?, ctime = COALESCE(?, ctime), width = COALESCE(?, width),
-                    height = COALESCE(?, height), aspect = ?, duration = COALESCE(?, duration), quick_hash = ?,
+                    height = COALESCE(?, height), aspect = COALESCE(?, aspect), duration = COALESCE(?, duration), quick_hash = ?,
                     file_key = COALESCE(?, file_key), animated = ?, content_hash = NULL, status = 0,
                     thumb_state = CASE WHEN thumb_state = 0 THEN 0 ELSE 3 END, thumb_ver = thumb_ver + 1, meta_state = 0
                  WHERE id = ?",

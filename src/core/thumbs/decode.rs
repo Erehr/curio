@@ -127,7 +127,9 @@ pub(super) fn decode_full(
     }
     if kind == AssetKind::Image || ext == "ico" {
         if let Ok(img) = decode_with_orientation(src) {
-            return Ok(plain(img));
+            let (w, h) = image::GenericImageView::dimensions(&img);
+            let dims = (kind == AssetKind::Image && w > 0 && h > 0).then_some((w as i64, h as i64));
+            return Ok((img, ThumbResult { dims, ..Default::default() }));
         }
         // 6) FFmpeg reads AVIF, HEIC, PSD, EXR …; an AVIF waits for it
         if ext == "avif" && media::engine() != media::Engine::Ffmpeg {

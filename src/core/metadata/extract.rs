@@ -92,10 +92,22 @@ pub fn probe_dims(path: &Path, ext: &str) -> Option<(i64, i64)> {
         let s = tree.size();
         return Some((s.width().round() as i64, s.height().round() as i64));
     }
-    match imagesize::size(path) {
-        Ok(s) if s.width > 0 && s.height > 0 => Some((s.width as i64, s.height as i64)),
-        _ => None,
+    let s = imagesize::size(path).ok()?;
+    if s.width == 0 || s.height == 0 {
+        return None;
     }
+    let (w, h) = (s.width as i64, s.height as i64);
+    if matches!(ext, "jpg" | "jpeg" | "jfif" | "jpe" | "tif" | "tiff" | "webp" | "heic" | "heif" | "avif" | "png") && exif_swaps_dims(path) {
+        Some((h, w))
+    } else {
+        Some((w, h))
+    }
+}
+
+fn exif_swaps_dims(path: &Path) -> bool {
+    read_exif(path)
+        .and_then(|ex| ex.get_field(exif::Tag::Orientation, exif::In::PRIMARY).and_then(|f| f.value.get_uint(0)))
+        .is_some_and(|o| (5..=8).contains(&o))
 }
 
 pub fn png_text_chunks(path: &Path) -> Result<HashMap<String, String>, String> {
@@ -122,15 +134,7 @@ pub fn png_text_chunks(path: &Path) -> Result<HashMap<String, String>, String> {
 
 pub(crate) fn exif_fields(path: &Path) -> Vec<(String, RawValue)> {
     let mut out = Vec::new();
-    let Ok(f) = std::fs::File::open(path) else { return out };
-    let mut r = BufReader::new(f);
-    let ex = match exif::Reader::new().read_from_container(&mut r) {
-        Ok(ex) => ex,
-        Err(_) => match webp_exif(path).and_then(|raw| exif::Reader::new().read_raw(without_child_links(raw)).ok()) {
-            Some(ex) => ex,
-            None => return out,
-        },
-    };
+    let Some(ex) = read_exif(path) else { return out };
     let get = |tag: exif::Tag| ex.get_field(tag, exif::In::PRIMARY);
     let text = |tag: exif::Tag| get(tag).map(|f| f.display_value().to_string().trim_matches('"').trim().to_string());
     // ComfyUI saves WebP with its graphs as "prompt:{...}" and "workflow:{...}" in text tags, Make and Model among them: those aren't a camera
@@ -217,11 +221,7 @@ fn gps_degrees(f: Option<&exif::Field>, reference: Option<&exif::Field>, negativ
 
 /// The primary image's EXIF tags by name, for plugins that read what the built-in readers don't: text as text (comments in UTF-16 decoded), anything else as EXIF shows it; `None` without EXIF. Stops adding tags past `max_bytes` of text.
 pub fn exif_tags(path: &Path, max_bytes: usize) -> Option<serde_json::Map<String, serde_json::Value>> {
-    let f = std::fs::File::open(path).ok()?;
-    let ex = match exif::Reader::new().read_from_container(&mut BufReader::new(f)) {
-        Ok(ex) => ex,
-        Err(_) => exif::Reader::new().read_raw(without_child_links(webp_exif(path)?)).ok()?,
-    };
+    let ex = read_exif(path)?;
     let utf16 = |bytes: &[u8], le: bool| String::from_utf16_lossy(&bytes.chunks(2).map(|c| if le { u16::from_le_bytes([c[0], *c.get(1).unwrap_or(&0)]) } else { u16::from_be_bytes([c[0], *c.get(1).unwrap_or(&0)]) }).collect::<Vec<u16>>());
     let mut out = serde_json::Map::new();
     let mut size = 0;
@@ -260,21 +260,74 @@ pub fn exif_tags(path: &Path, max_bytes: usize) -> Option<serde_json::Map<String
     Some(out)
 }
 
-/// The EXIF chunk of a WebP file, as TIFF data.
-fn webp_exif(path: &Path) -> Option<Vec<u8>> {
-    let d = std::fs::read(path).ok()?;
-    if d.len() < 12 || &d[..4] != b"RIFF" || &d[8..12] != b"WEBP" {
-        return None;
+const EXIF_MAX_BYTES: usize = 16 << 20;
+const EXIF_MAX_CHUNKS: usize = 4096;
+
+/// Reads EXIF via seeking for PNG and WebP (avoiding full-file reads of image payloads), and via `kamadak-exif` for container formats.
+fn read_exif(path: &Path) -> Option<exif::Exif> {
+    use std::io::{Read, Seek, SeekFrom};
+    let mut f = std::fs::File::open(path).ok()?;
+    let mut head = [0u8; 12];
+    f.read_exact(&mut head).ok()?;
+    if &head[..8] == b"\x89PNG\r\n\x1a\n" {
+        f.seek(SeekFrom::Start(8)).ok()?;
+        let raw = png_exif_from(&mut f)?;
+        return exif::Reader::new().read_raw(without_child_links(raw)).ok();
     }
-    let mut i = 12;
-    while i + 8 <= d.len() {
-        let n = u32::from_le_bytes(d[i + 4..i + 8].try_into().ok()?) as usize;
-        let body = d.get(i + 8..i + 8 + n)?;
-        if &d[i..i + 4] == b"EXIF" {
-            let tiff = body.strip_prefix(b"Exif\0\0").unwrap_or(body);
-            return Some(tiff.to_vec());
+    if &head[..4] == b"RIFF" && &head[8..12] == b"WEBP" {
+        let raw = webp_exif_from(&mut f)?;
+        return exif::Reader::new().read_raw(without_child_links(raw)).ok();
+    }
+    f.seek(SeekFrom::Start(0)).ok()?;
+    exif::Reader::new().read_from_container(&mut BufReader::new(f)).ok()
+}
+
+fn png_exif_from(f: &mut std::fs::File) -> Option<Vec<u8>> {
+    use std::io::{Read, Seek, SeekFrom};
+    for _ in 0..EXIF_MAX_CHUNKS {
+        let mut hdr = [0u8; 8];
+        if f.read_exact(&mut hdr).is_err() {
+            break;
         }
-        i += 8 + n + (n & 1);
+        let len = u32::from_be_bytes([hdr[0], hdr[1], hdr[2], hdr[3]]) as usize;
+        match &hdr[4..8] {
+            b"eXIf" => {
+                if len > EXIF_MAX_BYTES {
+                    return None;
+                }
+                let mut buf = vec![0u8; len];
+                f.read_exact(&mut buf).ok()?;
+                return Some(buf);
+            }
+            b"IEND" => return None,
+            _ => {
+                let skip = (len as i64).checked_add(4)?;
+                f.seek(SeekFrom::Current(skip)).ok()?;
+            }
+        }
+    }
+    None
+}
+
+/// The EXIF chunk of a WebP file, as TIFF data, read by seeking RIFF chunks.
+fn webp_exif_from(f: &mut std::fs::File) -> Option<Vec<u8>> {
+    use std::io::{Read, Seek, SeekFrom};
+    for _ in 0..EXIF_MAX_CHUNKS {
+        let mut hdr = [0u8; 8];
+        if f.read_exact(&mut hdr).is_err() {
+            break;
+        }
+        let len = u32::from_le_bytes([hdr[4], hdr[5], hdr[6], hdr[7]]) as usize;
+        if &hdr[..4] == b"EXIF" {
+            if len > EXIF_MAX_BYTES {
+                return None;
+            }
+            let mut buf = vec![0u8; len];
+            f.read_exact(&mut buf).ok()?;
+            return Some(buf.strip_prefix(b"Exif\0\0").map(ToOwned::to_owned).unwrap_or(buf));
+        }
+        let skip = (len as i64).checked_add((len & 1) as i64)?;
+        f.seek(SeekFrom::Current(skip)).ok()?;
     }
     None
 }
