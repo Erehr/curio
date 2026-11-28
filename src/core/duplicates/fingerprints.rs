@@ -321,6 +321,9 @@ pub fn sound_from(data: &[u8]) -> Vec<u32> {
 
 /// How alike two recordings sound: 1 − 2 × the share of bits that differ, at the best of the shifts tried, so unrelated sounds come out near 0.
 pub fn sound_similarity(a: &[u32], b: &[u32]) -> Option<f64> {
+    if a.len() < SOUND_MIN_OVERLAP || b.len() < SOUND_MIN_OVERLAP {
+        return None;
+    }
     let mut best: Option<f64> = None;
     for shift in -SOUND_SHIFT..=SOUND_SHIFT {
         let (x, y) = if shift >= 0 { (&a[shift as usize..], b) } else { (a, &b[(-shift) as usize..]) };

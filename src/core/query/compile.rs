@@ -227,30 +227,41 @@ impl<'a> Compiler<'a> {
             Expr::Not(x) => format!("(NOT {})", self.expr(x)?),
             Expr::Text(t) => self.text(t),
             Expr::Near { lat, lon, km } => {
-                let (la, lo) = self.gps()?;
-                // a box first, which the values' index narrows, then the distance on a plane tangent at the point: within a fraction of a percent up to a few hundred km
+                let (lat_id, lon_id) = self.gps_ids()?;
+                // a box first, which idx_fv_num narrows, then distance on a tangent plane
                 let dlat = km / 110.574;
                 let scale = (lat.to_radians().cos() * 111.320).max(1e-6);
                 let dlon = km / scale;
-                // longitudes wrap at the date line, in the box and in the distance
                 let (west, east) = (lon - dlon, lon + dlon);
+                let p_lat = self.pnum(*lat);
+                let p_lon = self.pnum(*lon);
+                let p_la_lo = self.pnum(lat - dlat);
+                let p_la_hi = self.pnum(lat + dlat);
                 let lon_box = if dlon >= 180.0 {
                     "1".to_string()
                 } else if west < -180.0 {
-                    format!("({lo} >= {} OR {lo} <= {east})", west + 360.0)
+                    let (pw, pe) = (self.pnum(west + 360.0), self.pnum(east));
+                    format!("(lo.num_value >= {pw} OR lo.num_value <= {pe})")
                 } else if east > 180.0 {
-                    format!("({lo} >= {west} OR {lo} <= {})", east - 360.0)
+                    let (pw, pe) = (self.pnum(west), self.pnum(east - 360.0));
+                    format!("(lo.num_value >= {pw} OR lo.num_value <= {pe})")
                 } else {
-                    format!("{lo} BETWEEN {west} AND {east}")
+                    let (pw, pe) = (self.pnum(west), self.pnum(east));
+                    format!("lo.num_value BETWEEN {pw} AND {pe}")
                 };
-                let dl = format!("(CASE WHEN {lo} - {lon} > 180 THEN {lo} - {lon} - 360 WHEN {lo} - {lon} < -180 THEN {lo} - {lon} + 360 ELSE {lo} - {lon} END)");
-                // items without a place are plainly not near, so NOT NEAR finds them
-                format!("COALESCE({la} BETWEEN {} AND {} AND {lon_box} AND (({la} - {lat}) * 110.574) * (({la} - {lat}) * 110.574) + ({dl} * {scale}) * ({dl} * {scale}) <= {}, 0)", lat - dlat, lat + dlat, km * km)
+                let p_scale1 = self.pnum(scale);
+                let p_scale2 = self.pnum(scale);
+                let p_km2 = self.pnum(km * km);
+                format!(
+                    "a.id IN (SELECT asset_id FROM (SELECT la.asset_id, (la.num_value - {p_lat}) * 110.574 AS dy, (lo.num_value - {p_lon}) AS dlo FROM field_values la JOIN field_values lo ON lo.asset_id = la.asset_id AND lo.field_id = {lon_id} WHERE la.field_id = {lat_id} AND la.num_value BETWEEN {p_la_lo} AND {p_la_hi} AND {lon_box}) WHERE dy * dy + ((CASE WHEN dlo > 180 THEN dlo - 360 WHEN dlo < -180 THEN dlo + 360 ELSE dlo END) * {p_scale1}) * ((CASE WHEN dlo > 180 THEN dlo - 360 WHEN dlo < -180 THEN dlo + 360 ELSE dlo END) * {p_scale2}) <= {p_km2})"
+                )
             }
             Expr::Inside { south, west, north, east } => {
-                let (la, lo) = self.gps()?;
-                let lon = if west <= east { format!("{lo} BETWEEN {west} AND {east}") } else { format!("({lo} >= {west} OR {lo} <= {east})") };
-                format!("COALESCE({la} BETWEEN {south} AND {north} AND {lon}, 0)")
+                let (lat_id, lon_id) = self.gps_ids()?;
+                let (ps, pn) = (self.pnum(*south), self.pnum(*north));
+                let (pw, pe) = (self.pnum(*west), self.pnum(*east));
+                let lon = if west <= east { format!("lo.num_value BETWEEN {pw} AND {pe}") } else { format!("(lo.num_value >= {pw} OR lo.num_value <= {pe})") };
+                format!("a.id IN (SELECT la.asset_id FROM field_values la JOIN field_values lo ON lo.asset_id = la.asset_id AND lo.field_id = {lon_id} WHERE la.field_id = {lat_id} AND la.num_value BETWEEN {ps} AND {pn} AND {lon})")
             }
             Expr::With(all) => self.with(all)?,
             Expr::Cmp { field, op, value } => {
@@ -316,10 +327,10 @@ impl<'a> Compiler<'a> {
                 }
                 let mut ph = Vec::new();
                 for x in &items {
-                    ph.push(self.ptext(&x.as_text().to_lowercase()));
+                    ph.push(self.ptext(&x.as_text()));
                 }
                 let not = if *op == Op::NotIn { "NOT " } else { "" };
-                format!("lower({col}) {not}IN ({})", ph.join(","))
+                format!("{col} COLLATE NOCASE {not}IN ({})", ph.join(","))
             }
             Op::Lt => format!("{col} < {}", self.ptext(&s)),
             Op::Le => format!("{col} <= {}", self.ptext(&s)),
@@ -327,6 +338,42 @@ impl<'a> Compiler<'a> {
             Op::Ge => format!("{col} >= {}", self.ptext(&s)),
             _ => return Err(format!("Operator {op:?} doesn't apply to text")),
         })
+    }
+
+    /// For columns stored strictly lowercase with BINARY indexes (`ext`, `kind`, `content_hash`).
+    fn string_cond_lower(&mut self, col: &str, op: &Op, v: &Val) -> Result<String, String> {
+        match op {
+            Op::Eq => Ok(format!("{col} = {}", self.ptext(&v.as_text().to_lowercase()))),
+            Op::Ne => Ok(format!("COALESCE({col},'') <> {}", self.ptext(&v.as_text().to_lowercase()))),
+            Op::In | Op::NotIn => {
+                let items = v.items();
+                if items.is_empty() {
+                    return Err(EMPTY_LIST.into());
+                }
+                let mut ph = Vec::new();
+                for x in &items {
+                    ph.push(self.ptext(&x.as_text().to_lowercase()));
+                }
+                let not = if *op == Op::NotIn { "NOT " } else { "" };
+                Ok(format!("{col} {not}IN ({})", ph.join(",")))
+            }
+            _ => self.string_cond(col, op, v),
+        }
+    }
+
+    /// Exact `= 1` / `= 0` for boolean flag columns so SQLite uses partial indexes (`idx_assets_favorite`, `idx_assets_explicit`).
+    fn bool_cond(&mut self, col: &str, op: &Op, v: &Val) -> Result<String, String> {
+        match op {
+            Op::Eq | Op::Similar | Op::Ne => {
+                let b = match v {
+                    Val::Num(n, None) => *n != 0.0,
+                    _ => parse_bool(&v.as_text()).map_err(|_| format!("'{}' is not true/false", v.as_text()))?,
+                };
+                let want = if *op == Op::Ne { !b } else { b };
+                Ok(format!("{col} = {}", if want { 1 } else { 0 }))
+            }
+            _ => self.num_cond(col, op, v, unit_one),
+        }
     }
 
     fn num_of(&self, v: &Val, mult: Mult) -> Result<f64, String> {
@@ -464,12 +511,12 @@ impl<'a> Compiler<'a> {
         })
     }
 
-    fn set_one(&mut self, table: &str, key: &str, names: &str, name: &str, how: &str) -> String {
-        self.set_one_by(table, key, names, "name", name, how)
+    fn set_one(&mut self, table: &str, key: &str, names: &str, name: &str, how: &str, neg: bool) -> String {
+        self.set_one_by(table, key, names, "name", name, how, neg)
     }
 
-    /// An item in a tag or folder whose `col` matches.
-    fn set_one_by(&mut self, table: &str, key: &str, names: &str, col: &str, name: &str, how: &str) -> String {
+    /// An item in a tag or folder whose `col` matches. Positive forms use uncorrelated `IN` so SQLite can drive from the tag/folder index instead of scanning `assets`.
+    fn set_one_by(&mut self, table: &str, key: &str, names: &str, col: &str, name: &str, how: &str, neg: bool) -> String {
         let (cmp, val) = match how {
             "contains" => ("LIKE", format!("%{}%", escape_like(name))),
             "starts" => ("LIKE", format!("{}%", escape_like(name))),
@@ -477,31 +524,39 @@ impl<'a> Compiler<'a> {
         };
         let p = self.ptext(&val);
         let tail = if cmp == "LIKE" { " ESCAPE '\\'" } else { " COLLATE NOCASE" };
-        format!(
-            "EXISTS (SELECT 1 FROM {table} x JOIN {names} n ON n.id = x.{key} WHERE x.asset_id = a.id AND n.{col} {cmp} {p}{tail})"
-        )
+        if neg {
+            format!("NOT EXISTS (SELECT 1 FROM {table} x JOIN {names} n ON n.id = x.{key} WHERE x.asset_id = a.id AND n.{col} {cmp} {p}{tail})")
+        } else {
+            format!("a.id IN (SELECT x.asset_id FROM {table} x JOIN {names} n ON n.id = x.{key} WHERE n.{col} {cmp} {p}{tail})")
+        }
     }
 
     /// Set membership against tags or folders.
     fn set_cond(&mut self, table: &str, key: &str, names: &str, op: &Op, v: &Val) -> Result<String, String> {
         Ok(match op {
-            Op::Eq | Op::Similar => self.set_one(table, key, names, &v.as_text(), "eq"),
-            Op::Contains => self.set_one(table, key, names, &v.as_text(), "contains"),
-            Op::Starts => self.set_one(table, key, names, &v.as_text(), "starts"),
-            Op::Ne => format!("(NOT {})", self.set_one(table, key, names, &v.as_text(), "eq")),
-            Op::NotContains => format!("(NOT {})", self.set_one(table, key, names, &v.as_text(), "contains")),
+            Op::Eq | Op::Similar => self.set_one(table, key, names, &v.as_text(), "eq", false),
+            Op::Contains => self.set_one(table, key, names, &v.as_text(), "contains", false),
+            Op::Starts => self.set_one(table, key, names, &v.as_text(), "starts", false),
+            Op::Ne => self.set_one(table, key, names, &v.as_text(), "eq", true),
+            Op::NotContains => self.set_one(table, key, names, &v.as_text(), "contains", true),
             Op::In | Op::HasAll | Op::HasNone | Op::NotIn => {
-                let mut parts = Vec::new();
-                for x in v.items() {
-                    parts.push(self.set_one(table, key, names, &x.as_text(), "eq"));
-                }
-                if parts.is_empty() {
+                let items = v.items();
+                if items.is_empty() {
                     return Err(EMPTY_LIST.into());
                 }
                 match op {
-                    Op::In => format!("({})", parts.join(" OR ")),
-                    Op::HasAll => format!("({})", parts.join(" AND ")),
-                    _ => format!("(NOT ({}))", parts.join(" OR ")),
+                    Op::In => {
+                        let ph: Vec<String> = items.iter().map(|x| self.ptext(&x.as_text())).collect();
+                        format!("a.id IN (SELECT x.asset_id FROM {table} x JOIN {names} n ON n.id = x.{key} WHERE n.name COLLATE NOCASE IN ({}))", ph.join(","))
+                    }
+                    Op::HasAll => {
+                        let parts: Vec<String> = items.iter().map(|x| self.set_one(table, key, names, &x.as_text(), "eq", false)).collect();
+                        format!("({})", parts.join(" AND "))
+                    }
+                    _ => {
+                        let ph: Vec<String> = items.iter().map(|x| self.ptext(&x.as_text())).collect();
+                        format!("NOT EXISTS (SELECT 1 FROM {table} x JOIN {names} n ON n.id = x.{key} WHERE x.asset_id = a.id AND n.name COLLATE NOCASE IN ({}))", ph.join(","))
+                    }
                 }
             }
             Op::Empty => format!("NOT EXISTS (SELECT 1 FROM {table} x WHERE x.asset_id = a.id)"),
@@ -512,22 +567,24 @@ impl<'a> Compiler<'a> {
 
     /// In a folder of that colour (a CSS colour as the folder keeps it, `var(--accent)` for the theme's); a coloured folder's subfolders count only with that colour themselves.
     fn folder_color(&mut self, op: &Op, v: &Val) -> Result<String, String> {
-        let one = |c: &mut Self, x: &Val| c.set_one_by("asset_folders", "folder_id", "folders", "color", &x.as_text(), "eq");
+        let one = |c: &mut Self, x: &Val, neg: bool| c.set_one_by("asset_folders", "folder_id", "folders", "color", &x.as_text(), "eq", neg);
         Ok(match op {
-            Op::Eq | Op::Similar => one(self, v),
-            Op::Ne => format!("(NOT {})", one(self, v)),
+            Op::Eq | Op::Similar => one(self, v, false),
+            Op::Ne => one(self, v, true),
             Op::In | Op::NotIn => {
-                let mut parts = Vec::new();
-                for x in v.items() {
-                    parts.push(one(self, &x));
-                }
-                if parts.is_empty() {
+                let items = v.items();
+                if items.is_empty() {
                     return Err(EMPTY_LIST.into());
                 }
-                if *op == Op::In { format!("({})", parts.join(" OR ")) } else { format!("(NOT ({}))", parts.join(" OR ")) }
+                let ph: Vec<String> = items.iter().map(|x| self.ptext(&x.as_text())).collect();
+                if *op == Op::In {
+                    format!("a.id IN (SELECT x.asset_id FROM asset_folders x JOIN folders n ON n.id = x.folder_id WHERE n.color COLLATE NOCASE IN ({}))", ph.join(","))
+                } else {
+                    format!("NOT EXISTS (SELECT 1 FROM asset_folders x JOIN folders n ON n.id = x.folder_id WHERE x.asset_id = a.id AND n.color COLLATE NOCASE IN ({}))", ph.join(","))
+                }
             }
             Op::Empty => "NOT EXISTS (SELECT 1 FROM asset_folders x JOIN folders n ON n.id = x.folder_id WHERE x.asset_id = a.id AND COALESCE(n.color, '') <> '')".into(),
-            Op::NotEmpty => "EXISTS (SELECT 1 FROM asset_folders x JOIN folders n ON n.id = x.folder_id WHERE x.asset_id = a.id AND COALESCE(n.color, '') <> '')".into(),
+            Op::NotEmpty => "a.id IN (SELECT x.asset_id FROM asset_folders x JOIN folders n ON n.id = x.folder_id WHERE COALESCE(n.color, '') <> '')".into(),
             _ => return Err(format!("Operator {op:?} doesn't apply to folder_color")),
         })
     }
@@ -545,22 +602,41 @@ impl<'a> Compiler<'a> {
                     o => o.clone(),
                 };
                 let op2 = if *op == Op::Similar { Op::Eq } else { op.clone() };
-                self.string_cond("a.ext", &op2, &v2)?
+                self.string_cond_lower("a.ext", &op2, &v2)?
             }
             Builtin::Kind => {
                 let op2 = if *op == Op::Similar { Op::Eq } else { op.clone() };
-                self.string_cond("a.kind", &op2, v)?
+                self.string_cond_lower("a.kind", &op2, v)?
             }
             Builtin::Mime => self.string_cond("a.mime", op, v)?,
             Builtin::Annotation => self.string_cond("a.annotation", op, v)?,
             Builtin::Url => self.string_cond("a.source_url", op, v)?,
             Builtin::Path => self.string_cond("a.rel_path", op, v)?,
-            Builtin::Hash => self.string_cond("a.content_hash", op, v)?,
-            Builtin::Id => self.string_cond("uid_text(a.uid)", op, v)?,
+            Builtin::Hash => self.string_cond_lower("a.content_hash", op, v)?,
+            Builtin::Id => match op {
+                Op::Eq | Op::Similar => format!("a.uid = uid_bytes({})", self.ptext(&v.as_text())),
+                Op::Ne => format!("a.uid <> uid_bytes({})", self.ptext(&v.as_text())),
+                Op::In | Op::NotIn => {
+                    let items = v.items();
+                    if items.is_empty() {
+                        return Err(EMPTY_LIST.into());
+                    }
+                    let ph: Vec<String> = items.iter().map(|x| format!("uid_bytes({})", self.ptext(&x.as_text()))).collect();
+                    let not = if *op == Op::NotIn { "NOT " } else { "" };
+                    format!("a.uid {not}IN ({})", ph.join(","))
+                }
+                _ => self.string_cond("uid_text(a.uid)", op, v)?,
+            },
             Builtin::Size => self.num_cond("a.size", op, v, unit_mult_size)?,
             Builtin::Width => self.num_cond("a.width", op, v, unit_one)?,
             Builtin::Height => self.num_cond("a.height", op, v, unit_one)?,
             Builtin::Aspect => {
+                if *op == Op::Empty {
+                    return Ok("(a.width IS NULL OR a.height IS NULL OR a.width <= 0 OR a.height <= 0)".into());
+                }
+                if *op == Op::NotEmpty {
+                    return Ok("(a.width > 0 AND a.height > 0)".into());
+                }
                 let v2 = match v {
                     Val::Str(s) if s.contains('/') => {
                         let mut it = s.split('/');
@@ -570,6 +646,12 @@ impl<'a> Compiler<'a> {
                     }
                     o => o.clone(),
                 };
+                if *op == Op::Ne {
+                    let n = self.num_of(&v2, unit_one)?;
+                    let lo = self.pnum(n - crate::core::consts::RATIO_TOLERANCE);
+                    let hi = self.pnum(n + crate::core::consts::RATIO_TOLERANCE);
+                    return Ok(format!("(a.width IS NULL OR a.height IS NULL OR a.width <= 0 OR a.height <= 0 OR NOT (a.aspect BETWEEN {lo} AND {hi}))"));
+                }
                 let cond = if *op == Op::Eq || *op == Op::Similar {
                     let n = self.num_of(&v2, unit_one)?;
                     let lo = self.pnum(n - crate::core::consts::RATIO_TOLERANCE);
@@ -579,16 +661,12 @@ impl<'a> Compiler<'a> {
                     self.num_cond("a.aspect", op, &v2, unit_one)?
                 };
                 // an item without dimensions has no shape, so it never matches a comparison
-                if matches!(op, Op::Empty | Op::NotEmpty | Op::Ne) {
-                    cond
-                } else {
-                    format!("(a.width > 0 AND a.height > 0 AND {cond})")
-                }
+                format!("(a.width > 0 AND a.height > 0 AND {cond})")
             }
             Builtin::Duration => self.num_cond("a.duration", op, v, unit_mult_duration)?,
             Builtin::Animated => self.num_cond("COALESCE(a.animated, 0)", op, v, unit_one)?,
-            Builtin::Favorite => self.num_cond("a.favorite", op, v, unit_one)?,
-            Builtin::Explicit => self.num_cond("a.explicit", op, v, unit_one)?,
+            Builtin::Favorite => self.bool_cond("a.favorite", op, v)?,
+            Builtin::Explicit => self.bool_cond("a.explicit", op, v)?,
             Builtin::TagCount => self.num_cond("(SELECT count(*) FROM asset_tags tc WHERE tc.asset_id = a.id)", op, v, unit_one)?,
             Builtin::Parts => self.num_cond("(SELECT count(*) FROM assets pc WHERE pc.part_of = a.id)", op, v, unit_one)?,
             // the roles of the files grouped into an item: `part = motion`, `part != raw`, `part IS EMPTY`
@@ -601,7 +679,11 @@ impl<'a> Compiler<'a> {
                     Op::NotContains => (true, self.string_cond("m.part_role", &Op::Contains, v)?),
                     o => (false, self.string_cond("m.part_role", o, v)?),
                 };
-                format!("{}EXISTS (SELECT 1 FROM assets m WHERE m.part_of = a.id AND {inner})", if neg { "NOT " } else { "" })
+                if neg {
+                    format!("NOT EXISTS (SELECT 1 FROM assets m WHERE m.part_of = a.id AND {inner})")
+                } else {
+                    format!("a.id IN (SELECT m.part_of FROM assets m WHERE m.part_of IS NOT NULL AND {inner})")
+                }
             }
             Builtin::Rating => {
                 if let Val::Str(s) = v {
@@ -692,8 +774,8 @@ impl<'a> Compiler<'a> {
         })
     }
 
-    /// The latitude and longitude of the item, as SQL.
-    fn gps(&self) -> Result<(String, String), String> {
+    /// Field IDs of `gps_lat` and `gps_lon`, verified indexed.
+    fn gps_ids(&self) -> Result<(i64, i64), String> {
         let id = |k: &str| -> Result<i64, String> {
             let f = self.cat.custom(k).ok_or("This library has no location data yet")?;
             if !f.indexed {
@@ -701,13 +783,13 @@ impl<'a> Compiler<'a> {
             }
             Ok(f.id)
         };
-        let of = |fid: i64| format!("(SELECT fv.num_value FROM field_values fv WHERE fv.asset_id = a.id AND fv.field_id = {fid})");
-        Ok((of(id("gps_lat")?), of(id("gps_lon")?)))
+        Ok((id("gps_lat")?, id("gps_lon")?))
     }
 
-    /// One value of each field at the same place in its list, as a LoRA and its strength: the first field's values, then each other's at the same `idx`.
+    /// One value of each field at the same place in its list, as a LoRA and its strength: joined uncorrelated so SQLite drives from `field_values` indexes.
     fn with(&mut self, all: &[Expr]) -> Result<String, String> {
-        let mut sql = String::new();
+        let mut from = String::new();
+        let mut wh = Vec::with_capacity(all.len());
         for (i, e) in all.iter().enumerate() {
             let Expr::Cmp { field, op, value } = e else { unreachable!() };
             let f = match self.cat.custom(field) {
@@ -718,11 +800,19 @@ impl<'a> Compiler<'a> {
                 return Err(crate::core::db::not_indexed(&f.key));
             }
             let w = format!("w{i}");
-            let same = if i == 0 { String::new() } else { format!(" AND {w}.idx = w0.idx") };
+            if i == 0 {
+                from = format!("field_values {w}");
+            } else {
+                from.push_str(&format!(" JOIN field_values {w} ON {w}.asset_id = w0.asset_id AND {w}.idx = w0.idx AND {w}.field_id = {}", f.id));
+            }
             let cond = self.value_cond(&f, &w, op, value)?;
-            sql += &format!("{}EXISTS (SELECT 1 FROM field_values {w} WHERE {w}.asset_id = a.id AND {w}.field_id = {}{same} AND {cond}", if i == 0 { "" } else { " AND " }, f.id);
+            if i == 0 {
+                wh.push(format!("w0.field_id = {} AND {cond}", f.id));
+            } else {
+                wh.push(cond);
+            }
         }
-        Ok(sql + &")".repeat(all.len()))
+        Ok(format!("a.id IN (SELECT w0.asset_id FROM {from} WHERE {})", wh.join(" AND ")))
     }
 
     /// A condition one stored value of the field meets, in table `alias`.
@@ -743,60 +833,42 @@ impl<'a> Compiler<'a> {
 
     fn custom(&mut self, f: &FieldDef, op: &Op, v: &Val) -> Result<String, String> {
         let fid = f.id;
-        let exists = move |inner: String| {
-            format!("EXISTS (SELECT 1 FROM field_values fv WHERE fv.asset_id = a.id AND fv.field_id = {fid} AND {inner})")
-        };
+        // positive filters use uncorrelated IN so SQLite drives from idx_fv_text / idx_fv_num; negations keep NOT EXISTS
+        let has = move |inner: String| format!("a.id IN (SELECT fv.asset_id FROM field_values fv WHERE fv.field_id = {fid} AND {inner})");
+        let not_has = move |inner: String| format!("NOT EXISTS (SELECT 1 FROM field_values fv WHERE fv.asset_id = a.id AND fv.field_id = {fid} AND {inner})");
         let numeric = f.ftype.is_numeric();
         let is_date = matches!(f.ftype, FieldType::Date | FieldType::DateTime);
         Ok(match op {
-            Op::Empty => format!(
-                "NOT EXISTS (SELECT 1 FROM field_values fv WHERE fv.asset_id = a.id AND fv.field_id = {fid} AND (fv.num_value IS NOT NULL OR COALESCE(fv.text_value,'') <> ''))"
-            ),
-            Op::NotEmpty => exists("(fv.num_value IS NOT NULL OR COALESCE(fv.text_value,'') <> '')".into()),
+            Op::Empty => not_has("(fv.num_value IS NOT NULL OR COALESCE(fv.text_value,'') <> '')".into()),
+            Op::NotEmpty => has("(fv.num_value IS NOT NULL OR COALESCE(fv.text_value,'') <> '')".into()),
             Op::Ne if f.ftype == FieldType::Boolean => {
                 let b = parse_bool(&v.as_text()).map_err(|_| format!("'{}' is not true/false", v.as_text()))?;
-                if !b {
-                    exists("fv.num_value = 1".into())
-                } else {
-                    format!("NOT {}", exists("fv.num_value = 1".into()))
-                }
+                if !b { has("fv.num_value = 1".into()) } else { not_has("fv.num_value = 1".into()) }
             }
-            Op::Ne if is_date => format!("(NOT {})", exists(self.date_cond("fv.num_value", &Op::Eq, v)?)),
-            Op::Ne if numeric => format!("(NOT {})", exists(self.num_cond("fv.num_value", &Op::Eq, v, unit_one)?)),
-            Op::Ne => format!("(NOT {})", exists(self.string_cond("fv.text_value", &Op::Eq, v)?)),
+            Op::Ne if is_date => not_has(self.date_cond("fv.num_value", &Op::Eq, v)?),
+            Op::Ne if numeric => not_has(self.num_cond("fv.num_value", &Op::Eq, v, unit_one)?),
+            Op::Ne => not_has(self.string_cond("fv.text_value", &Op::Eq, v)?),
             Op::NotIn | Op::HasNone => {
-                let inner = if numeric {
-                    self.num_cond("fv.num_value", &Op::In, v, unit_one)?
-                } else {
-                    self.string_cond("fv.text_value", &Op::In, v)?
-                };
-                format!("(NOT {})", exists(inner))
+                let inner = if numeric { self.num_cond("fv.num_value", &Op::In, v, unit_one)? } else { self.string_cond("fv.text_value", &Op::In, v)? };
+                not_has(inner)
             }
-            Op::NotContains => format!("(NOT {})", exists(self.string_cond("fv.text_value", &Op::Contains, v)?)),
+            Op::NotContains => not_has(self.string_cond("fv.text_value", &Op::Contains, v)?),
             Op::HasAll => {
                 let mut parts = Vec::new();
                 for x in v.items() {
-                    let inner = if numeric {
-                        self.num_cond("fv.num_value", &Op::Eq, &x, unit_one)?
-                    } else {
-                        self.string_cond("fv.text_value", &Op::Eq, &x)?
-                    };
-                    parts.push(exists(inner));
+                    let inner = if numeric { self.num_cond("fv.num_value", &Op::Eq, &x, unit_one)? } else { self.string_cond("fv.text_value", &Op::Eq, &x)? };
+                    parts.push(has(inner));
                 }
                 format!("({})", parts.join(" AND "))
             }
-            _ if is_date => exists(self.date_cond("fv.num_value", op, v)?),
-            Op::Contains | Op::Starts | Op::Ends | Op::Matches => exists(self.string_cond("fv.text_value", op, v)?),
+            _ if is_date => has(self.date_cond("fv.num_value", op, v)?),
+            Op::Contains | Op::Starts | Op::Ends | Op::Matches => has(self.string_cond("fv.text_value", op, v)?),
             _ if f.ftype == FieldType::Boolean => {
                 let b = parse_bool(&v.as_text()).map_err(|_| format!("'{}' is not true/false", v.as_text()))?;
-                if b {
-                    exists("fv.num_value = 1".into())
-                } else {
-                    format!("NOT {}", exists("fv.num_value = 1".into()))
-                }
+                if b { has("fv.num_value = 1".into()) } else { not_has("fv.num_value = 1".into()) }
             }
-            _ if numeric => exists(self.num_cond("fv.num_value", op, v, unit_one)?),
-            // a number kept as text, such as a seed, compares as a number
+            _ if numeric => has(self.num_cond("fv.num_value", op, v, unit_one)?),
+            // a number kept as text (such as a seed) mirrors its parsed numeric shadow in num_value, indexed by idx_fv_num
             Op::Lt | Op::Le | Op::Gt | Op::Ge if matches!(v, Val::Num(n, None) if n.is_finite()) => {
                 let Val::Num(n, _) = v else { unreachable!() };
                 let sym = match op {
@@ -805,16 +877,17 @@ impl<'a> Compiler<'a> {
                     Op::Gt => ">",
                     _ => ">=",
                 };
-                exists(format!("fv.text_value GLOB '*[0-9]*' AND CAST(fv.text_value AS REAL) {sym} {n}"))
+                let p = self.pnum(*n);
+                has(format!("fv.num_value IS NOT NULL AND fv.num_value {sym} {p}"))
             }
             Op::Similar => {
                 if matches!(f.ftype, FieldType::SingleSelect | FieldType::MultiSelect) {
-                    exists(self.string_cond("fv.text_value", &Op::Eq, v)?)
+                    has(self.string_cond("fv.text_value", &Op::Eq, v)?)
                 } else {
-                    exists(self.string_cond("fv.text_value", &Op::Contains, v)?)
+                    has(self.string_cond("fv.text_value", &Op::Contains, v)?)
                 }
             }
-            _ => exists(self.string_cond("fv.text_value", op, v)?),
+            _ => has(self.string_cond("fv.text_value", op, v)?),
         })
     }
 }

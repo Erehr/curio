@@ -1,6 +1,5 @@
 //! Items as the scanner writes them and as the window reads them back.
 
-use crate::core::db::IN_TRASH;
 use crate::core::db::ITEMS;
 use crate::core::db::UNCATEGORIZED;
 use crate::core::db::Counts;
@@ -412,15 +411,22 @@ impl Db {
     }
 
     pub fn abs_path(&self, id: AssetId) -> Option<PathBuf> {
-        self.conn
-            .query_row(
-                "SELECT r.path, a.rel_path FROM assets a JOIN roots r ON r.id = a.root_id WHERE a.id = ?",
-                [id],
-                |r| Ok(filesystem::db_to_abs(&r.get::<_, String>(0)?, &r.get::<_, String>(1)?)),
-            )
-            .optional()
-            .ok()
-            .flatten()
+        let mut st = self.conn.prepare_cached("SELECT r.path, a.rel_path FROM assets a JOIN roots r ON r.id = a.root_id WHERE a.id = ?").ok()?;
+        st.query_row([id], |r| Ok(filesystem::db_to_abs(&r.get::<_, String>(0)?, &r.get::<_, String>(1)?))).optional().ok().flatten()
+    }
+
+    /// Batched absolute paths for `ids` in chunks of 500.
+    pub fn abs_paths(&self, ids: &[AssetId]) -> HashMap<AssetId, PathBuf> {
+        let mut out = HashMap::with_capacity(ids.len());
+        for chunk in ids.chunks(500) {
+            let ph = vec!["?"; chunk.len()].join(",");
+            let Ok(mut st) = self.conn.prepare(&format!("SELECT a.id, r.path, a.rel_path FROM assets a JOIN roots r ON r.id = a.root_id WHERE a.id IN ({ph})")) else { continue };
+            let Ok(rows) = st.query_map(params_from_iter(chunk.iter()), |r| Ok((r.get::<_, AssetId>(0)?, filesystem::db_to_abs(&r.get::<_, String>(1)?, &r.get::<_, String>(2)?)))) else { continue };
+            for (id, p) in rows.filter_map(|r| r.ok()) {
+                out.insert(id, p);
+            }
+        }
+        out
     }
 
     /// Light rows for visible grid cells only.
@@ -484,10 +490,16 @@ impl Db {
 
     /// The palettes of those of `ids` that have one.
     pub fn palettes_of(&self, ids: &[AssetId]) -> DbResult<HashMap<AssetId, Vec<PaletteColor>>> {
-        let wanted: HashSet<AssetId> = ids.iter().copied().collect();
-        let mut st = self.conn.prepare("SELECT id, palette FROM assets WHERE palette IS NOT NULL AND palette <> '[]'").map_err(e)?;
-        let rows = st.query_map([], |r| Ok((r.get::<_, AssetId>(0)?, r.get::<_, String>(1)?))).map_err(e)?;
-        Ok(rows.filter_map(|r| r.ok()).filter(|(id, _)| wanted.contains(id)).map(|(id, p)| (id, color::palette_from_json(&p))).collect())
+        let mut out = HashMap::new();
+        for chunk in ids.chunks(500) {
+            let ph = vec!["?"; chunk.len()].join(",");
+            let mut st = self.conn.prepare(&format!("SELECT id, palette FROM assets WHERE id IN ({ph}) AND palette IS NOT NULL AND palette <> '[]'")).map_err(e)?;
+            let rows = st.query_map(params_from_iter(chunk.iter()), |r| Ok((r.get::<_, AssetId>(0)?, r.get::<_, String>(1)?))).map_err(e)?;
+            for (id, p) in rows.filter_map(|r| r.ok()) {
+                out.insert(id, color::palette_from_json(&p));
+            }
+        }
+        Ok(out)
     }
 
     /// The items that have a note; few have one, so a set of them is cheaper than asking per item.
@@ -504,8 +516,8 @@ impl Db {
             favorites: q(&format!("SELECT count(*) FROM assets a WHERE a.deleted = 0 AND {ITEMS} AND a.favorite = 1")),
             uncategorized: q(&format!("SELECT count(*) FROM assets a WHERE a.deleted = 0 AND {ITEMS} AND {UNCATEGORIZED}")),
             untagged: q(&format!("SELECT count(*) FROM assets a WHERE a.deleted = 0 AND {ITEMS} AND NOT EXISTS (SELECT 1 FROM asset_tags t WHERE t.asset_id = a.id)")),
-            trash: q(&format!("SELECT count(*) FROM assets a WHERE {ITEMS} AND ({IN_TRASH})")),
-            missing: q(&format!("SELECT count(*) FROM assets a WHERE a.deleted = 0 AND {ITEMS} AND a.status <> 0")),
+            trash: q(&format!("SELECT count(*) FROM (SELECT id FROM assets a WHERE {ITEMS} AND a.deleted = 1 UNION SELECT a.id FROM trashed_entries te JOIN assets a ON a.id = te.asset_id WHERE {ITEMS})")),
+            missing: q(&format!("SELECT count(*) FROM assets a WHERE a.deleted = 0 AND {ITEMS} AND a.status > 0")),
             recent: q(&format!("SELECT count(*) FROM assets a WHERE a.deleted = 0 AND {ITEMS} AND a.last_used IS NOT NULL")),
             tags: q("SELECT count(*) FROM tags"),
             size: q("SELECT COALESCE(sum(size), 0) FROM assets WHERE deleted = 0"),

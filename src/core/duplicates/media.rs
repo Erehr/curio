@@ -31,11 +31,11 @@ enum MediaPrint {
 
 /// Videos by their frames, or sounds by their prints, made with FFmpeg where missing; candidates are those of about the same length. Answers how many were compared.
 #[allow(clippy::too_many_arguments)]
-pub(super) fn media(db: &Db, ctx: &dyn Store, u: &Universe, way: Way, kind: &str, threshold: f64, graph: &mut Graph, found: &mut Found, problems: &mut Problems, stop: &AtomicBool, progress: &Progress) -> DbResult<usize> {
+pub(super) fn media(db: &Db, ctx: &dyn Store, u: &Universe, min_size: i64, way: Way, kind: &str, threshold: f64, graph: &mut Graph, found: &mut Found, problems: &mut Problems, stop: &AtomicBool, progress: &Progress) -> DbResult<usize> {
     let pk = if way == Way::Video { fingerprints::VIDEO } else { fingerprints::SOUND };
     let lengths_match = if way == Way::Video { fingerprints::video_lengths_match } else { fingerprints::sound_lengths_match };
     let sql = format!(
-        "SELECT a.id, COALESCE(a.duration, 0), a.mtime, a.size, f.ver, f.src, f.size, f.data, {} FROM assets a LEFT JOIN fingerprints f ON f.asset_id = a.id AND f.kind = {pk} WHERE {} AND a.status = 0 AND a.kind = '{kind}'",
+        "SELECT a.id, COALESCE(a.duration, 0), a.mtime, a.size, f.ver, f.src, f.size, f.data, {} FROM assets a LEFT JOIN fingerprints f ON f.asset_id = a.id AND f.kind = {pk} WHERE {} AND a.status = 0 AND a.size >= ? AND a.kind = '{kind}'",
         u.mine(),
         u.filter()
     );
@@ -49,7 +49,7 @@ pub(super) fn media(db: &Db, ctx: &dyn Store, u: &Universe, way: Way, kind: &str
     }
     let mut st = db.conn.prepare(&sql).map_err(|e| e.to_string())?;
     let rows: Vec<Row> = st
-        .query_map([], |r| {
+        .query_map([min_size], |r| {
             let (mtime, size): (Option<i64>, i64) = (r.get(2)?, r.get(3)?);
             let current = r.get::<_, Option<i64>>(4)? == Some(fingerprints::version(pk)) && r.get::<_, Option<i64>>(5)? == mtime && r.get::<_, Option<i64>>(6)? == Some(size);
             Ok(Row { id: r.get(0)?, length: r.get(1)?, mtime: mtime.unwrap_or(0), size, data: if current { r.get(7)? } else { None }, mine: r.get::<_, i64>(8)? != 0 })

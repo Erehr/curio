@@ -38,6 +38,9 @@ pub fn typed_values(f: &FieldDef, raw: &RawValue) -> DbResult<Vec<(Option<String
                     }
                     RawValue::List(_) => continue,
                 };
+                if !n.is_finite() {
+                    return Err(format!("{}: not a valid number", f.label));
+                }
                 let n = if f.ftype == FieldType::Integer { n.round() } else { n };
                 if let Some(min) = v.min {
                     if n < min {

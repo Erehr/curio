@@ -7,9 +7,12 @@ use crate::core::query::lexer::tokenize;
 use crate::core::query::Expr;
 use crate::core::query::lexer::Tok;
 
+const MAX_DEPTH: usize = 64;
+
 pub struct Parser<'a> {
     toks: Vec<Tok>,
     pos: usize,
+    depth: usize,
     is_field: &'a dyn Fn(&str) -> bool,
 }
 
@@ -22,7 +25,7 @@ pub fn parse(input: &str, is_field: &dyn Fn(&str) -> bool) -> Result<Expr, Strin
     if toks.is_empty() {
         return Ok(Expr::True);
     }
-    let mut p = Parser { toks, pos: 0, is_field };
+    let mut p = Parser { toks, pos: 0, depth: 0, is_field };
     let e = p.parse_or()?;
     if p.pos < p.toks.len() {
         return Err(format!("Unexpected {:?}", p.toks[p.pos]));
@@ -81,12 +84,24 @@ impl<'a> Parser<'a> {
     fn parse_unary(&mut self) -> Result<Expr, String> {
         match self.peek() {
             Some(t) if kw(t, "NOT") => {
+                if self.depth >= MAX_DEPTH {
+                    return Err("Query is nested too deeply".into());
+                }
                 self.pos += 1;
-                Ok(Expr::Not(Box::new(self.parse_unary()?)))
+                self.depth += 1;
+                let inner = self.parse_unary();
+                self.depth -= 1;
+                Ok(Expr::Not(Box::new(inner?)))
             }
             Some(Tok::Minus) => {
+                if self.depth >= MAX_DEPTH {
+                    return Err("Query is nested too deeply".into());
+                }
                 self.pos += 1;
-                Ok(Expr::Not(Box::new(self.parse_unary()?)))
+                self.depth += 1;
+                let inner = self.parse_unary();
+                self.depth -= 1;
+                Ok(Expr::Not(Box::new(inner?)))
             }
             _ => self.parse_primary(),
         }
@@ -109,6 +124,9 @@ impl<'a> Parser<'a> {
                         None => (w, neg),
                     };
                     let n: f64 = w.parse().map_err(|_| format!("'{w}' isn't a number"))?;
+                    if !n.is_finite() {
+                        return Err(format!("'{w}' isn't a number"));
+                    }
                     out.push(if neg { -n } else { n });
                 }
                 other => return Err(format!("Expected a number, found {other:?}")),
@@ -147,8 +165,14 @@ impl<'a> Parser<'a> {
         match self.peek().cloned() {
             None => Err("Unexpected end of query".into()),
             Some(Tok::LParen) => {
+                if self.depth >= MAX_DEPTH {
+                    return Err("Query is nested too deeply".into());
+                }
                 self.pos += 1;
-                let e = self.parse_or()?;
+                self.depth += 1;
+                let e = self.parse_or();
+                self.depth -= 1;
+                let e = e?;
                 match self.next() {
                     Some(Tok::RParen) => Ok(e),
                     _ => Err("Missing ')'".into()),
@@ -205,23 +229,31 @@ impl<'a> Parser<'a> {
                 _ => Err("Expected a value".into()),
             },
             Some(Tok::LParen) => {
+                if self.depth >= MAX_DEPTH {
+                    return Err("Query is nested too deeply".into());
+                }
+                self.depth += 1;
                 let mut items = Vec::new();
-                loop {
-                    if let Some(Tok::RParen) = self.peek() {
-                        self.pos += 1;
-                        break;
+                let res = (|| {
+                    loop {
+                        if let Some(Tok::RParen) = self.peek() {
+                            self.pos += 1;
+                            break;
+                        }
+                        items.push(self.parse_value()?);
+                        match self.next() {
+                            Some(Tok::Comma) => continue,
+                            Some(Tok::RParen) => break,
+                            _ => return Err("Expected ',' or ')' in list".into()),
+                        }
                     }
-                    items.push(self.parse_value()?);
-                    match self.next() {
-                        Some(Tok::Comma) => continue,
-                        Some(Tok::RParen) => break,
-                        _ => return Err("Expected ',' or ')' in list".into()),
+                    if items.is_empty() {
+                        return Err(EMPTY_LIST.into());
                     }
-                }
-                if items.is_empty() {
-                    return Err(EMPTY_LIST.into());
-                }
-                Ok(Val::List(items))
+                    Ok(Val::List(items))
+                })();
+                self.depth -= 1;
+                res
             }
             other => Err(format!("Expected a value, found {other:?}")),
         }

@@ -136,21 +136,12 @@ impl Db {
         const MAX_BUCKETS: i64 = 200;
         let Some(gb) = self.smart_group_by(id)? else { return Ok(vec![]) };
         let cat = self.field_catalog();
-        let hits = self.search(&Scope::SmartFolder(id), "", &Sort::default(), false, &cat)?;
-        if hits.is_empty() {
-            return Ok(vec![]);
-        }
-        self.conn.execute_batch("CREATE TEMP TABLE IF NOT EXISTS sel(id INTEGER PRIMARY KEY); DELETE FROM temp.sel;").map_err(e)?;
-        {
-            let mut st = self.conn.prepare_cached("INSERT OR IGNORE INTO temp.sel(id) VALUES(?)").map_err(e)?;
-            for h in &hits {
-                st.execute([h.0]).map_err(e)?;
-            }
-        }
+        let plan = self.search_plan(&Scope::SmartFolder(id), "", &Sort::default(), false, &cat)?;
+        let from = format!("FROM assets a {} WHERE ({})", plan.joins, plan.filter);
         let date_buckets = |col: &str, fmt: &str| -> DbResult<Vec<SmartBucket>> {
-            let sql = format!("SELECT strftime('{fmt}', a.{col} / 1000, 'unixepoch', 'localtime') AS k, count(*) FROM assets a JOIN temp.sel s ON s.id = a.id WHERE a.{col} IS NOT NULL GROUP BY k HAVING k IS NOT NULL ORDER BY k DESC LIMIT {MAX_BUCKETS}");
+            let sql = format!("SELECT strftime('{fmt}', a.{col} / 1000, 'unixepoch', 'localtime') AS k, count(*) {from} AND a.{col} IS NOT NULL GROUP BY k HAVING k IS NOT NULL ORDER BY k DESC LIMIT {MAX_BUCKETS}");
             let mut st = self.conn.prepare(&sql).map_err(e)?;
-            let rows = st.query_map([], |r| {
+            let rows = st.query_map(rusqlite::params_from_iter(plan.params.iter()), |r| {
                 let v: String = r.get(0)?;
                 Ok(SmartBucket { value: v.clone(), label: v, count: r.get(1)? })
             }).map_err(e)?;
@@ -164,32 +155,32 @@ impl Db {
             "year:modified" => date_buckets("mtime", "%Y"),
             "month:modified" => date_buckets("mtime", "%Y-%m"),
             "rating" => {
-                let mut st = self.conn.prepare("SELECT a.rating, count(*) FROM assets a JOIN temp.sel s ON s.id = a.id GROUP BY a.rating ORDER BY a.rating DESC").map_err(e)?;
-                let rows = st.query_map([], |r| {
+                let mut st = self.conn.prepare(&format!("SELECT a.rating, count(*) {from} GROUP BY a.rating ORDER BY a.rating DESC")).map_err(e)?;
+                let rows = st.query_map(rusqlite::params_from_iter(plan.params.iter()), |r| {
                     let n: i64 = r.get(0)?;
                     Ok(SmartBucket { value: n.to_string(), label: n.to_string(), count: r.get(1)? })
                 }).map_err(e)?;
                 Ok(rows.filter_map(|r| r.ok()).collect())
             }
             "kind" => {
-                let mut st = self.conn.prepare("SELECT a.kind, count(*) FROM assets a JOIN temp.sel s ON s.id = a.id GROUP BY a.kind ORDER BY 2 DESC, 1 ASC").map_err(e)?;
-                let rows = st.query_map([], |r| {
+                let mut st = self.conn.prepare(&format!("SELECT a.kind, count(*) {from} GROUP BY a.kind ORDER BY 2 DESC, 1 ASC")).map_err(e)?;
+                let rows = st.query_map(rusqlite::params_from_iter(plan.params.iter()), |r| {
                     let v: String = r.get(0)?;
                     Ok(SmartBucket { value: v.clone(), label: v, count: r.get(1)? })
                 }).map_err(e)?;
                 Ok(rows.filter_map(|r| r.ok()).collect())
             }
             "ext" => {
-                let mut st = self.conn.prepare(&format!("SELECT a.ext, count(*) FROM assets a JOIN temp.sel s ON s.id = a.id WHERE a.ext <> '' GROUP BY a.ext ORDER BY 2 DESC, 1 ASC LIMIT {MAX_BUCKETS}")).map_err(e)?;
-                let rows = st.query_map([], |r| {
+                let mut st = self.conn.prepare(&format!("SELECT a.ext, count(*) {from} AND a.ext <> '' GROUP BY a.ext ORDER BY 2 DESC, 1 ASC LIMIT {MAX_BUCKETS}")).map_err(e)?;
+                let rows = st.query_map(rusqlite::params_from_iter(plan.params.iter()), |r| {
                     let v: String = r.get(0)?;
                     Ok(SmartBucket { value: v.clone(), label: v.to_uppercase(), count: r.get(1)? })
                 }).map_err(e)?;
                 Ok(rows.filter_map(|r| r.ok()).collect())
             }
             "tag" => {
-                let mut st = self.conn.prepare(&format!("SELECT t.name, count(DISTINCT x.asset_id) FROM asset_tags x JOIN tags t ON t.id = x.tag_id JOIN temp.sel s ON s.id = x.asset_id GROUP BY t.id ORDER BY 2 DESC, t.name COLLATE NOCASE LIMIT {MAX_BUCKETS}")).map_err(e)?;
-                let rows = st.query_map([], |r| {
+                let mut st = self.conn.prepare(&format!("SELECT t.name, count(DISTINCT x.asset_id) FROM assets a {} JOIN asset_tags x ON x.asset_id = a.id JOIN tags t ON t.id = x.tag_id WHERE ({}) GROUP BY t.id ORDER BY 2 DESC, t.name COLLATE NOCASE LIMIT {MAX_BUCKETS}", plan.joins, plan.filter)).map_err(e)?;
+                let rows = st.query_map(rusqlite::params_from_iter(plan.params.iter()), |r| {
                     let v: String = r.get(0)?;
                     Ok(SmartBucket { value: v.clone(), label: v, count: r.get(1)? })
                 }).map_err(e)?;
@@ -198,13 +189,16 @@ impl Db {
             other => {
                 let Some(key) = other.strip_prefix("field:") else { return Ok(vec![]) };
                 let Some(f) = cat.by_key.get(key) else { return Ok(vec![]) };
+                let mut params = plan.params.clone();
+                params.push(Value::Integer(f.id));
                 let mut st = self.conn.prepare(&format!(
                     "SELECT CASE WHEN fv.text_value IS NOT NULL THEN fv.text_value ELSE CAST(fv.num_value AS TEXT) END AS k, count(DISTINCT fv.asset_id)
-                     FROM field_values fv JOIN temp.sel s ON s.id = fv.asset_id
-                     WHERE fv.field_id = ?1 AND (COALESCE(fv.text_value, '') <> '' OR fv.num_value IS NOT NULL)
-                     GROUP BY k ORDER BY 2 DESC, k COLLATE NOCASE LIMIT {MAX_BUCKETS}"
+                     FROM assets a {} JOIN field_values fv ON fv.asset_id = a.id
+                     WHERE ({}) AND fv.field_id = ? AND (COALESCE(fv.text_value, '') <> '' OR fv.num_value IS NOT NULL)
+                     GROUP BY k ORDER BY 2 DESC, k COLLATE NOCASE LIMIT {MAX_BUCKETS}",
+                    plan.joins, plan.filter
                 )).map_err(e)?;
-                let rows = st.query_map([f.id], |r| {
+                let rows = st.query_map(rusqlite::params_from_iter(params.iter()), |r| {
                     let v: String = r.get(0)?;
                     let label = if f.ftype == FieldType::Integer || f.ftype == FieldType::Float {
                         v.strip_suffix(".0").unwrap_or(&v).to_string()

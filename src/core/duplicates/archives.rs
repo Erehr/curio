@@ -19,10 +19,10 @@ use crate::core::duplicates::scope::Universe;
 
 /// Archives by their entries, read from their directories where missing: the same contents, or the share of entries in common. Answers how many were compared.
 #[allow(clippy::too_many_arguments)]
-pub(super) fn archives(db: &Db, ctx: &dyn Store, u: &Universe, threshold: f64, graph: &mut Graph, problems: &mut Problems, stop: &AtomicBool, progress: &Progress) -> DbResult<usize> {
+pub(super) fn archives(db: &Db, ctx: &dyn Store, u: &Universe, min_size: i64, threshold: f64, graph: &mut Graph, problems: &mut Problems, stop: &AtomicBool, progress: &Progress) -> DbResult<usize> {
     let exts = crate::core::archive::EXTS.iter().map(|e| format!("'{e}'")).collect::<Vec<_>>().join(",");
     let sql = format!(
-        "SELECT a.id, a.mtime, a.size, f.ver, f.src, f.size, f.data, {} FROM assets a LEFT JOIN fingerprints f ON f.asset_id = a.id AND f.kind = {} WHERE {} AND a.status = 0 AND lower(a.ext) IN ({exts})",
+        "SELECT a.id, a.mtime, a.size, f.ver, f.src, f.size, f.data, {} FROM assets a LEFT JOIN fingerprints f ON f.asset_id = a.id AND f.kind = {} WHERE {} AND a.status = 0 AND a.size >= ? AND a.ext IN ({exts})",
         u.mine(),
         fingerprints::ARCHIVE,
         u.filter()
@@ -36,7 +36,7 @@ pub(super) fn archives(db: &Db, ctx: &dyn Store, u: &Universe, threshold: f64, g
     }
     let mut st = db.conn.prepare(&sql).map_err(|e| e.to_string())?;
     let rows: Vec<Row> = st
-        .query_map([], |r| {
+        .query_map([min_size], |r| {
             let (mtime, size): (Option<i64>, i64) = (r.get(1)?, r.get(2)?);
             let current = r.get::<_, Option<i64>>(3)? == Some(fingerprints::version(fingerprints::ARCHIVE)) && r.get::<_, Option<i64>>(4)? == mtime && r.get::<_, Option<i64>>(5)? == Some(size);
             Ok(Row { id: r.get(0)?, mtime: mtime.unwrap_or(0), size, data: if current { r.get(6)? } else { None }, mine: r.get::<_, i64>(7)? != 0 })
@@ -72,22 +72,24 @@ pub(super) fn archives(db: &Db, ctx: &dyn Store, u: &Universe, threshold: f64, g
         return Ok(nodes.len());
     }
     progress(0.0, 0.0, &format!("Comparing {} archives", nodes.len()));
-    // which archives hold each entry; pairs sharing enough entries are compared in full
-    let mut holders: HashMap<(u32, u64), Vec<u32>> = HashMap::new();
+    // which archives hold each entry (with multiplicity, so archives with repeated entries prune accurately)
+    let mut holders: HashMap<(u32, u64), Vec<(u32, u32)>> = HashMap::new();
     for (k, n) in nodes.iter().enumerate() {
-        let mut last = None;
-        for e in &n.2 {
-            if last != Some(e) {
-                holders.entry(*e).or_default().push(k as u32);
-                last = Some(e);
+        let mut i = 0;
+        while i < n.2.len() {
+            let e = n.2[i];
+            let start = i;
+            while i < n.2.len() && n.2[i] == e {
+                i += 1;
             }
+            holders.entry(e).or_default().push((k as u32, (i - start) as u32));
         }
     }
     let mut shared: HashMap<(u32, u32), u32> = HashMap::new();
     for list in holders.values().filter(|l| l.len() > 1 && l.len() <= COMMON_ENTRY) {
         for x in 0..list.len() {
             for y in x + 1..list.len() {
-                *shared.entry((list[x], list[y])).or_default() += 1;
+                *shared.entry((list[x].0, list[y].0)).or_default() += list[x].1.min(list[y].1);
             }
         }
     }

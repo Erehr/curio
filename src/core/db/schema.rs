@@ -287,6 +287,11 @@ pub(super) const MIGRATIONS: &[Migration] = &[
         BEGIN DELETE FROM roots WHERE id = OLD.root_id AND NOT EXISTS (SELECT 1 FROM assets WHERE root_id = OLD.root_id) AND NOT EXISTS (SELECT 1 FROM file_ops WHERE root_id = OLD.root_id); END;
     "#,
     },
+    Migration {
+        floor: Floor::Keep,
+        catch_up: &[],
+        sql: "CREATE INDEX IF NOT EXISTS idx_assets_pending_thumb ON assets(added_at DESC) WHERE thumb_state IN (0, 3) AND status = 0 AND deleted = 0 AND part_of IS NULL;",
+    },
 ];
 
 pub const SCHEMA_VERSION: i64 = MIGRATIONS.len() as i64;

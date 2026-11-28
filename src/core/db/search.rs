@@ -11,10 +11,10 @@ use rusqlite::{params, params_from_iter, OptionalExtension};
 use crate::core::model::*;
 use crate::core::query::{self, fields::FieldCatalog};
 
-struct SearchPlan {
-    joins: String,
-    filter: String,
-    params: Vec<Value>,
+pub(super) struct SearchPlan {
+    pub(super) joins: String,
+    pub(super) filter: String,
+    pub(super) params: Vec<Value>,
     forced_sort: Option<String>,
 }
 
@@ -309,7 +309,7 @@ impl Db {
         self.conn.query_row(&sql, params_from_iter(plan.params.iter()), |r| r.get(0)).map_err(e)
     }
 
-    fn search_plan(&self, scope: &Scope, query_text: &str, sort: &Sort, include_subfolders: bool, cat: &FieldCatalog) -> DbResult<SearchPlan> {
+    pub(super) fn search_plan(&self, scope: &Scope, query_text: &str, sort: &Sort, include_subfolders: bool, cat: &FieldCatalog) -> DbResult<SearchPlan> {
         let mut params: Vec<Value> = Vec::new();
         let mut joins = String::new();
         let mut wh: Vec<String> = Vec::new();
@@ -353,12 +353,11 @@ impl Db {
                 if include_subfolders {
                     let seeds = vec!["SELECT ?"; list.len().max(1)].join(" UNION ALL ");
                     wh.push(format!(
-                        "EXISTS (SELECT 1 FROM asset_folders f WHERE f.asset_id = a.id AND f.folder_id IN (
-                            WITH RECURSIVE sub(id) AS ({seeds} UNION ALL SELECT fo.id FROM folders fo JOIN sub ON fo.parent_id = sub.id)
-                            SELECT id FROM sub))"
+                        "a.id IN (WITH RECURSIVE sub(id) AS ({seeds} UNION ALL SELECT fo.id FROM folders fo JOIN sub ON fo.parent_id = sub.id)
+                         SELECT f.asset_id FROM asset_folders f WHERE f.folder_id IN (SELECT id FROM sub))"
                     ));
                 } else {
-                    wh.push(format!("EXISTS (SELECT 1 FROM asset_folders f WHERE f.asset_id = a.id AND f.folder_id IN ({ph}))"));
+                    wh.push(format!("a.id IN (SELECT asset_id FROM asset_folders WHERE folder_id IN ({ph}))"));
                 }
                 params.extend(list.iter().map(|i| Value::Integer(*i)));
             }
@@ -371,23 +370,25 @@ impl Db {
                 params.push(Value::Integer(*id));
             }
             Scope::RootDir(id, dir) => {
-                let prefix = format!("{}/", dir.trim_matches('/'));
-                let plen = prefix.chars().count() as i64;
+                let clean = dir.trim_matches('/');
+                let lo = format!("{clean}/");
+                let hi = format!("{clean}0");
+                let plen = lo.chars().count() as i64;
                 if include_subfolders {
-                    wh.push("a.deleted = 0 AND a.root_id = ? AND substr(a.rel_path, 1, ?) = ?".into());
+                    wh.push("a.deleted = 0 AND a.root_id = ? AND a.rel_path >= ? AND a.rel_path < ?".into());
                     params.push(Value::Integer(*id));
-                    params.push(Value::Integer(plen));
-                    params.push(Value::Text(prefix));
+                    params.push(Value::Text(lo));
+                    params.push(Value::Text(hi));
                 } else {
-                    wh.push("a.deleted = 0 AND a.root_id = ? AND substr(a.rel_path, 1, ?) = ? AND instr(substr(a.rel_path, ?), '/') = 0".into());
+                    wh.push("a.deleted = 0 AND a.root_id = ? AND a.rel_path >= ? AND a.rel_path < ? AND instr(substr(a.rel_path, ?), '/') = 0".into());
                     params.push(Value::Integer(*id));
-                    params.push(Value::Integer(plen));
-                    params.push(Value::Text(prefix));
+                    params.push(Value::Text(lo));
+                    params.push(Value::Text(hi));
                     params.push(Value::Integer(plen + 1));
                 }
             }
             Scope::Tag(id) => {
-                wh.push("a.deleted = 0 AND EXISTS (SELECT 1 FROM asset_tags t WHERE t.asset_id = a.id AND t.tag_id = ?)".into());
+                wh.push("a.deleted = 0 AND a.id IN (SELECT asset_id FROM asset_tags WHERE tag_id = ?)".into());
                 params.push(Value::Integer(*id));
             }
             Scope::Folder(id) => {
@@ -398,14 +399,13 @@ impl Db {
                     forced_sort = Some(format!("af.position {}", if sort.descending { "DESC" } else { "ASC" }));
                 } else if include_subfolders {
                     wh.push(
-                        "EXISTS (SELECT 1 FROM asset_folders f WHERE f.asset_id = a.id AND f.folder_id IN (
-                            WITH RECURSIVE sub(id) AS (SELECT ? UNION ALL SELECT fo.id FROM folders fo JOIN sub ON fo.parent_id = sub.id)
-                            SELECT id FROM sub))"
+                        "a.id IN (WITH RECURSIVE sub(id) AS (SELECT ? UNION ALL SELECT fo.id FROM folders fo JOIN sub ON fo.parent_id = sub.id)
+                         SELECT f.asset_id FROM asset_folders f WHERE f.folder_id IN (SELECT id FROM sub))"
                             .into(),
                     );
                     params.push(Value::Integer(*id));
                 } else {
-                    wh.push("EXISTS (SELECT 1 FROM asset_folders f WHERE f.asset_id = a.id AND f.folder_id = ?)".into());
+                    wh.push("a.id IN (SELECT asset_id FROM asset_folders WHERE folder_id = ?)".into());
                     params.push(Value::Integer(*id));
                 }
             }
@@ -473,16 +473,29 @@ impl Db {
         st.query_map([], |r| r.get(0)).map(|r| r.filter_map(|x| x.ok()).collect()).unwrap_or_default()
     }
 
+    /// Load `ids` into `temp.sel` in batched multi-row inserts inside a savepoint.
+    fn load_temp_sel(&self, ids: &[AssetId]) -> DbResult<()> {
+        self.conn.execute_batch("SAVEPOINT sel_load; CREATE TEMP TABLE IF NOT EXISTS sel(id INTEGER PRIMARY KEY); DELETE FROM temp.sel;").map_err(e)?;
+        let res = (|| {
+            for chunk in ids.chunks(500) {
+                let ph = vec!["(?)"; chunk.len()].join(",");
+                let mut st = self.conn.prepare_cached(&format!("INSERT OR IGNORE INTO temp.sel(id) VALUES {ph}")).map_err(e)?;
+                st.execute(params_from_iter(chunk.iter())).map_err(e)?;
+            }
+            Ok(())
+        })();
+        if res.is_ok() {
+            self.conn.execute_batch("RELEASE sel_load").map_err(e)?;
+        } else {
+            let _ = self.conn.execute_batch("ROLLBACK TO sel_load; RELEASE sel_load");
+        }
+        res
+    }
+
     /// Totals for a selection (or a whole folder): count, total size, and only the tags and
     /// folders shared by every item (what the Inspector shows for a multi-selection).
     pub fn selection_summary(&self, ids: &[AssetId]) -> DbResult<serde_json::Value> {
-        self.conn.execute_batch("CREATE TEMP TABLE IF NOT EXISTS sel(id INTEGER PRIMARY KEY); DELETE FROM temp.sel;").map_err(e)?;
-        {
-            let mut st = self.conn.prepare_cached("INSERT OR IGNORE INTO temp.sel(id) VALUES(?)").map_err(e)?;
-            for id in ids {
-                st.execute([id]).map_err(e)?;
-            }
-        }
+        self.load_temp_sel(ids)?;
         let n: i64 = self.conn.query_row("SELECT count(*) FROM temp.sel", [], |r| r.get(0)).map_err(e)?;
         let (size, w, h, dur, rating_min, rating_max, fav_min, fav_max, exp_min, exp_max): (i64, Option<i64>, Option<i64>, Option<f64>, i64, i64, i64, i64, i64, i64) = self
             .conn
@@ -532,13 +545,7 @@ impl Db {
     /// A landscape picture also counts towards 4:3 / 16:9.
     pub fn filter_facets(&self, ids: &[AssetId]) -> DbResult<serde_json::Value> {
         use crate::core::consts::{PANORAMIC_RATIO as r, RATIO_TOLERANCE as t};
-        self.conn.execute_batch("CREATE TEMP TABLE IF NOT EXISTS sel(id INTEGER PRIMARY KEY); DELETE FROM temp.sel;").map_err(e)?;
-        {
-            let mut st = self.conn.prepare_cached("INSERT OR IGNORE INTO temp.sel(id) VALUES(?)").map_err(e)?;
-            for id in ids {
-                st.execute([id]).map_err(e)?;
-            }
-        }
+        self.load_temp_sel(ids)?;
         let mut rating = serde_json::Map::new();
         {
             let mut st = self.conn.prepare("SELECT a.rating, count(*) FROM assets a JOIN temp.sel s ON s.id = a.id GROUP BY a.rating").map_err(e)?;
@@ -557,17 +564,25 @@ impl Db {
                COALESCE(sum(a.width > a.height AND {a} >= {r}), 0),
                COALESCE(sum(a.height > a.width AND {i} >= {r}), 0),
                COALESCE(sum(a.height > 0 AND abs({a} - 4.0 / 3.0) <= {t}), 0),
-               COALESCE(sum(a.height > 0 AND abs({a} - 16.0 / 9.0) <= {t}), 0)
+               COALESCE(sum(a.height > 0 AND abs({a} - 16.0 / 9.0) <= {t}), 0),
+               COALESCE(sum(COALESCE(a.animated, 0)), 0),
+               COALESCE(sum(a.favorite), 0),
+               COALESCE(sum(a.explicit), 0)
              FROM assets a JOIN temp.sel s ON s.id = a.id"
         );
-        let shape = self
+        let (shape, animated, favorite, explicit) = self
             .conn
             .query_row(&sql, [], |x| {
-                Ok(serde_json::json!({
-                    "landscape": x.get::<_, i64>(0)?, "portrait": x.get::<_, i64>(1)?, "square": x.get::<_, i64>(2)?,
-                    "wide": x.get::<_, i64>(3)?, "tall": x.get::<_, i64>(4)?,
-                    "4:3": x.get::<_, i64>(5)?, "16:9": x.get::<_, i64>(6)?,
-                }))
+                Ok((
+                    serde_json::json!({
+                        "landscape": x.get::<_, i64>(0)?, "portrait": x.get::<_, i64>(1)?, "square": x.get::<_, i64>(2)?,
+                        "wide": x.get::<_, i64>(3)?, "tall": x.get::<_, i64>(4)?,
+                        "4:3": x.get::<_, i64>(5)?, "16:9": x.get::<_, i64>(6)?,
+                    }),
+                    x.get::<_, i64>(7)?,
+                    x.get::<_, i64>(8)?,
+                    x.get::<_, i64>(9)?,
+                ))
             })
             .map_err(e)?;
         let group = |col: &str| -> DbResult<serde_json::Map<String, serde_json::Value>> {
@@ -589,7 +604,6 @@ impl Db {
                 moving.insert(k, n.into());
             }
         }
-        let (animated, favorite, explicit): (i64, i64, i64) = self.conn.query_row("SELECT COALESCE(sum(COALESCE(a.animated, 0)), 0), COALESCE(sum(a.favorite), 0), COALESCE(sum(a.explicit), 0) FROM assets a JOIN temp.sel s ON s.id = a.id", [], |x| Ok((x.get(0)?, x.get(1)?, x.get(2)?))).map_err(e)?;
         // keyed in lower case, as folder_color compares colours
         let mut folder_colors = serde_json::Map::new();
         {
@@ -609,13 +623,7 @@ impl Db {
         let Some((field_id, numeric)) = self.conn.query_row("SELECT id, type IN ('integer', 'float', 'boolean') FROM fields WHERE key = ?", [key], |r| Ok((r.get::<_, i64>(0)?, r.get::<_, bool>(1)?))).optional().map_err(e)? else {
             return Ok(serde_json::json!({ "values": [], "set": 0 }));
         };
-        self.conn.execute_batch("CREATE TEMP TABLE IF NOT EXISTS sel(id INTEGER PRIMARY KEY); DELETE FROM temp.sel;").map_err(e)?;
-        {
-            let mut st = self.conn.prepare_cached("INSERT OR IGNORE INTO temp.sel(id) VALUES(?)").map_err(e)?;
-            for id in ids {
-                st.execute([id]).map_err(e)?;
-            }
-        }
+        self.load_temp_sel(ids)?;
         let set: i64 = self.conn.query_row("SELECT count(DISTINCT v.asset_id) FROM field_values v JOIN temp.sel s ON s.id = v.asset_id WHERE v.field_id = ?", [field_id], |r| r.get(0)).map_err(e)?;
         let sql = if numeric {
             "SELECT v.num_value, count(DISTINCT v.asset_id) FROM field_values v JOIN temp.sel s ON s.id = v.asset_id WHERE v.field_id = ?1 AND v.num_value IS NOT NULL GROUP BY v.num_value ORDER BY 2 DESC, 1 LIMIT ?2"

@@ -185,12 +185,12 @@ pub fn find(db: &Db, ctx: &dyn Store, s: &Search, stop: &AtomicBool, progress: &
     }
     for (way, kind) in [(Way::Video, "video"), (Way::Sound, "audio")] {
         if let Some(t) = s.threshold(way).filter(|_| !stop.load(Ordering::Relaxed)) {
-            let n = media(db, ctx, &u, way, kind, t, &mut graph, &mut found, &mut problems, stop, progress)?;
+            let n = media(db, ctx, &u, s.min_size, way, kind, t, &mut graph, &mut found, &mut problems, stop, progress)?;
             found.checked.push((way, n));
         }
     }
     if let Some(t) = s.threshold(Way::Archive).filter(|_| !stop.load(Ordering::Relaxed)) {
-        let n = archives(db, ctx, &u, t, &mut graph, &mut problems, stop, progress)?;
+        let n = archives(db, ctx, &u, s.min_size, t, &mut graph, &mut problems, stop, progress)?;
         found.checked.push((Way::Archive, n));
     }
     found.stopped = stop.load(Ordering::Relaxed);
@@ -273,7 +273,7 @@ impl Store for Ctx {
 }
 
 fn abs_paths(db: &Db, ids: &[AssetId]) -> HashMap<AssetId, PathBuf> {
-    ids.iter().filter_map(|i| db.abs_path(*i).map(|p| (*i, p))).collect()
+    db.abs_paths(ids)
 }
 
 // ------------------------------------------------------------------ groups
@@ -343,7 +343,7 @@ impl Graph {
             members[keep].extend(moved);
         };
         for class in &self.classes {
-            let blocked = class.iter().any(|a| class.iter().any(|b| self.ignored.contains(&pair(*a, *b))));
+            let blocked = !self.ignored.is_empty() && class.iter().any(|a| class.iter().any(|b| self.ignored.contains(&pair(*a, *b))));
             if blocked {
                 for x in 0..class.len() {
                     for y in x + 1..class.len() {

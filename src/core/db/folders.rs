@@ -334,12 +334,21 @@ impl Db {
 
     /// The items of a location, or of one of its folders (`dir`, relative to it), with their files there: not in the trash, missing or grouped into another.
     pub fn items_under(&self, root: i64, dir: Option<&str>) -> DbResult<Vec<AssetId>> {
-        let mut st = self
-            .conn
-            .prepare("SELECT id FROM assets WHERE root_id = ?1 AND part_of IS NULL AND deleted = 0 AND status = 0 AND (?2 IS NULL OR substr(rel_path, 1, length(?2) + 1) = ?2 || '/') ORDER BY id")
-            .map_err(e)?;
-        let rows = st.query_map(params![root, dir], |r| r.get(0)).map_err(e)?;
-        Ok(rows.filter_map(|r| r.ok()).collect())
+        match dir {
+            None => {
+                let mut st = self.conn.prepare_cached("SELECT id FROM assets WHERE root_id = ?1 AND part_of IS NULL AND deleted = 0 AND status = 0 ORDER BY id").map_err(e)?;
+                let rows = st.query_map([root], |r| r.get(0)).map_err(e)?;
+                Ok(rows.filter_map(|r| r.ok()).collect())
+            }
+            Some(d) => {
+                let clean = d.trim_matches('/');
+                let lo = format!("{clean}/");
+                let hi = format!("{clean}0");
+                let mut st = self.conn.prepare_cached("SELECT id FROM assets WHERE root_id = ?1 AND part_of IS NULL AND deleted = 0 AND status = 0 AND rel_path >= ?2 AND rel_path < ?3 ORDER BY id").map_err(e)?;
+                let rows = st.query_map(params![root, lo, hi], |r| r.get(0)).map_err(e)?;
+                Ok(rows.filter_map(|r| r.ok()).collect())
+            }
+        }
     }
 
     /// Tags added to whatever lands in this folder from now on. Returns the existing items that were tagged.
