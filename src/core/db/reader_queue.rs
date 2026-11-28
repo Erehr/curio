@@ -122,8 +122,8 @@ impl Db {
                 p.push(Value::Text(r.clone()));
             }
         }
-        // newest first, as thumbnails are made: the two reach a file about together, so it is read from disk once
-        sql += " ORDER BY q.asset_id DESC LIMIT ?";
+        // in the order thumbnails are made (newest added first, as an import from Eagle dates them): the two reach a file about together, so it is read from disk once
+        sql += " ORDER BY a.added_at DESC, q.asset_id DESC LIMIT ?";
         p.push(Value::Integer(limit as i64));
         let mut st = self.conn.prepare(&sql).map_err(e)?;
         let rows = st.query_map(params_from_iter(p.iter()), |r| Ok((r.get::<_, i64>(0)?, r.get::<_, String>(1)?, crate::core::metadata::readers::Mode::from_db(r.get(2)?)))).map_err(e)?;
