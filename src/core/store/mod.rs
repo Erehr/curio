@@ -304,7 +304,29 @@ pub fn sync_folders(db: &mut Db, paths: &LibraryPaths) -> DbResult<Vec<String>> 
             break;
         }
         if waiting.len() == count {
-            problems.extend(waiting.iter().map(|(_, w)| format!("moving a folder to {w}: something else is there")));
+            // break a sibling name swap (e.g. A <-> B) by moving one waiting directory aside to a temporary name
+            let held: HashSet<String> = waiting
+                .iter()
+                .filter_map(|(id, _)| db.conn.query_row("SELECT dir FROM folders WHERE id = ?", [id], |r| r.get::<_, Option<String>>(0)).ok().flatten())
+                .map(|d| fold_path(&d))
+                .collect();
+            let cycle = waiting.iter().find_map(|(id, want)| {
+                held.contains(&fold_path(want)).then(|| {
+                    db.conn.query_row("SELECT dir FROM folders WHERE id = ?", [id], |r| r.get::<_, Option<String>>(0)).ok().flatten()
+                }).flatten()
+            });
+            if let Some(c) = cycle {
+                let tmp = format!("{c}.swap-{}", fastrand::u32(..));
+                match move_dir(db, paths, &c, &tmp) {
+                    Ok(()) => {
+                        todo = waiting;
+                        continue;
+                    }
+                    Err(e) => problems.push(e),
+                }
+            } else {
+                problems.extend(waiting.iter().map(|(_, w)| format!("moving a folder to {w}: something else is there")));
+            }
             break;
         }
         todo = waiting;
@@ -422,12 +444,14 @@ pub fn copy_in(src: &Path, dest: &Path) -> io::Result<()> {
     res
 }
 
-/// Move `src` to `dest`, never replacing what is at `dest`: renamed when both are on one drive, else copied whole and the original then removed.
+/// Move `src` to `dest`, never replacing what is at `dest`: renamed when both are on one drive, else copied and verified before the original is removed.
 pub fn move_in(src: &Path, dest: &Path) -> io::Result<()> {
-    if rename_no_clobber(src, dest).is_ok() {
-        return Ok(());
+    match rename_no_clobber(src, dest) {
+        Ok(()) => return Ok(()),
+        Err(e) if transfer::crosses_devices(&e) => {}
+        Err(e) => return Err(e),
     }
-    copy_in(src, dest)?;
+    disk::copy_verified(src, dest)?;
     if let Err(e) = std::fs::remove_file(src) {
         crate::core::system::logging::warn(&format!("{} was copied into the library but couldn't be removed: {e}", src.display()));
     }

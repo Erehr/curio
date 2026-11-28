@@ -159,7 +159,7 @@ impl Db {
     }
 
     /// Look at images whose animated flag isn't known yet. Returns how many were checked and the ones found animated.
-    pub fn backfill_animated(&self, limit: i64) -> DbResult<(usize, Vec<AssetId>)> {
+    pub fn backfill_animated(&mut self, limit: i64) -> DbResult<(usize, Vec<AssetId>)> {
         let rows: Vec<AssetId> = {
             let mut st = self
                 .conn
@@ -169,15 +169,28 @@ impl Db {
             q.filter_map(|r| r.ok()).collect()
         };
         let checked = rows.len();
+        if rows.is_empty() {
+            return Ok((0, Vec::new()));
+        }
+        let mut updates = Vec::with_capacity(rows.len());
         let mut found = Vec::new();
         for id in rows {
             let Some(path) = self.abs_path(id) else { continue };
             let ext = path.extension().map(|x| x.to_string_lossy().to_lowercase()).unwrap_or_default();
             let yes = crate::core::metadata::extract::is_animated(&path, &ext);
-            self.conn.execute("UPDATE assets SET animated = ? WHERE id = ?", rusqlite::params![yes as i64, id]).map_err(e)?;
+            updates.push((id, yes));
             if yes {
                 found.push(id);
             }
+        }
+        if !updates.is_empty() {
+            self.tx(|db| {
+                let mut st = db.conn.prepare_cached("UPDATE assets SET animated = ? WHERE id = ?").map_err(e)?;
+                for &(id, yes) in &updates {
+                    st.execute(rusqlite::params![yes as i64, id]).map_err(e)?;
+                }
+                Ok(())
+            })?;
         }
         Ok((checked, found))
     }

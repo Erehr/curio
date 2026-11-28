@@ -1,6 +1,6 @@
 //! The scanner thread: locations read, the store kept in step with the index, auto-import.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -25,8 +25,10 @@ use crate::core::library::LibEvent;
 use crate::core::library::ScanJob;
 use crate::core::library::Ctx;
 
+const UNSETTLED_TRIES: u32 = 8;
+
 /// Follow changes made in the store outside Curio (`only` = the notified paths, `None` = everything), then arrange what they queued.
-fn reconcile_store(db: &mut Db, ctx: &Ctx, self_tx: &Sender<ScanJob>, only: Option<&[PathBuf]>) {
+fn reconcile_store(db: &mut Db, ctx: &Ctx, self_tx: &Sender<ScanJob>, only: Option<&[PathBuf]>, unsettled_tries: &mut HashMap<PathBuf, u32>, shutdown: &Arc<AtomicBool>) {
     *ctx.busy.lock() = Some("Checking the library's files".into());
     match crate::core::store::outside::reconcile(db, &ctx.paths, only, ctx.hard_links, crate::core::model::now_ms()) {
         Ok(mut r) => {
@@ -50,13 +52,28 @@ fn reconcile_store(db: &mut Db, ctx: &Ctx, self_tx: &Sender<ScanJob>, only: Opti
             if let Some(first) = r.problems.first() {
                 ctx.send(LibEvent::Error(Said::new("errors.watch.notFollowed", json!({"error": first}), format!("A change made in the library's folder couldn't be followed: {first}"))));
             }
-            if !r.unsettled.is_empty() {
+            let active: HashSet<&PathBuf> = r.unsettled.iter().collect();
+            unsettled_tries.retain(|p, _| active.contains(p));
+            let retry: Vec<PathBuf> = r
+                .unsettled
+                .into_iter()
+                .filter(|p| {
+                    let n = unsettled_tries.entry(p.clone()).or_insert(0);
+                    *n += 1;
+                    *n <= UNSETTLED_TRIES
+                })
+                .collect();
+            if !retry.is_empty() {
                 // still being written: look again once they have been still for a while
                 if let Some(root) = db.roots().unwrap_or_default().into_iter().find(|r| r.kind == RootKind::Managed) {
-                    let (tx, paths) = (self_tx.clone(), r.unsettled);
+                    let (tx, sd) = (self_tx.clone(), shutdown.clone());
+                    let max_n = retry.iter().filter_map(|p| unsettled_tries.get(p).copied()).max().unwrap_or(1);
+                    let delay = Duration::from_millis((crate::core::store::outside::SETTLE_MS as u64 + 500).saturating_mul(max_n as u64));
                     std::thread::spawn(move || {
-                        std::thread::sleep(Duration::from_millis(crate::core::store::outside::SETTLE_MS as u64 + 500));
-                        let _ = tx.send(ScanJob::Watch(WatchBatch { root_id: root.id, paths, rescan: false }));
+                        std::thread::sleep(delay);
+                        if !sd.load(Ordering::Relaxed) {
+                            let _ = tx.send(ScanJob::Watch(WatchBatch { root_id: root.id, paths: retry, rescan: false }));
+                        }
                     });
                 }
             }
@@ -171,6 +188,7 @@ pub(super) fn scanner_loop(mut db: Db, rx: Receiver<ScanJob>, self_tx: Sender<Sc
     // not while the library is still being reconciled after opening
     let mut next_backup_check = Instant::now() + Duration::from_secs(120);
     let mut store_tries: HashMap<AssetId, u32> = HashMap::new();
+    let mut unsettled_tries: HashMap<PathBuf, u32> = HashMap::new();
     if db.meta_get("animated_webp_recheck").as_deref() != Some("1") {
         if db.reset_webp_animated().is_ok() {
             let _ = db.meta_set("animated_webp_recheck", "1");
@@ -217,7 +235,6 @@ pub(super) fn scanner_loop(mut db: Db, rx: Receiver<ScanJob>, self_tx: Sender<Sc
             }
             // a big watched tree is walked less often: a pass may not take over 5 % of the time
             auto_import_gap = Duration::from_secs(crate::core::consts::AUTO_IMPORT_POLL_SECS).max(last_auto_import.elapsed() * 20);
-            animated_pending = true;
         }
         if animated_pending {
             match db.backfill_animated(ANIMATED_BATCH) {
@@ -253,19 +270,19 @@ pub(super) fn scanner_loop(mut db: Db, rx: Receiver<ScanJob>, self_tx: Sender<Sc
         let finished = guard("a background job", || match job {
             ScanJob::All => {
                 for r in db.roots().unwrap_or_default().into_iter().filter(|r| r.enabled && r.kind != RootKind::Unknown) {
-                    scan_one(&mut db, &ctx, &mut watcher, &self_tx, r.id);
+                    scan_one(&mut db, &ctx, &mut watcher, &self_tx, r.id, &mut unsettled_tries, &shutdown);
                 }
             }
-            ScanJob::Root(id) => scan_one(&mut db, &ctx, &mut watcher, &self_tx, id),
+            ScanJob::Root(id) => scan_one(&mut db, &ctx, &mut watcher, &self_tx, id, &mut unsettled_tries, &shutdown),
             ScanJob::Watch(b) => {
                 let Some(root) = db.root(b.root_id) else { return };
                 if root.kind == RootKind::Unknown {
                     return;
                 }
                 if root.kind == RootKind::Managed {
-                    reconcile_store(&mut db, &ctx, &self_tx, (!b.rescan).then_some(b.paths.as_slice()));
+                    reconcile_store(&mut db, &ctx, &self_tx, (!b.rescan).then_some(b.paths.as_slice()), &mut unsettled_tries, &shutdown);
                 } else if b.rescan {
-                    scan_one(&mut db, &ctx, &mut watcher, &self_tx, root.id);
+                    scan_one(&mut db, &ctx, &mut watcher, &self_tx, root.id, &mut unsettled_tries, &shutdown);
                 } else {
                     let opts = ctx.scan_options();
                     match scan::reconcile_paths(&mut db, &root, &b.paths, &opts) {
@@ -300,7 +317,7 @@ pub(super) fn scanner_loop(mut db: Db, rx: Receiver<ScanJob>, self_tx: Sender<Sc
                 }
             }
             ScanJob::CheckStore => {
-                reconcile_store(&mut db, &ctx, &self_tx, None);
+                reconcile_store(&mut db, &ctx, &self_tx, None, &mut unsettled_tries, &shutdown);
                 if let Err(e) = db.drop_empty_loose_roots() {
                     logging::error(&format!("removing unused locations: {e}"));
                 }
@@ -403,13 +420,13 @@ fn auto_import(db: &mut Db, ctx: &Ctx) {
 /// How often a scan under way says how far it got.
 const SCAN_NOTE_EVERY: Duration = Duration::from_secs(1);
 
-fn scan_one(db: &mut Db, ctx: &Ctx, watcher: &mut FsWatcher, self_tx: &Sender<ScanJob>, root_id: i64) {
+fn scan_one(db: &mut Db, ctx: &Ctx, watcher: &mut FsWatcher, self_tx: &Sender<ScanJob>, root_id: i64, unsettled_tries: &mut HashMap<PathBuf, u32>, shutdown: &Arc<AtomicBool>) {
     let Some(root) = db.root(root_id) else { return };
     if root.kind == RootKind::Unknown {
         return;
     }
     if root.kind == RootKind::Managed {
-        reconcile_store(db, ctx, self_tx, None);
+        reconcile_store(db, ctx, self_tx, None, unsettled_tries, shutdown);
         return;
     }
     let label = root.label.clone();

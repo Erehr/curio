@@ -364,7 +364,7 @@ pub fn scan_root_with(db: &mut Db, root: &Root, opts: &ScanOptions, progress: &d
     }
     for chunk in new_files.chunks(SCAN_BATCH) {
         if cancel.load(Ordering::Relaxed) {
-            break;
+            return Ok((stats, items_only(db, events)?));
         }
         let got = insert_new(db, root, chunk, opts, &by_key, &mut by_hash, &mut used, &mut stats)?;
         if stream {
@@ -373,6 +373,9 @@ pub fn scan_root_with(db: &mut Db, root: &Root, opts: &ScanOptions, progress: &d
         events.extend(got);
         done += chunk.len();
         progress(stats.seen, &format!("indexing {done}/{total_batches}"));
+    }
+    if cancel.load(Ordering::Relaxed) {
+        return Ok((stats, items_only(db, events)?));
     }
     for id in &used {
         vanished.remove(id);
@@ -455,9 +458,10 @@ pub fn reconcile_paths(db: &mut Db, root: &Root, paths: &[PathBuf], opts: &ScanO
     // with what the listing says of each, so unchanged files are never opened
     let mut present: Vec<(PathBuf, Option<filesystem::FileStat>)> = Vec::new();
     for p in paths {
-        match std::fs::metadata(p) {
+        match std::fs::symlink_metadata(p) {
+            Ok(md) if md.file_type().is_symlink() => continue,
             Ok(md) if md.is_dir() => {
-                for e in walkdir::WalkDir::new(p).into_iter().filter_map(|e| e.ok()).filter(|e| e.file_type().is_file()) {
+                for e in walkdir::WalkDir::new(p).follow_links(false).into_iter().filter_map(|e| e.ok()).filter(|e| e.file_type().is_file()) {
                     let st = e.metadata().ok().map(|m| filesystem::listed(&m));
                     present.push((e.into_path(), st));
                 }

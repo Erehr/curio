@@ -61,7 +61,7 @@ fn rename(src: &Path, dst: &Path) -> io::Result<()> {
     store::disk::rename_no_clobber(src, dst)
 }
 
-fn crosses_devices(e: &io::Error) -> bool {
+pub(super) fn crosses_devices(e: &io::Error) -> bool {
     e.kind() == io::ErrorKind::CrossesDevices || (cfg!(windows) && e.raw_os_error() == Some(17)) || (cfg!(unix) && e.raw_os_error() == Some(18))
 }
 
@@ -227,6 +227,14 @@ fn recover_one(db: &mut Db, op: &FileOp) -> DbResult<Option<AssetId>> {
     }
     let src = abs_in(db, op.root_id, &op.rel_path)?;
     let dst = abs_in(db, d.to_root, &to_rel)?;
+    if op.root_id == d.to_root && crate::core::db::fold_path(&op.rel_path) == crate::core::db::fold_path(&to_rel) {
+        if store::disk::name_on_disk(&dst).as_deref() == Some(base_of(&to_rel)) {
+            finish(db, op, &d, false)?;
+            return Ok(Some(asset));
+        }
+        db.remove_file_op(op.id)?;
+        return Ok(None);
+    }
     match (src.exists(), dst.exists()) {
         (false, true) => finish(db, op, &d, false)?,
         (true, false) => {

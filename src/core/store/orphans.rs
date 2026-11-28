@@ -5,7 +5,7 @@ use crate::core::store::managed_root;
 use crate::core::store::LibraryPaths;
 use std::collections::HashSet;
 use std::path::PathBuf;
-use crate::core::db::{Db, DbResult};
+use crate::core::db::{fold_path, Db, DbResult};
 use crate::core::system::filesystem;
 use crate::core::model::*;
 use crate::core::store::{self};
@@ -19,21 +19,20 @@ pub fn managed_orphans(db: &Db, paths: &LibraryPaths, clean_temps: bool) -> DbRe
     let mut known: HashSet<String> = {
         let mut st = db.conn.prepare("SELECT rel_path FROM assets WHERE root_id = ?1 UNION SELECT rel_path FROM placements").map_err(|e| e.to_string())?;
         let rows = st.query_map([root_id], |r| r.get::<_, String>(0)).map_err(|e| e.to_string())?;
-        rows.filter_map(|r| r.ok()).collect()
+        rows.filter_map(|r| r.ok()).map(|r| fold_path(&r)).collect()
     };
     for op in db.file_ops(None, None, i64::MAX)?.into_iter().filter(|o| o.root_id == root_id) {
         if let Some(d) = op.dest {
-            known.insert(d);
+            known.insert(fold_path(&d));
         }
-    }
-    for op in db.file_ops(None, None, i64::MAX)?.into_iter().filter(|o| o.root_id == root_id) {
         if let Some(t) = &op.tmp {
-            known.insert(match op.rel_path.rsplit_once('/') {
+            let tmp_rel = match op.rel_path.rsplit_once('/') {
                 Some((dir, _)) => format!("{dir}/{t}"),
                 None => t.clone(),
-            });
+            };
+            known.insert(fold_path(&tmp_rel));
         }
-        known.insert(op.rel_path);
+        known.insert(fold_path(&op.rel_path));
     }
     let mut out = vec![];
     let walker = walkdir::WalkDir::new(&paths.managed).into_iter().filter_entry(|e| {
@@ -42,7 +41,7 @@ pub fn managed_orphans(db: &Db, paths: &LibraryPaths, clean_temps: bool) -> DbRe
     });
     for entry in walker.filter_map(|e| e.ok()).filter(|e| e.file_type().is_file()) {
         let rel = filesystem::rel_to_db(entry.path().strip_prefix(&paths.managed).unwrap_or(entry.path()));
-        if known.contains(&rel) {
+        if known.contains(&fold_path(&rel)) {
             continue;
         }
         let name = entry.file_name().to_string_lossy();

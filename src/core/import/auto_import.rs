@@ -456,13 +456,16 @@ fn mtime_ms(md: &std::fs::Metadata) -> i64 {
     md.modified().ok().and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok()).map(|d| d.as_millis() as i64).unwrap_or(0)
 }
 
-/// Another program still writing it holds it open; Windows refuses us then.
+/// Another program still writing it holds a write handle; Windows refuses a read-only-shared open then, while read-only files succeed.
+#[cfg(windows)]
 pub fn free_to_read(p: &Path) -> bool {
-    if cfg!(windows) {
-        std::fs::OpenOptions::new().write(true).open(p).is_ok()
-    } else {
-        true
-    }
+    use std::os::windows::fs::OpenOptionsExt;
+    std::fs::OpenOptions::new().read(true).share_mode(1).open(p).is_ok()
+}
+
+#[cfg(not(windows))]
+pub fn free_to_read(_p: &Path) -> bool {
+    true
 }
 
 /// The folder for a file under `base`, one level per part of `rel`, made if missing.

@@ -199,13 +199,34 @@ impl Db {
         Ok(())
     }
 
+    /// Placements matching any path in `rels` or sitting underneath any of them (case-folded via `rel_key` index).
+    pub fn placements_matching(&self, rels: &[String]) -> DbResult<Vec<Placement>> {
+        let mut by_id: HashMap<i64, Placement> = HashMap::new();
+        let mut exact = self.conn.prepare_cached("SELECT id, asset_id, folder_id, rel_path, linked FROM placements WHERE rel_key = ?").map_err(e)?;
+        let mut under = self.conn.prepare_cached("SELECT id, asset_id, folder_id, rel_path, linked FROM placements WHERE rel_key >= ?1 AND rel_key < ?2").map_err(e)?;
+        for r in rels {
+            let k = fold_path(r);
+            for p in exact.query_map([&k], placement_row).map_err(e)?.filter_map(|x| x.ok()) {
+                by_id.insert(p.id, p);
+            }
+            let lo = format!("{k}/");
+            let hi = format!("{k}0");
+            for p in under.query_map(params![lo, hi], placement_row).map_err(e)?.filter_map(|x| x.ok()) {
+                by_id.insert(p.id, p);
+            }
+        }
+        Ok(by_id.into_values().collect())
+    }
+
     /// Rewrite every placement and managed item path under the directory `from` to sit under `to`.
     pub fn move_placement_dir(&self, from: &str, to: &str) -> DbResult<usize> {
-        let prefix = fold_path(&format!("{from}/"));
+        let folded = fold_path(from);
+        let lo = format!("{folded}/");
+        let hi = format!("{folded}0");
         let skip = from.chars().count() + 1;
         let rows: Vec<(i64, i64, String)> = {
-            let mut st = self.conn.prepare("SELECT id, asset_id, rel_path FROM placements WHERE substr(rel_key, 1, ?2) = ?1").map_err(e)?;
-            let q = st.query_map(params![prefix, prefix.chars().count() as i64], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?))).map_err(e)?;
+            let mut st = self.conn.prepare_cached("SELECT id, asset_id, rel_path FROM placements WHERE rel_key >= ?1 AND rel_key < ?2").map_err(e)?;
+            let q = st.query_map(params![lo, hi], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?))).map_err(e)?;
             q.filter_map(|r| r.ok()).collect()
         };
         for (id, asset, old) in &rows {

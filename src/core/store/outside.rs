@@ -99,7 +99,8 @@ pub fn reconcile(db: &mut Db, paths: &LibraryPaths, only: Option<&[PathBuf]>, li
                 if filesystem::is_temp_name(base_of(&rel)) {
                     continue;
                 }
-                match std::fs::metadata(p) {
+                match std::fs::symlink_metadata(p) {
+                    Ok(m) if m.file_type().is_symlink() => continue,
                     Ok(m) if m.is_dir() => walk(paths, &rel, &mut disk),
                     Ok(_) => {
                         if let Ok(st) = filesystem::stat(p) {
@@ -113,15 +114,14 @@ pub fn reconcile(db: &mut Db, paths: &LibraryPaths, only: Option<&[PathBuf]>, li
             if scope.is_empty() {
                 return Ok(out);
             }
-            let keys: Vec<(String, String)> = scope.iter().map(|r| (fold_path(r), fold_path(&format!("{r}/")))).collect();
-            db.placements()?.into_iter().filter(|p| {
-                let k = fold_path(&p.rel_path);
-                disk.contains_key(&p.rel_path) || keys.iter().any(|(exact, under)| &k == exact || k.starts_with(under))
-            }).collect()
+            scope.extend(disk.keys().cloned());
+            db.placements_matching(&scope)?
         }
     };
     let ids: Vec<i64> = known.iter().map(|p| p.id).collect();
-    follow_folder_moves(db, paths, &ids, &disk, &mut out)?;
+    if known.iter().any(|p| !disk.contains_key(&p.rel_path)) {
+        follow_folder_moves(db, paths, &ids, &disk, &mut out)?;
+    }
     follow_files(db, paths, root, &ids, &mut disk, links, now, &mut out)?;
     out.changed.sort();
     out.changed.dedup();
@@ -146,7 +146,8 @@ fn follow_folder_moves(db: &mut Db, paths: &LibraryPaths, ids: &[i64], disk: &Ha
     folders.sort_by_key(|(_, d): &(i64, String)| d.matches('/').count());
     for (fid, _) in folders {
         let Some(dir) = db.conn.query_row("SELECT dir FROM folders WHERE id = ?", [fid], |r| r.get::<_, Option<String>>(0)).ok().flatten() else { continue };
-        if store::abs(paths, &dir).exists() {
+        let abs_dir = store::abs(paths, &dir);
+        if abs_dir.exists() && store::disk::name_on_disk(&abs_dir).as_deref() == Some(base_of(&dir)) {
             continue;
         }
         let prefix = format!("{dir}/");
@@ -170,7 +171,7 @@ fn follow_folder_moves(db: &mut Db, paths: &LibraryPaths, ids: &[i64], disk: &Ha
             }
         }
         let Some(to) = target.filter(|t| agree && !in_trash(t) && t != &dir) else { continue };
-        let taken: bool = db.conn.query_row("SELECT EXISTS(SELECT 1 FROM folders WHERE dir IS NOT NULL AND fold_path(dir) = ?)", [fold_path(&to)], |r| r.get(0)).unwrap_or(false);
+        let taken: bool = db.conn.query_row("SELECT EXISTS(SELECT 1 FROM folders WHERE id <> ?1 AND dir IS NOT NULL AND fold_path(dir) = ?2)", rusqlite::params![fid, fold_path(&to)], |r| r.get(0)).unwrap_or(false);
         if taken {
             continue;
         }
@@ -256,7 +257,6 @@ fn member_moved(db: &mut Db, p: &Placement, rel: &str, d: &OnDisk) -> DbResult<(
 #[allow(clippy::too_many_arguments)]
 fn follow_files(db: &mut Db, paths: &LibraryPaths, root: i64, ids: &[i64], disk: &mut HashMap<String, OnDisk>, links: bool, now: i64, out: &mut Reconciled) -> DbResult<()> {
     let known: Vec<Placement> = ids.iter().filter_map(|id| db.placement(*id)).collect();
-    let known_rels: HashSet<String> = db.placements()?.into_iter().map(|p| p.rel_path).collect();
     // an interrupted relink left the new link beside its place
     for p in &known {
         if !disk.contains_key(&p.rel_path) {
@@ -269,7 +269,7 @@ fn follow_files(db: &mut Db, paths: &LibraryPaths, root: i64, ids: &[i64], disk:
         }
     }
     let missing: Vec<Placement> = known.iter().filter(|p| !disk.contains_key(&p.rel_path)).cloned().collect();
-    let mut fresh: HashMap<String, OnDisk> = disk.iter().filter(|(r, _)| !known_rels.contains(*r)).map(|(r, d)| (r.clone(), d.clone())).collect();
+    let mut fresh: HashMap<String, OnDisk> = disk.iter().filter(|(r, _)| db.placement_at(r).is_none_or(|p| p.rel_path != **r)).map(|(r, d)| (r.clone(), d.clone())).collect();
     // moved or renamed: the same file under another name
     let mut gone = vec![];
     for p in missing {
@@ -311,52 +311,51 @@ fn follow_files(db: &mut Db, paths: &LibraryPaths, root: i64, ids: &[i64], disk:
         out.changed.push(p.asset_id);
     }
     // new: a missing item come back (restored from the Recycle Bin), or a file dropped in by hand
-    let present_keys: HashSet<String> = db
-        .conn
-        .prepare("SELECT file_key FROM assets a WHERE status = 0 AND file_key IS NOT NULL AND (root_id = ? OR EXISTS (SELECT 1 FROM placements p WHERE p.asset_id = a.id))")
-        .and_then(|mut st| st.query_map([root], |r| r.get::<_, String>(0)).map(|q| q.filter_map(|r| r.ok()).collect()))
-        .map_err(|e| e.to_string())?;
-    // read after the placements: a purge forgets its rows and records its recycles in one transaction
-    let recycling = db.recycle_paths(root)?;
-    let mut fresh: Vec<(String, OnDisk)> = fresh.into_iter().collect();
-    fresh.sort_by(|a, b| a.0.cmp(&b.0));
-    for (rel, d) in fresh {
-        if in_trash(&rel) || recycling.contains(&rel) {
-            continue;
-        }
-        let abs = store::abs(paths, &rel);
-        if d.key.as_deref().is_some_and(|k| present_keys.contains(k)) {
-            // another entry of an item already here (a link made by hand): left alone, listed as a stray
-            continue;
-        }
-        if d.mtime.is_some_and(|m| now - m < SETTLE_MS) || !crate::core::import::auto_import::free_to_read(&abs) {
-            out.unsettled.push(abs);
-            continue;
-        }
-        let qh = filesystem::quick_hash(&abs, d.size as u64).ok();
-        let back = db.find_move_candidate(d.key.as_deref(), qh.as_deref(), d.size).filter(|id| db.asset(*id).ok().flatten().is_some_and(|a| a.root_id == root));
-        if let Some(id) = back {
-            if let Some(p) = db.placements_of(id)?.into_iter().next() {
-                move_to(db, &p, &rel, &d)?;
-                out.changed.push(id);
+    if !fresh.is_empty() {
+        let present_keys: HashSet<String> = db
+            .conn
+            .prepare("SELECT file_key FROM assets a WHERE status = 0 AND file_key IS NOT NULL AND (root_id = ? OR EXISTS (SELECT 1 FROM placements p WHERE p.asset_id = a.id))")
+            .and_then(|mut st| st.query_map([root], |r| r.get::<_, String>(0)).map(|q| q.filter_map(|r| r.ok()).collect()))
+            .map_err(|e| e.to_string())?;
+        // read after the placements: a purge forgets its rows and records its recycles in one transaction
+        let recycling = db.recycle_paths(root)?;
+        let mut fresh: Vec<(String, OnDisk)> = fresh.into_iter().collect();
+        fresh.sort_by(|a, b| a.0.cmp(&b.0));
+        for (rel, d) in fresh {
+            if in_trash(&rel) || recycling.contains(&rel) {
                 continue;
             }
-        }
-        let folder = folder_of_dir(db, parent_of(&rel))?;
-        match db.tx(|db| insert_managed_file(db, paths, root, &abs, None, folder)) {
-            Ok(id) => out.adopted.push(id),
-            Err(e) => out.problems.push(format!("{rel}: {e}")),
+            let abs = store::abs(paths, &rel);
+            if d.key.as_deref().is_some_and(|k| present_keys.contains(k)) {
+                // another entry of an item already here (a link made by hand): left alone, listed as a stray
+                continue;
+            }
+            if d.mtime.is_some_and(|m| now - m < SETTLE_MS) || !crate::core::import::auto_import::free_to_read(&abs) {
+                out.unsettled.push(abs);
+                continue;
+            }
+            let qh = filesystem::quick_hash(&abs, d.size as u64).ok();
+            let back = db.find_move_candidate(d.key.as_deref(), qh.as_deref(), d.size).filter(|id| db.asset(*id).ok().flatten().is_some_and(|a| a.root_id == root));
+            if let Some(id) = back {
+                if let Some(p) = db.placements_of(id)?.into_iter().next() {
+                    move_to(db, &p, &rel, &d)?;
+                    out.changed.push(id);
+                    continue;
+                }
+            }
+            let folder = folder_of_dir(db, parent_of(&rel))?;
+            match db.tx(|db| insert_managed_file(db, paths, root, &abs, None, folder)) {
+                Ok(id) => out.adopted.push(id),
+                Err(e) => out.problems.push(format!("{rel}: {e}")),
+            }
         }
     }
     // replaced or edited: present placements whose file changed
-    let mut by_asset: HashMap<AssetId, Vec<Placement>> = HashMap::new();
-    for p in ids.iter().filter_map(|id| db.placement(*id)) {
-        if disk.contains_key(&p.rel_path) {
-            by_asset.entry(p.asset_id).or_default().push(p);
-        }
-    }
-    for (asset, here) in by_asset {
-        match follow_content(db, paths, asset, &here, disk, links) {
+    let mut touched_assets: Vec<AssetId> = ids.iter().filter_map(|id| db.placement(*id)).filter(|p| disk.contains_key(&p.rel_path)).map(|p| p.asset_id).collect();
+    touched_assets.sort();
+    touched_assets.dedup();
+    for asset in touched_assets {
+        match follow_content(db, paths, asset, disk, links) {
             Ok(true) => out.changed.push(asset),
             Ok(false) => {}
             Err(e) => out.problems.push(e),
@@ -366,8 +365,18 @@ fn follow_files(db: &mut Db, paths: &LibraryPaths, root: i64, ids: &[i64], disk:
 }
 
 /// An item whose linked placements no longer share one file (an editor saved one by replacing it): the newest wins and the others become links to it, their old files going to the Recycle Bin. An item edited in place gets its size, date and thumbnail renewed.
-fn follow_content(db: &mut Db, paths: &LibraryPaths, asset: AssetId, here: &[Placement], disk: &HashMap<String, OnDisk>, links: bool) -> DbResult<bool> {
+fn follow_content(db: &mut Db, paths: &LibraryPaths, asset: AssetId, disk: &mut HashMap<String, OnDisk>, links: bool) -> DbResult<bool> {
     let a = db.asset(asset)?.ok_or("no such item")?;
+    let all = db.placements_of(asset)?;
+    // watcher batches only contain changed paths; stat sibling placements so safe-saves relink siblings and edits to non-primary placements still update the item
+    for p in &all {
+        if !disk.contains_key(&p.rel_path) {
+            if let Ok(st) = filesystem::stat(&store::abs(paths, &p.rel_path)) {
+                disk.insert(p.rel_path.clone(), OnDisk { key: st.file_key, size: st.size as i64, mtime: st.mtime });
+            }
+        }
+    }
+    let here: Vec<&Placement> = all.iter().filter(|p| disk.contains_key(&p.rel_path)).collect();
     if !db.in_store(asset) {
         let key = fsys_key_of(db, asset);
         if here.iter().any(|p| disk[&p.rel_path].size != a.size || (p.linked && disk[&p.rel_path].key != key)) {
@@ -375,7 +384,7 @@ fn follow_content(db: &mut Db, paths: &LibraryPaths, asset: AssetId, here: &[Pla
         }
         return Ok(false);
     }
-    let linked: Vec<&Placement> = here.iter().filter(|p| p.linked).collect();
+    let linked: Vec<&Placement> = here.iter().copied().filter(|p| p.linked).collect();
     let keys: HashSet<Option<&str>> = linked.iter().map(|p| disk[&p.rel_path].key.as_deref()).collect();
     if linked.len() > 1 && keys.len() > 1 {
         let winner = linked.iter().max_by_key(|p| disk[&p.rel_path].mtime.unwrap_or(0)).unwrap();
