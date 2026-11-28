@@ -108,7 +108,9 @@ const EDGE = 4
 function position() {
   const c = this.container
   if (!c) return
-  c.style.minWidth = field.value ? field.value.width + 'px' : ''
+  // under a field or a wide control (the library card) it is at least as wide as what opened it, never wider than the window
+  const under = field.value?.width ?? opener?.getBoundingClientRect().width
+  c.style.minWidth = under ? Math.min(under, innerWidth - 2 * EDGE) + 'px' : ''
   const list = c.querySelector('.p-contextmenu-root-list')
   if (list) list.style.maxHeight = ''
   const w = c.offsetWidth
