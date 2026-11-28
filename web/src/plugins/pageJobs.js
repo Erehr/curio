@@ -1,4 +1,4 @@
-// Work plugin pages do for the library in hidden frames: thumbnails (`formats[].thumbnail_page`) and fields read from files (`extractors[].page`). The main window runs each such page and hands it the items the library left for it, one at a time.
+// Work plugin pages do for the library in hidden frames: thumbnails (`formats[].thumbnail_page`) and fields read from files (`extractors[].page`). The main window runs each such page and hands it the items the library left for it, a few at a time.
 import { nextTick, reactive } from 'vue'
 import { call, invoke } from '../platform/ipc.js'
 import { S } from '../app/state.js'
@@ -11,11 +11,13 @@ const waiting = new Map()
 let request = 0
 
 const IDLE_MS = 1500
-// a file read stays queued until the library applies the answer: it isn't handed out again meanwhile
+// a file read or a thumbnail stays queued until the library applies the answer: it isn't handed out again meanwhile
 const ANSWERED_MS = 15000
 const JOB_LIMIT_MS = 60000
 // a page left without work is closed, freeing what it holds (a WebGL context, a PDF engine)
 const CLOSE_AFTER_MS = 30000
+// files each loop works on at once: one at a time leaves the computer mostly waiting on each answer; a few more would hold that many book or PDF engines in a page
+const AT_ONCE = 3
 
 export const setFrameRef = (key, c) => (c ? refs.set(key, c) : refs.delete(key))
 
@@ -74,11 +76,31 @@ async function read(job) {
   await call('page_read_done', { id: job.id, reader: job.reader, mode: job.mode, values: answer?.values ?? null, error: answer?.error ?? null, timedOut: !answer })
 }
 
+/** Runs `work` on the jobs `next(under)` hands out, `AT_ONCE` at a time, asking for another as each ends, so a slow file holds up only its own place; `under` are the jobs under way. Answers whether there was any. */
+async function drain(next, keyOf, work) {
+  const running = new Map()
+  let any = false
+  for (;;) {
+    if (running.size < AT_ONCE) {
+      const job = (await next([...running.values()].map((r) => r.job))).find((j) => !running.has(keyOf(j)))
+      if (job) {
+        any = true
+        const key = keyOf(job)
+        running.set(key, { job, done: work(job).finally(() => running.delete(key)) })
+        continue
+      }
+    }
+    if (!running.size) return any
+    await Promise.race([...running.values()].map((r) => r.done))
+  }
+}
+
 /** Works through the items waiting for a plugin page, in the main window only: thumbnails and file reads in loops of their own, so a page slow to make a picture never holds up the reading. */
 export function startPageJobs() {
   const gaveUpThumbs = new Set()
   const gaveUpReads = new Map()
   const answered = new Map()
+  const madeThumbs = new Map()
   let lib = S.startup?.current ?? null
   let contrib = S.contrib
   // another library, or other plugins, start over
@@ -89,6 +111,7 @@ export function startPageJobs() {
       gaveUpThumbs.clear()
       gaveUpReads.clear()
       answered.clear()
+      madeThumbs.clear()
       PJ.frames = []
     }
     if (S.contrib !== contrib) {
@@ -112,20 +135,30 @@ export function startPageJobs() {
     }
     tick()
   }
-  loop(async () => {
-    const thumbs = (await call('page_jobs', { limit: 8, skip: [...gaveUpThumbs] })).filter((j) => !gaveUpThumbs.has(j.id))
-    for (const j of thumbs) await thumbnail(j).catch(() => gaveUpThumbs.add(j.id))
-    return thumbs.length > 0
-  })
-  loop(async () => {
-    const now = Date.now()
-    for (const [key, entry] of answered) if (now - entry.at > ANSWERED_MS) answered.delete(key)
-    const skipReads = [...gaveUpReads.values(), ...[...answered.values()].map((e) => [e.id, e.reader])]
-    const reads = (await call('page_reads', { limit: 8, skip: skipReads })).filter((j) => !gaveUpReads.has(`${j.id}|${j.reader}`) && !answered.has(`${j.id}|${j.reader}`))
-    for (const j of reads) {
-      const key = `${j.id}|${j.reader}`
-      await read(j).then(() => answered.set(key, { id: j.id, reader: j.reader, at: Date.now() }), () => gaveUpReads.set(key, [j.id, j.reader]))
-    }
-    return reads.length > 0
-  })
+  loop(() =>
+    drain(
+      async (under) => {
+        const now = Date.now()
+        for (const [id, at] of madeThumbs) if (now - at > ANSWERED_MS) madeThumbs.delete(id)
+        // the library reads only so many: those under way and the latest made first
+        const skip = [...under.map((j) => j.id), ...[...madeThumbs.keys()].reverse(), ...gaveUpThumbs]
+        return (await call('page_jobs', { limit: AT_ONCE * 2, skip })).filter((j) => !gaveUpThumbs.has(j.id) && !madeThumbs.has(j.id))
+      },
+      (j) => j.id,
+      (j) => thumbnail(j).then(() => madeThumbs.set(j.id, Date.now()), () => gaveUpThumbs.add(j.id)),
+    ),
+  )
+  const readKey = (j) => `${j.id}|${j.reader}`
+  loop(() =>
+    drain(
+      async (under) => {
+        const now = Date.now()
+        for (const [key, entry] of answered) if (now - entry.at > ANSWERED_MS) answered.delete(key)
+        const skip = [...under.map((j) => [j.id, j.reader]), ...[...answered.values()].reverse().map((e) => [e.id, e.reader]), ...gaveUpReads.values()]
+        return (await call('page_reads', { limit: AT_ONCE * 2, skip })).filter((j) => !gaveUpReads.has(readKey(j)) && !answered.has(readKey(j)))
+      },
+      readKey,
+      (j) => read(j).then(() => answered.set(readKey(j), { id: j.id, reader: j.reader, at: Date.now() }), () => gaveUpReads.set(readKey(j), [j.id, j.reader])),
+    ),
+  )
 }

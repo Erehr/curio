@@ -58,7 +58,7 @@ Opening a matching file counts items matching the file's stem in each listed fie
 
 Format plugins can supply thumbnails in two ways (both require `files.read`; command thumbnailers also require `exec`):
 
-- **Hidden thumbnail page (`thumbnail_page`)**: Runs in a hidden frame while a window is open, receives [`plugin.thumbnail`](../hooks/work.md#plugin-thumbnail) requests one at a time and responds with `curio.thumbnailDone(request, picture, { width, height })` within 60 s. Suited to WebGL (3D models), `pdf.js`, `foliate-js` or Canvas rendering. See [Complete a thumbnail or extraction request](../pages/completions.md).
+- **Hidden thumbnail page (`thumbnail_page`)**: Runs in a hidden frame while a window is open, receives [`plugin.thumbnail`](../hooks/work.md#plugin-thumbnail) requests, up to three at once, and responds to each with `curio.thumbnailDone(request, picture, { width, height })` within 60 s. Suited to WebGL (3D models), `pdf.js`, `foliate-js` or Canvas rendering. See [Complete a thumbnail or extraction request](../pages/completions.md).
 - **External thumbnail command (`thumbnail.command`)**: Spawns a CLI process with `{input}`, `{output}` and `{size}` placeholders (90 s timeout). See [Extractor and thumbnail program contracts](../programs/file-handlers.md).
 - **Fallback**: Returning `null` from a thumbnail page or exiting non-zero from a command lets Curio's built-in thumbnailers run next.
 

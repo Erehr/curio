@@ -7,7 +7,7 @@ Hidden worker pages (`formats[].thumbnail_page` and `extractors[].page`) generat
 
 ## Thumbnail request
 
-Curio mounts `thumbnail_page.page` in a hidden iframe and queues [`plugin.thumbnail`](../hooks/work.md#plugin-thumbnail) requests one at a time so startup delays never drop work. See [`plugin.thumbnail`](../hooks/work.md#plugin-thumbnail) for the full payload fields (`request`, `item`, `ext`, `size` and Range-capable `fileUrl`).
+Curio mounts `thumbnail_page.page` in a hidden iframe and queues [`plugin.thumbnail`](../hooks/work.md#plugin-thumbnail) requests so startup delays never drop work, and sends up to three at once: answer each by its `request`. See [`plugin.thumbnail`](../hooks/work.md#plugin-thumbnail) for the full payload fields (`request`, `item`, `ext`, `size` and Range-capable `fileUrl`).
 
 ## curio.thumbnailDone(request, picture, info)
 
@@ -34,7 +34,7 @@ curio.on('plugin.thumbnail', async ({ data }) => {
 
 ## Extract request
 
-Curio mounts `extractors[].page` in a hidden iframe and queues [`plugin.extract`](../hooks/work.md#plugin-extract) requests one at a time. See [`plugin.extract`](../hooks/work.md#plugin-extract) for the full payload fields (`request`, `reader`, `item`, `ext`, `name`, `size`, `fileUrl` and companion `parts[]`).
+Curio mounts `extractors[].page` in a hidden iframe and queues [`plugin.extract`](../hooks/work.md#plugin-extract) requests and sends up to three at once: answer each by its `request`. See [`plugin.extract`](../hooks/work.md#plugin-extract) for the full payload fields (`request`, `reader`, `item`, `ext`, `name`, `size`, `fileUrl` and companion `parts[]`).
 
 For large binaries, read headers with `fetch(data.fileUrl, { headers: { Range: 'bytes=0-65535' } })` instead of loading the entire file into memory, or call `curio.item.exif`, `curio.item.pngText` or `curio.archive.list`.
 
