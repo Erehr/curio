@@ -13,7 +13,6 @@ use crate::core::api::operations::item_adds::item_add_from_paths;
 use crate::core::api::operations::said;
 use crate::core::api::operations::ids_of;
 use crate::core::api::operations::item_adds::Placing;
-use crate::core::api::operations::item_reads::OneItem;
 use crate::core::api::operations::file_missing;
 use crate::core::api::operations::bad;
 use crate::core::api::operations::not_found;
@@ -32,10 +31,24 @@ fn archive_file(c: &Ctx, id: &ItemRef) -> Result<(AssetId, PathBuf, String, i64)
     Ok((id, path, ext, ver))
 }
 
-pub(super) fn archive_list(c: &Ctx, p: OneItem) -> ApiResult {
+#[derive(Deserialize, JsonSchema)]
+pub(super) struct ArchiveList {
+    /// The item's id.
+    id: ItemRef,
+    /// Whether pictures come with the size they show at and whether they move, read from the first bytes of each: `false` gives only names, sizes and kinds, which reads a small part of a large archive (counting pages, finding a cover).
+    #[serde(default = "with_sizes")]
+    sizes: bool,
+}
+
+fn with_sizes() -> bool {
+    true
+}
+
+pub(super) fn archive_list(c: &Ctx, p: ArchiveList) -> ApiResult {
     let (_, path, _, _) = archive_file(c, &p.id)?;
     let a = crate::core::archive::open(&path).map_err(bad)?;
-    let looks = a.looks();
+    // each picture's first bytes are a read of their own: hundreds in a comic, all over the file
+    let looks = if p.sizes { a.looks() } else { HashMap::new() };
     let entries: Vec<Value> = a
         .entries()
         .iter()

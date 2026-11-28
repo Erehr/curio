@@ -12,13 +12,14 @@ Operations for listing and reading members inside ZIP, CBZ, EPUB, 7z and CB7 ite
   <span class="curio-badge">MCP: archive_list</span>
 </div>
 
-List every entry inside a ZIP, CBZ, EPUB, 7z or CB7 item in natural reading order (folder by folder, `page2` before `page10`), including byte size, whether each entry is an image (`picture`), and image dimensions and animation flags.
+List every entry inside a ZIP, CBZ, EPUB, 7z or CB7 item in natural reading order (folder by folder, `page2` before `page10`), including byte size, whether each entry is an image (`picture`), and image dimensions and animation flags. Reading the dimensions means reading the start of every image, so pass `sizes: false` when only the names, sizes and kinds matter, such as to count pages or find a cover.
 
 **Parameters**
 
 | Parameter | Type | Required | Default | Description |
 |---|---|---|---|---|
 | `id` | `string \| number` | Yes | — | Archive item UUID or row ID. |
+| `sizes` | `boolean` | No | `true` | Whether image entries include `width`, `height` and `animated`. |
 | `library` | `string` | No | Default library | Target library (ID, path or unique name). Not allowed for plugin callers. |
 
 **Returns** `{ entries: { name: string; size: number; picture: boolean; width?: number; height?: number; animated?: boolean }[] }`:

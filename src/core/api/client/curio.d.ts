@@ -1029,6 +1029,8 @@ declare namespace Curio {
   interface ArchiveListParams {
     /** The item's id. */
     id: string | number;
+    /** Whether pictures come with the size they show at and whether they move, read from the first bytes of each: `false` gives only names, sizes and kinds, which reads a small part of a large archive (counting pages, finding a cover). */
+    sizes?: boolean;
     /** The library to use: its id from library.list, its folder or its name. Without it, the library of the most recently used window. */
     library?: string;
   }
@@ -2054,7 +2056,7 @@ declare namespace Curio {
       run(params?: ProcessRunParams): Promise<ProcessRun>;
     };
     archive: {
-      /** What a ZIP, CBZ, EPUB, 7z or CB7 item holds, in reading order (folder by folder, `page2` before `page10`), each entry with its size and whether it is a picture; pictures with the size they show at and whether they move, read from their first bytes (in a 7z, once it has been unpacked for reading). Needs files.read. Takes library. */
+      /** What a ZIP, CBZ, EPUB, 7z or CB7 item holds, in reading order (folder by folder, `page2` before `page10`), each entry with its size and whether it is a picture; pictures with the size they show at and whether they move, read from their first bytes (in a 7z, once it has been unpacked for reading), unless `sizes` is false. Needs files.read. Takes library. */
       list(params: ArchiveListParams): Promise<{ entries: { name: string; size: number; picture: boolean; width?: number; height?: number; animated?: boolean }[] }>;
       /** One entry of an archive item; over HTTP the answer is the entry itself. Needs files.read. Takes library. */
       entry(params: ArchiveEntryParams): Promise<Blob>;
