@@ -201,7 +201,8 @@ fn window_thumb_done(state: &AppState, id: i64, image: Option<String>, width: Op
                 .execute("UPDATE assets SET aspect = ?, width = CASE WHEN kind IN ('image', 'video') THEN width ELSE NULL END, height = CASE WHEN kind IN ('image', 'video') THEN height ELSE NULL END WHERE id = ?", rusqlite::params![asp, id])
                 .map_err(|e| e.to_string())?;
         }
-        Ok(if dims.is_some() || aspect.is_some() { Changed::files(&[id]) } else { Changed::shown(&[id], Aspect::Thumbnail) })
+        // a new shape is asked for in a while, not with a search of the whole library for each cover
+        Ok(if dims.is_some() || aspect.is_some() { Changed::reshaped(&[id]) } else { Changed::shown(&[id], Aspect::Thumbnail) })
     })
 }
 

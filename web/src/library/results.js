@@ -30,6 +30,18 @@ export function searchSoon(delay) {
   else requestSearch(delay)
 }
 
+// thumbnails giving items new shapes come many a second while covers are made: the list is asked for again for them at most this often
+const RESHAPE_MS = 3000
+let reshapeTimer = null
+/** A search for items' new shapes in a while, apart from searches for changes, which still come at once. */
+export function reshapeSoon() {
+  if (reshapeTimer) return
+  reshapeTimer = setTimeout(() => {
+    reshapeTimer = null
+    searchSoon(0)
+  }, RESHAPE_MS)
+}
+
 /** Resolves once the search asked for last is shown. */
 export async function searched(limit = 30000) {
   const t0 = Date.now()

@@ -199,6 +199,7 @@ struct ToWindow {
     changed: bool,
     structure: bool,
     requery: bool,
+    reshaped: bool,
     sent: Instant,
 }
 
@@ -206,7 +207,7 @@ const WINDOW_EVERY: Duration = Duration::from_millis(100);
 
 impl Default for ToWindow {
     fn default() -> Self {
-        ToWindow { thumbs: vec![], ids: vec![], changed: false, structure: false, requery: false, sent: Instant::now().checked_sub(WINDOW_EVERY).unwrap_or_else(Instant::now) }
+        ToWindow { thumbs: vec![], ids: vec![], changed: false, structure: false, requery: false, reshaped: false, sent: Instant::now().checked_sub(WINDOW_EVERY).unwrap_or_else(Instant::now) }
     }
 }
 
@@ -216,6 +217,7 @@ impl ToWindow {
         self.ids.extend(c.all_ids());
         self.structure |= c.sidebar();
         self.requery |= c.requery;
+        self.reshaped |= c.reshaped;
     }
 
     /// Sends what waits once `WINDOW_EVERY` has passed since the last send: the first after a quiet spell goes at once.
@@ -235,8 +237,8 @@ impl ToWindow {
         if self.changed {
             self.ids.sort_unstable();
             self.ids.dedup();
-            let _ = app.emit("lib", serde_json::json!({"kind": "changed", "ids": std::mem::take(&mut self.ids), "structure": self.structure, "requery": self.requery}));
-            (self.changed, self.structure, self.requery) = (false, false, false);
+            let _ = app.emit("lib", serde_json::json!({"kind": "changed", "ids": std::mem::take(&mut self.ids), "structure": self.structure, "requery": self.requery, "reshaped": self.reshaped}));
+            (self.changed, self.structure, self.requery, self.reshaped) = (false, false, false, false);
         }
         self.sent = Instant::now();
     }

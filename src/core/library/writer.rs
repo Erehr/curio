@@ -108,6 +108,7 @@ fn flush_results(db: &mut Db, results: &mut Vec<WriterJob>, ctx: &Ctx, ready: &m
     let cat = db.field_catalog();
     let mut meta_changed = Vec::new();
     let mut searchable = Vec::new();
+    let mut reshaped = false;
     let r = db.tx(|db| {
         for j in jobs {
             match j {
@@ -118,6 +119,7 @@ fn flush_results(db: &mut Db, results: &mut Vec<WriterJob>, ctx: &Ctx, ready: &m
                     if let Some(d) = duration {
                         db.set_duration(id, d)?;
                     }
+                    reshaped |= dims.is_some() || aspect.is_some_and(|a| a.is_finite() && a > 0.0);
                     if let Some((w, h)) = dims {
                         // images/videos: real dimensions come from the probe or decoded picture
                         db.conn.execute("UPDATE assets SET width = ?, height = ?, aspect = ? WHERE id = ? AND (width IS NULL OR kind <> 'image')",
@@ -157,6 +159,10 @@ fn flush_results(db: &mut Db, results: &mut Vec<WriterJob>, ctx: &Ctx, ready: &m
     }
     for id in ready.drain(..) {
         ctx.send(LibEvent::ThumbReady(id));
+    }
+    // the covers made were told of as ready just now
+    if reshaped {
+        ctx.send(LibEvent::Changed(Changed::reshaped(&[])));
     }
     if !meta_changed.is_empty() {
         ctx.send(LibEvent::Changed(Changed::shown(&meta_changed, Aspect::File)));

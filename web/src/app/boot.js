@@ -10,7 +10,7 @@ import { S, folderOpen } from './state.js'
 import { toast } from './notify.js'
 import { clearSelection, loadDetail, selectOnly } from '../library/selection.js'
 import { loadSavedFilters } from '../filters/query.js'
-import { resetResults, requestSearch, searchSoon, invalidateItems } from '../library/results.js'
+import { resetResults, requestSearch, reshapeSoon, searchSoon, invalidateItems } from '../library/results.js'
 import { edit } from '../library/edits.js'
 import { watchWindowShape, L } from '../layout/arrangement.js'
 import { loadThemeFile, refreshTheme } from './appearance.js'
@@ -155,6 +155,7 @@ export async function boot() {
       }
       // what's shown follows every change; a sort set to random would deal again, so it waits
       if (ev.requery && L().sort.key !== 'random') searchSoon(150)
+      else if (ev.reshaped && L().sort.key !== 'random') reshapeSoon()
     } else if (ev.kind === 'thumbs') {
       invalidateItems(ev.ids)
     } else if (ev.kind === 'scan') {

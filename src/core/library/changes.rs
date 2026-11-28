@@ -66,6 +66,8 @@ pub struct Changed {
     pub parts: Parts,
     /// The current result list may be different now.
     pub requery: bool,
+    /// Items took a new shape with their thumbnails (a comic's or a book's cover): the list holds the same items, but the window asks for it again in a while for their shapes. Thumbnails come many a second, so this never asks at once as `requery` does.
+    pub reshaped: bool,
     /// The `requestId` of the API add that made `added`.
     pub request: Option<String>,
     /// For the window alone, ahead of the change that tells of it for good: what a first scan finds as it walks, before pairing may make some of it members of others.
@@ -84,6 +86,10 @@ impl Changed {
     /// A change that leaves the result list as it is.
     pub fn shown(ids: &[AssetId], aspect: Aspect) -> Self {
         Changed { ids: ids.to_vec(), aspect, ..Default::default() }
+    }
+    /// Thumbnails that gave items a new shape; without `ids`, ones already told of as made.
+    pub fn reshaped(ids: &[AssetId]) -> Self {
+        Changed { ids: ids.to_vec(), aspect: Aspect::Thumbnail, reshaped: true, ..Default::default() }
     }
     pub fn added(ids: &[AssetId], how: &'static str) -> Self {
         Changed { added: ids.to_vec(), how, requery: true, ..Default::default() }
@@ -125,6 +131,7 @@ impl Changed {
         self.uids.extend(o.uids);
         self.parts = self.parts | o.parts;
         self.requery |= o.requery;
+        self.reshaped |= o.reshaped;
         self
     }
     /// From what a scan of a location found.
