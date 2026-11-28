@@ -110,29 +110,72 @@ pub(crate) fn is_noise(name: &str) -> bool {
 pub const EXTS: &[&str] = &["zip", "cbz", "epub", "7z", "cb7"];
 
 /// A 7z file, by its signature rather than its name.
+/// How a 7z file starts.
+const SEVEN_Z: [u8; 6] = *b"7z\xBC\xAF\x27\x1C";
+
 pub(crate) fn is_7z(path: &Path) -> bool {
     let mut head = [0u8; 6];
-    std::fs::File::open(path).and_then(|mut f| f.read_exact(&mut head)).is_ok() && head == *b"7z\xBC\xAF\x27\x1C"
+    std::fs::File::open(path).and_then(|mut f| f.read_exact(&mut head)).is_ok() && head == SEVEN_Z
 }
 
 fn open_7z(path: &Path) -> Result<sevenz_rust::SevenZReader<std::fs::File>, String> {
     sevenz_rust::SevenZReader::open(path, sevenz_rust::Password::empty()).map_err(|e| format!("Not an archive Curio reads: {e}"))
 }
 
-/// A file read at positions of its own, so clones read one open file at once from several threads.
-#[derive(Clone)]
+/// Small reads are served from this much read ahead: a ZIP's index is read a few bytes at a time, thousands of calls to the system for a comic of 200 pages without it.
+const READ_AHEAD: usize = 64 << 10;
+
+/// A file read at positions of its own, so clones read one open file at once from several threads; each clone reads ahead on its own.
 struct PosFile {
     file: Arc<std::fs::File>,
     pos: u64,
     len: u64,
+    ahead: Vec<u8>,
+    ahead_at: u64,
+}
+
+impl PosFile {
+    fn new(file: std::fs::File, len: u64) -> Self {
+        PosFile { file: Arc::new(file), pos: 0, len, ahead: Vec::new(), ahead_at: 0 }
+    }
+
+    fn read_at(&self, buf: &mut [u8], at: u64) -> std::io::Result<usize> {
+        #[cfg(windows)]
+        return std::os::windows::fs::FileExt::seek_read(&*self.file, buf, at);
+        #[cfg(unix)]
+        return std::os::unix::fs::FileExt::read_at(&*self.file, buf, at);
+    }
+}
+
+impl Clone for PosFile {
+    fn clone(&self) -> Self {
+        PosFile { file: self.file.clone(), pos: self.pos, len: self.len, ahead: Vec::new(), ahead_at: 0 }
+    }
 }
 
 impl Read for PosFile {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-        #[cfg(windows)]
-        let n = std::os::windows::fs::FileExt::seek_read(&*self.file, buf, self.pos)?;
-        #[cfg(unix)]
-        let n = std::os::unix::fs::FileExt::read_at(&*self.file, buf, self.pos)?;
+        let held = self.pos >= self.ahead_at && self.pos < self.ahead_at + self.ahead.len() as u64;
+        if !held {
+            // a large read, such as a page's bytes, goes straight to the file
+            if buf.len() >= READ_AHEAD {
+                let n = self.read_at(buf, self.pos)?;
+                self.pos += n as u64;
+                return Ok(n);
+            }
+            let mut fresh = std::mem::take(&mut self.ahead);
+            fresh.resize(READ_AHEAD, 0);
+            let got = self.read_at(&mut fresh, self.pos)?;
+            fresh.truncate(got);
+            self.ahead = fresh;
+            self.ahead_at = self.pos;
+            if got == 0 {
+                return Ok(0);
+            }
+        }
+        let from = (self.pos - self.ahead_at) as usize;
+        let n = buf.len().min(self.ahead.len() - from);
+        buf[..n].copy_from_slice(&self.ahead[from..from + n]);
         self.pos += n as u64;
         Ok(n)
     }
@@ -224,12 +267,15 @@ pub fn open(path: &Path) -> Result<Arc<Archive>, String> {
 impl Archive {
     fn read(path: &Path, stamp: (u64, Option<SystemTime>), now: u64) -> Result<Archive, String> {
         let mut a = Archive { path: path.to_path_buf(), stamp, entries: Vec::new(), zip: None, looks: OnceLock::new(), unpack: OnceLock::new(), used: AtomicU64::new(now) };
-        if is_7z(path) {
+        let file = std::fs::File::open(path).map_err(|e| e.to_string())?;
+        let mut head = [0u8; 6];
+        let mut file = PosFile::new(file, stamp.0);
+        if file.read_exact(&mut head).is_ok() && head == SEVEN_Z {
             let z = open_7z(path)?;
             a.entries = z.archive().files.iter().filter(|e| !e.is_directory && e.has_stream && !is_noise(&e.name)).map(|e| Entry { name: e.name.clone(), size: e.size, picture: is_picture(&e.name) }).collect();
         } else {
-            let file = std::fs::File::open(path).map_err(|e| e.to_string())?;
-            let mut z = zip::ZipArchive::new(PosFile { file: Arc::new(file), pos: 0, len: stamp.0 }).map_err(|e| format!("Not an archive Curio reads: {e}"))?;
+            file.pos = 0;
+            let mut z = zip::ZipArchive::new(file).map_err(|e| format!("Not an archive Curio reads: {e}"))?;
             for i in 0..z.len() {
                 let Ok(e) = z.by_index_raw(i) else { continue };
                 if e.is_dir() || is_noise(e.name()) {
