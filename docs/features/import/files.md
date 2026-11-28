@@ -55,5 +55,6 @@ Press ++ctrl+v++ anywhere in the main window (outside text inputs) to import fro
 Large imports run on the library's background worker so you can keep browsing while files copy and index:
 
 - **Progress toasts**: Active imports and background jobs appear as persistent toasts with a progress bar and a **Cancel** button. Up to three non-error toasts stack at once.
+- **Background work**: Thumbnails and metadata still being made after an import show as a toast with a progress bar once the work takes more than a few seconds. **Hide** removes the toast until that work finishes.
 - **Notifications & sound effects**: Configure when system notifications appear (**Always**, **In background**, **Failures only** or **Off**) and toggle sound effects for **Imports & downloads** under **Settings › Notifications**.
 - **Post-import workers**: Once files enter the database, Curio generates thumbnails, extracts dominant color palettes, checks animation flags and runs enabled metadata readers. See [Indexing, previews and performance](../help/performance.md).

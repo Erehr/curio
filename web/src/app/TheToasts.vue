@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import Toast from 'openvue/toast'
 import { useToast } from 'openvue/usetoast'
 import { S } from './state.js'
@@ -8,7 +8,7 @@ import AppIcon from '../shared/AppIcon.vue'
 import { fmtTime } from '../formats/index.js'
 import { englishText, t } from '../shared/i18n.js'
 
-// The notices and live import/job progress bars at the bottom right; progress toasts stay until finished or cancelled.
+// The notices and live import/job progress bars at the bottom right, and the thumbnails and reads still under way after files are added; progress toasts stay until finished or cancelled.
 const NOTICE_MS = 5000
 const ERROR_MS = 8000
 const IMPORT_ID = 'curio-import'
@@ -51,7 +51,7 @@ watch(() => S.toasts.map((x) => x.id), (ids) => {
   }
   const active = new Set(ids.map((id) => 'curio-' + id))
   for (const [key, m] of shown) {
-    if (key === IMPORT_ID || key.startsWith(JOB_PREFIX) || active.has(key)) continue
+    if (key === IMPORT_ID || key.startsWith(JOB_PREFIX) || key.startsWith(BACKGROUND_PREFIX) || active.has(key)) continue
     shown.delete(key)
     toast.remove(m)
   }
@@ -85,6 +85,46 @@ watch(() => jobs.value.map((j) => j.id), (ids) => {
   }
 }, { immediate: true })
 
+// what is still made after files are added, which has no job of its own: thumbnails, and files read by plugin pages (a comic's pages)
+// shown once it has gone on a while, as how much is done of all that has waited since it began; hidden by the user until it next ends
+const BACKGROUND_PREFIX = 'curio-background-'
+const BACKGROUND_AFTER_MS = 5000
+const background = reactive({ thumbs: { done: 0, left: 0, since: 0, hidden: false }, reads: { done: 0, left: 0, since: 0, hidden: false } })
+const leftOf = (kind) => (kind === 'thumbs' ? (S.status.thumbs || 0) + (S.status.pageThumbs || 0) : S.status.reads || 0)
+// a rescan's "Reading metadata" job already shows the reading
+const readingJob = () => jobs.value.some((j) => j.title === englishText('library.jobs.titles.metadata'))
+const backgroundKind = (m) => (typeof m.id === 'string' && m.id.startsWith(BACKGROUND_PREFIX) ? m.id.slice(BACKGROUND_PREFIX.length) : null)
+const backgroundTitle = (kind) => (kind === 'thumbs' ? t('library.jobs.thumbnails') : t('library.jobs.titles.metadata'))
+const backgroundCount = (b) => `${b.done.toLocaleString()}/${(b.done + b.left).toLocaleString()}`
+function showBackground(key, on) {
+  if (on && !shown.has(key)) {
+    const m = { id: key, group: 'curio', severity: 'info', styleClass: 'toast progress', closable: false }
+    shown.set(key, m)
+    toast.add(m)
+  } else if (!on && shown.has(key)) {
+    toast.remove(shown.get(key))
+    shown.delete(key)
+  }
+}
+// the status is asked for every second, each answer a new object
+watch(() => S.status, () => {
+  const now = Date.now()
+  for (const kind of Object.keys(background)) {
+    const b = background[kind]
+    const left = leftOf(kind)
+    if (left < b.left) b.done += b.left - left
+    b.left = left
+    if (!left) Object.assign(b, { done: 0, since: 0, hidden: false })
+    else if (!b.since) b.since = now
+    // while files are still being added, their bar says enough
+    showBackground(BACKGROUND_PREFIX + kind, left > 0 && !b.hidden && !importJob.value && now - b.since >= BACKGROUND_AFTER_MS && !(kind === 'reads' && readingJob()))
+  }
+}, { immediate: true })
+function hideBackground(kind) {
+  background[kind].hidden = true
+  showBackground(BACKGROUND_PREFIX + kind, false)
+}
+
 function done({ message }) {
   const x = ours(message)
   if (x) closeToast(x.id)
@@ -116,6 +156,14 @@ function undo(message) {
           <span class="mono toast-time">{{ count(jobOf(message)) }} ({{ fmtTime(since(jobOf(message).started)) }})</span>
         </span>
         <button class="toast-action" v-tooltip.top="$t('library.jobs.cancel')" :aria-label="$t('library.jobs.cancelNamed', { name: titleOf(jobOf(message)) })" @click="run('job_cancel', { id: jobOf(message).id })"><AppIcon name="x" :size="15" /></button>
+      </template>
+      <template v-else-if="backgroundKind(message)">
+        <div class="toast-fill" :style="{ width: fraction(background[backgroundKind(message)].done, background[backgroundKind(message)].done + background[backgroundKind(message)].left) * 100 + '%' }" />
+        <span class="toast-progress-text" :data-background="backgroundKind(message)">
+          <span class="toast-job-title">{{ backgroundTitle(backgroundKind(message)) }}</span>
+          <span class="mono toast-time">{{ backgroundCount(background[backgroundKind(message)]) }}</span>
+        </span>
+        <button class="toast-action" v-tooltip.top="$t('library.jobs.hide')" :aria-label="$t('library.jobs.hide')" @click="hideBackground(backgroundKind(message))"><AppIcon name="x" :size="15" /></button>
       </template>
       <template v-else>
         <AppIcon :name="message.severity === 'error' ? 'alert-circle-filled' : message.severity === 'warn' ? 'alert-triangle-filled' : 'circle-check-filled'" :size="18" class="toast-state" />

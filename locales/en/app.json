@@ -2240,6 +2240,8 @@
       "cancelNamed": "Cancel {name}",
       "adding": "Adding files {n}",
       "stop": "Stop adding",
+      "thumbnails": "Making thumbnails",
+      "hide": "Hide",
       "titles": {
         "metadata": "Reading metadata",
         "duplicates": "Looking for duplicates"

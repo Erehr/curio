@@ -238,6 +238,11 @@ impl Db {
     }
 
     /// Items waiting for a plugin page's thumbnail: id, uid and extension, excluding `skip`.
+    /// How many items wait for a plugin page's thumbnail, as `page_jobs` hands them out.
+    pub fn page_jobs_left(&self) -> DbResult<i64> {
+        self.conn.query_row("SELECT count(*) FROM assets WHERE thumb_state = 5 AND status = 0 AND deleted = 0 AND part_of IS NULL", [], |r| r.get(0)).map_err(e)
+    }
+
     pub fn page_jobs(&self, limit: i64, skip: &[AssetId]) -> DbResult<Vec<(AssetId, String, String)>> {
         if skip.is_empty() {
             let mut st = self.conn.prepare_cached("SELECT id, uid_text(uid), ext FROM assets WHERE thumb_state = 5 AND status = 0 AND deleted = 0 AND part_of IS NULL ORDER BY added_at DESC LIMIT ?").map_err(e)?;

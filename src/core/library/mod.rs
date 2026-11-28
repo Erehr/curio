@@ -612,6 +612,11 @@ impl Library {
         self.ctx.meta_wake.notify_one();
     }
 
+    /// The readers a plugin page runs, whose files the window works through.
+    pub fn page_readers(&self) -> Vec<String> {
+        self.ctx.contrib.read().readers.iter().filter(|r| r.page().is_some()).map(|r| r.id.clone()).collect()
+    }
+
     pub fn contributions(&self) -> Contributions {
         self.ctx.contrib.read().clone()
     }
