@@ -53,7 +53,8 @@ export function refreshTheme() {
   root.style.setProperty('--ui-font', `${chosen && !S.ui.fontSystem ? `"${chosen}", ` : ''}${SYSTEM_FONT}`)
   document.documentElement.classList.toggle('no-side-counts', S.ui.sidebarCounts === false)
   document.documentElement.classList.toggle('overlay-scroll', S.ui.overlayScrollbars !== false)
-  applyWindowLook(S.ui, { dark: !!t.dark, materials: S.startup.materials || [] })
+  // following the system leaves the window's light or dark to it (null); a mode chosen here is kept on it, through the system's own changes
+  applyWindowLook(S.ui, { dark: S.ui.themeMode === 'system' ? null : !!t.dark, materials: S.startup.materials || [] })
   const css = getComputedStyle(root)
   for (const k of SCALES) tokens[k] = root.style.getPropertyValue('--' + k).trim() || css.getPropertyValue('--' + k).trim()
   tokens['font-size'] = `${BASE_FONT_PX}px`

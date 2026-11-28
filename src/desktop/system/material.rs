@@ -40,6 +40,8 @@ pub(crate) fn sized<'a>(b: tauri::WebviewWindowBuilder<'a, tauri::Wry, tauri::Ap
 }
 
 pub fn apply(window: &tauri::WebviewWindow, look: Look) {
+    // the window keeps a mode chosen in Curio: on a change to the system's settings (a new wallpaper, its accent colour) the window layer otherwise sets its light or dark back to the system's, and Mica turns light under a dark page
+    let _ = window.set_theme(look.dark.map(|d| if d { tauri::Theme::Dark } else { tauri::Theme::Light }));
     imp::apply(window, look)
 }
 
