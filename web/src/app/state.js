@@ -86,6 +86,8 @@ export const S = reactive({
   resultsMs: 0,
   queryError: null,
   searching: false,
+  // the search under way asks for something other than what is shown (another folder, query or sort), not for it again after a change
+  searchingAnew: false,
   items: markRaw(new Map()),
   itemsVer: 0,
   cells: markRaw(new Map()),

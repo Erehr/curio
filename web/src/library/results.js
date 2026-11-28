@@ -101,6 +101,9 @@ const sameNotes = (a = new Set(), b = new Set()) => a.size === b.size && [...a].
 const sameGroups = (a, b) => (!a && !b) || (!!a && !!b && a.length === b.length && a.every((g, i) => g.key === b[i].key && g.start === b[i].start && g.count === b[i].count))
 const sameResults = (a, b) => !!a?.ids && sameNotes(a.notes, b.notes) && sameGroups(a.groups, b.groups) && sameList(a.ids, b.ids) && sameList(a.aspects, b.aspects)
 
+// the request whose answer is shown
+let shownFor = ''
+
 async function doSearch() {
   searchQueued = false
   if (!S.libOpen || S.itemWindow || S.prefsWindow) return
@@ -127,6 +130,8 @@ async function doSearch() {
     date_bounds: dates.date_bounds,
     tz_offset_ms: dates.tz_offset_ms,
   }
+  const key = JSON.stringify(req)
+  S.searchingAnew = key !== shownFor
   S.searching = true
   const t0 = performance.now()
   try {
@@ -136,6 +141,7 @@ async function doSearch() {
     gone.clear()
     S.resultsMs = Math.round(performance.now() - t0)
     S.queryError = null
+    shownFor = key
     // an edit that left the list as it was (a folder renamed, moved or recoloured) redraws nothing
     if (sameResults(S.results, r)) return
     S.results = markRaw(r)
@@ -161,6 +167,7 @@ async function doSearch() {
   } finally {
     if (seq === searchSeq) {
       S.searching = false
+      S.searchingAnew = false
       if (refreshAfter) {
         refreshAfter = false
         requestSearch()

@@ -497,7 +497,7 @@ onBeforeUnmount(() => {
       </div>
     </div>
     <div v-if="band" class="band" :style="{ left: band.x + 'px', top: band.y + 'px', width: band.w + 'px', height: band.h + 'px' }" />
-    <div v-if="loaded && !S.searching && !V.layout?.n && !hasSubs" class="empty muted">{{ $t('grid.spectrum.empty') }}</div>
+    <div v-if="loaded && !S.searchingAnew && !V.layout?.n && !hasSubs" class="empty muted">{{ $t('grid.spectrum.empty') }}</div>
     <ItemMenu ref="menu" />
   </div>
 </template>

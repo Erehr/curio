@@ -763,7 +763,8 @@ const thumb = thumbOf
   <div class="grid-wrap" :class="[bgClass, { gray: lay.grayscale, pixelated: S.ui.pixelated }]">
     <AppMenu ref="bgMenu" :model="bgItems" />
     <AppMenu ref="secMenu" :model="secMenuItems" />
-    <div v-if="!S.results.ids.length && !S.searching && !hasSubs" class="empty" @contextmenu="bgContext">
+    <!-- asked again after a change in the library (thumbnails being made), the empty view stays rather than blinking -->
+    <div v-if="!S.results.ids.length && !S.searchingAnew && !hasSubs" class="empty" @contextmenu="bgContext">
       <AppIcon :name="S.scope.kind === 'trash' ? 'trash' : S.search ? 'search-off' : 'photo-off'" :size="64" class="faint" />
       <div class="muted">{{ S.scope.kind === 'trash' ? $t('grid.empty.trash') : S.search || S.queryError || filterQuery() ? $t('grid.empty.noMatches') : $t('grid.empty.nothing') }}</div>
       <div v-if="S.queryError" class="danger small">{{ S.queryError }}</div>
