@@ -177,8 +177,8 @@ fn window_thumb_done(state: &AppState, id: i64, image: Option<String>, width: Op
         .or_else(|| crate::core::thumbs::shell::thumbnail(Path::new(&a.abs_path), crate::core::thumbs::shell::NATIVE_THUMB_DEFAULT).ok());
     let dest = crate::core::thumbs::thumb_path(&dir, &a.uid, a.thumb_ver);
     let written = picture.and_then(|p| crate::core::thumbs::write_custom_thumbnail(&p, &dest).ok());
-    if written.is_some() && a.thumb_ver > 0 {
-        let _ = std::fs::remove_file(crate::core::thumbs::thumb_path(&dir, &a.uid, a.thumb_ver - 1));
+    if written.is_some() {
+        crate::core::thumbs::remove_older(&dir, &a.uid, a.thumb_ver);
     }
     let visual = matches!(a.kind, crate::core::model::AssetKind::Image | crate::core::model::AssetKind::Video);
     let dims = visual.then(|| width.zip(height).filter(|(w, h)| *w > 0 && *h > 0)).flatten();

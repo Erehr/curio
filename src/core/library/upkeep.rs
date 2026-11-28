@@ -81,6 +81,10 @@ pub(super) fn run_maintenance(db: &Db, ctx: &Ctx) {
     if stored > 0 {
         logging::info(&format!("removed {stored} viewer previews kept on disk by earlier versions"));
     }
+    let versions = old_thumbnails(db, &ctx.paths.thumbs);
+    if versions > 0 {
+        logging::info(&format!("removed {versions} thumbnails replaced by newer ones"));
+    }
     logging::info(&format!("maintenance done; thumbnail cache {} MB", size / 1024 / 1024));
     match crate::core::store::orphans::managed_orphans(db, &ctx.paths, true) {
         Ok(o) if !o.is_empty() => logging::info(&format!("{} files in the library's own folder belong to no item; see Settings › Storage & backup", o.len())),
@@ -109,6 +113,15 @@ pub(super) fn run_maintenance(db: &Db, ctx: &Ctx) {
             }
         }
     }
+}
+
+/// Thumbnails an asset has newer ones of, which writing a new one once left behind when its version had gone up twice.
+fn old_thumbnails(db: &Db, dir: &Path) -> usize {
+    let current: std::collections::HashMap<String, i64> = {
+        let Ok(mut st) = db.conn.prepare("SELECT uid_text(uid), thumb_ver FROM assets") else { return 0 };
+        st.query_map([], |r| Ok((r.get::<_, String>(0)?, r.get::<_, i64>(1)?))).map(|rows| rows.filter_map(|x| x.ok()).map(|(uid, ver)| (thumbs::cache_key(&uid).into_owned(), ver)).collect()).unwrap_or_default()
+    };
+    thumbs::remove_old_versions(dir, &current)
 }
 
 /// Leftovers in the cache's tmp folder; recent ones may belong to work still under way.

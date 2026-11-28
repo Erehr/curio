@@ -78,6 +78,42 @@ pub fn thumb_path(cache_dir: &Path, uid: &str, ver: i64) -> PathBuf {
     cache_dir.join(&key[key.len() - 2..]).join(format!("{key}_{ver}.img"))
 }
 
+/// Removes the asset's thumbnails from before `ver`: its version can go up more than once before the next thumbnail is written (a rescan, then a plugin turned on), so not only the one before it.
+pub fn remove_older(cache_dir: &Path, uid: &str, ver: i64) {
+    let key = cache_key(uid);
+    let Ok(entries) = std::fs::read_dir(cache_dir.join(&key[key.len() - 2..])) else { return };
+    for f in entries.flatten() {
+        if f.file_name().to_str().and_then(|name| version_of(name, &key)).is_some_and(|n| n < ver) {
+            let _ = std::fs::remove_file(f.path());
+        }
+    }
+}
+
+/// Thumbnails left behind by versions written before `remove_older` took every older one: each `<key>_<n>.img` whose asset is at a later version than `n`. `current` maps each asset's cache key to its version.
+pub fn remove_old_versions(cache_dir: &Path, current: &std::collections::HashMap<String, i64>) -> usize {
+    let mut n = 0;
+    for dir in std::fs::read_dir(cache_dir).into_iter().flatten().flatten().filter(|d| d.file_name().len() == 2) {
+        for f in std::fs::read_dir(dir.path()).into_iter().flatten().flatten() {
+            let Some(name) = f.file_name().to_str().map(str::to_string) else { continue };
+            let Some((key, _)) = name.split_once('_') else { continue };
+            let old = current.get(key).is_some_and(|ver| version_of(&name, key).is_some_and(|v| v < *ver));
+            if old && std::fs::remove_file(f.path()).is_ok() {
+                n += 1;
+            }
+        }
+    }
+    n
+}
+
+/// The version in a thumbnail's name, `<key>_<version>.img`, when it is the thumbnail of `key`.
+fn version_of(name: &str, key: &str) -> Option<i64> {
+    let digits = name.strip_prefix(key)?.strip_prefix('_')?.strip_suffix(".img")?;
+    if digits.is_empty() || !digits.bytes().all(|b| b.is_ascii_digit()) {
+        return None;
+    }
+    digits.parse().ok()
+}
+
 /// Scaled previews of items and of archives' pages were once kept on disk as `<key>_*.img` in two-character folders; only files matching that pattern are removed.
 pub fn remove_stored_previews(preview_dir: &Path) -> usize {
     let mut n = 0;

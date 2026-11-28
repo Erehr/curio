@@ -144,9 +144,7 @@ fn make_thumb(db: &Db, ctx: &Ctx, id: AssetId) -> Option<WriterJob> {
     let link = if matches!(ext.as_str(), "url" | "webloc" | "website") && !source_url.is_empty() { Some(source_url.as_str()) } else { None };
     match thumbs::generate_with(&src, &ext, kind, &dest, &handlers, &ctx.paths.tmp, link) {
         Ok(r) => {
-            if ver > 0 {
-                let _ = std::fs::remove_file(thumbs::thumb_path(&ctx.paths.thumbs, &uid, ver - 1));
-            }
+            thumbs::remove_older(&ctx.paths.thumbs, &uid, ver);
             Some(WriterJob::ThumbDone { id, ok: r.has_thumb, dims: r.dims, aspect: r.aspect, palette: r.palette, look: r.look, duration: r.duration, title: r.title })
         }
         Err(e) if e == crate::core::media::NEEDS_FFMPEG => Some(WriterJob::ThumbWaiting { id }),

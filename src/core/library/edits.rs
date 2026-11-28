@@ -151,6 +151,7 @@ pub fn custom_thumbnail(db: &Db, thumbs_dir: &Path, ids: &[AssetId], t: &CustomT
     for id in ids {
         let (uid, ver, _) = db.next_thumb_version(*id)?;
         thumbs::write_bytes(&t.bytes, &thumbs::thumb_path(thumbs_dir, &uid, ver))?;
+        thumbs::remove_older(thumbs_dir, &uid, ver);
         db.set_thumb_done(*id, true, None, Some(&t.palette), Some(&t.look))?;
         if t.aspect.is_finite() && t.aspect > 0.0 {
             db.conn
