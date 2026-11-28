@@ -87,6 +87,8 @@ enum WriterJob {
     ThumbPage { id: AssetId },
     /// What reading a file found. `whole`: every reader ran, for a new or changed file; otherwise the queued readers `done` ran. `ran` names every reader run, whose errors `failed` replaces. `later`: the page readers the file is queued for afterwards.
     Meta { id: AssetId, plan: readers::Plan, whole: bool, done: Vec<String>, ran: Vec<String>, failed: Vec<(String, String)>, duration: Option<f64>, dims: Option<(i64, i64)>, later: Vec<String> },
+    /// Flushes queued work, drops the writer's DB handle and `Ctx` (breaking the `Arc<Ctx>` cycle), then signals completion.
+    Shutdown(Sender<()>),
 }
 
 enum ScanJob {
@@ -104,6 +106,7 @@ enum ScanJob {
     /// queued entries whose store pass failed (`0` the folder tree), queued again after a pause
     RetryStore(Vec<AssetId>),
     Run(WriteFn),
+    Shutdown,
 }
 
 /// Shared state visible to every worker.
@@ -812,17 +815,21 @@ impl Library {
     }
 
     pub fn shutdown(&self) {
-        // edits made just before closing are saved, not dropped with the process
-        if !self.shutdown.load(Ordering::Relaxed) && !self.flush(Duration::from_secs(5)) {
-            logging::warn("closing before every edit was saved");
+        if self.shutdown.swap(true, Ordering::AcqRel) {
+            return;
         }
         if let Some(q) = self.downloads.get() {
             q.close();
         }
-        self.shutdown.store(true, Ordering::Relaxed);
         self.ctx.cancel.store(true, Ordering::Relaxed);
         self.thumbq.cv.notify_all();
         self.ctx.meta_wake.notify_all();
+        let _ = self.ctx.scanner.send(ScanJob::Shutdown);
+        // edits queued before closing are flushed in FIFO order before the writer exits and drops its DB handle
+        let (tx, rx) = crossbeam_channel::bounded(1);
+        if self.ctx.writer.send(WriterJob::Shutdown(tx)).is_ok() && rx.recv_timeout(Duration::from_secs(5)).is_err() {
+            logging::warn("closing before every edit was saved");
+        }
         let _ = self.db.conn.execute_batch("PRAGMA optimize;");
     }
 }

@@ -56,13 +56,13 @@ pub fn backup(db: &Db, dest: &Path, library_id: &str, kind: &str) -> DbResult<Pa
             return Err(format!("the copy failed its check: {}", ok.join("; ")));
         }
         let schema = copy.schema_version();
-        drop(copy);
         let ids: Vec<AssetId> = {
-            let mut st = db.conn.prepare("SELECT id FROM assets WHERE part_of IS NULL").map_err(|e| e.to_string())?;
+            let mut st = copy.conn.prepare("SELECT id FROM assets WHERE part_of IS NULL").map_err(|e| e.to_string())?;
             let rows = st.query_map([], |r| r.get(0)).map_err(|e| e.to_string())?;
             rows.filter_map(|r| r.ok()).collect()
         };
-        export_json(db, &ids, &tmp.join("metadata.json"))?;
+        export_json(&copy, &ids, &tmp.join("metadata.json"))?;
+        drop(copy);
         let (size, blake3) = hash_file(&file)?;
         let m = BackupManifest {
             format: BACKUP_FORMAT.into(),

@@ -329,8 +329,8 @@ impl Db {
         Ok(rows.filter_map(|r| r.ok()).collect())
     }
 
-    /// Tags added to whatever lands in this folder from now on.
-    pub fn set_folder_auto_tags(&self, id: i64, tags: &[String]) -> DbResult<()> {
+    /// Tags added to whatever lands in this folder from now on. Returns the existing items that were tagged.
+    pub fn set_folder_auto_tags(&self, id: i64, tags: &[String]) -> DbResult<Vec<AssetId>> {
         let json = if tags.is_empty() { None } else { serde_json::to_string(tags).ok() };
         self.conn.execute("UPDATE folders SET auto_tags = ? WHERE id = ?", params![json, id]).map_err(e)?;
         if !tags.is_empty() {
@@ -338,9 +338,10 @@ impl Db {
             let inside: Vec<AssetId> = st.query_map([id], |r| r.get(0)).map_err(e)?.filter_map(|r| r.ok()).collect();
             if !inside.is_empty() {
                 self.add_tags(&inside, tags)?;
+                return Ok(inside);
             }
         }
-        Ok(())
+        Ok(Vec::new())
     }
 
     /// Put folders in title order: the children of `parent`, or every level.

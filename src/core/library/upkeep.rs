@@ -70,7 +70,7 @@ pub(super) fn run_backup(db: &Db, ctx: &Ctx, kind: &str) -> DbResult<PathBuf> {
     res
 }
 
-pub(super) fn run_maintenance(db: &Db, ctx: &Ctx) {
+pub(super) fn run_maintenance(db: &mut Db, ctx: &Ctx) {
     if let Err(e) = db.optimize() {
         logging::warn(&format!("optimize: {e}"));
     }
@@ -94,22 +94,33 @@ pub(super) fn run_maintenance(db: &Db, ctx: &Ctx) {
     // hashing policies
     let policy = ctx.settings.read().hash_policy;
     if policy != HashPolicy::OnDemand {
-        let limit = if policy == HashPolicy::SmallFiles { ctx.settings.read().hash_small_limit_mb * 1024 * 1024 } else { u64::MAX };
-        let ids: Vec<(AssetId, i64)> = {
-            let Ok(mut st) = db.conn.prepare("SELECT id, size FROM assets WHERE content_hash IS NULL AND status = 0 AND part_of IS NULL LIMIT 5000") else { return };
-            st.query_map([], |r| Ok((r.get(0)?, r.get(1)?))).map(|r| r.filter_map(|x| x.ok()).collect()).unwrap_or_default()
+        let limit = if policy == HashPolicy::SmallFiles { (ctx.settings.read().hash_small_limit_mb * 1024 * 1024).min(i64::MAX as u64) as i64 } else { i64::MAX };
+        let ids: Vec<AssetId> = {
+            let Ok(mut st) = db.conn.prepare("SELECT id FROM assets WHERE content_hash IS NULL AND status = 0 AND part_of IS NULL AND size <= ? LIMIT 5000") else { return };
+            st.query_map([limit], |r| r.get(0)).map(|r| r.filter_map(|x| x.ok()).collect()).unwrap_or_default()
         };
-        for (id, size) in ids {
+        for chunk in ids.chunks(64) {
             if ctx.cancel.load(Ordering::Relaxed) {
                 break;
             }
-            if size as u64 > limit {
-                continue;
-            }
-            if let Some(p) = db.abs_path(id) {
-                if let Ok(h) = crate::core::system::filesystem::content_hash(&p) {
-                    let _ = db.set_content_hash(id, &h);
+            let mut hashed = Vec::new();
+            for &id in chunk {
+                if ctx.cancel.load(Ordering::Relaxed) {
+                    break;
                 }
+                if let Some(p) = db.abs_path(id) {
+                    if let Ok(h) = crate::core::system::filesystem::content_hash(&p) {
+                        hashed.push((id, h));
+                    }
+                }
+            }
+            if !hashed.is_empty() {
+                let _ = db.tx(|db| {
+                    for (id, h) in &hashed {
+                        db.set_content_hash(*id, h)?;
+                    }
+                    Ok(())
+                });
             }
         }
     }

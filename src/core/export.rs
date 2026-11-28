@@ -157,6 +157,7 @@ pub fn export_json(db: &Db, ids: &[AssetId], dest: &Path) -> DbResult<usize> {
         }
     }
     w.write_all(b"]}").map_err(|e| e.to_string())?;
+    w.flush().map_err(|e| e.to_string())?;
     Ok(n)
 }
 
@@ -212,6 +213,7 @@ pub fn export_csv(db: &Db, ids: &[AssetId], dest: &Path) -> DbResult<usize> {
             n += 1;
         }
     }
+    w.flush().map_err(|e| e.to_string())?;
     Ok(n)
 }
 

@@ -102,12 +102,22 @@ fn count_failure(plugin_id: String) -> WriteFn {
     Box::new(move |db, ctx| {
         let n = db.plugin_failure(&plugin_id, false);
         if n >= plugins::MAX_FAILURES {
-            let mut list = ctx.plugins.write();
-            if let Some(p) = list.iter_mut().find(|p| p.manifest.id == plugin_id) {
-                p.problem = Some(format!("disabled after {n} failures"));
+            let mut newly_disabled = false;
+            {
+                let mut list = ctx.plugins.write();
+                if let Some(p) = list.iter_mut().find(|p| p.manifest.id == plugin_id) {
+                    newly_disabled = p.problem.is_none();
+                    p.problem = Some(format!("disabled after {n} failures"));
+                }
             }
-            ctx.contrib.write().thumb_handlers.retain(|h| h.plugin_id != plugin_id);
-            ctx.send(LibEvent::Error(Said::new("errors.plugins.disabled", json!({"plugin": plugin_id, "count": n}), format!("Plugin {plugin_id} was disabled after {n} failures"))));
+            {
+                let mut contrib = ctx.contrib.write();
+                contrib.thumb_handlers.retain(|h| h.plugin_id != plugin_id);
+                contrib.readers.retain(|r| r.owner != plugin_id);
+            }
+            if newly_disabled {
+                ctx.send(LibEvent::Error(Said::new("errors.plugins.disabled", json!({"plugin": plugin_id, "count": n}), format!("Plugin {plugin_id} was disabled after {n} failures"))));
+            }
         }
         Ok(Changed::default())
     })
@@ -179,6 +189,7 @@ pub(super) fn apply_reply(db: &Db, plugin: &Plugin, reply: plugins::run::PluginR
     }
     let cat = db.field_catalog();
     let mut ids = Vec::new();
+    let mut tagged = false;
     for ch in reply.set {
         let Ok(id) = db.conn.query_row("SELECT id FROM assets WHERE uid = uid_bytes(?)", [&ch.id], |r| r.get::<_, i64>(0)) else { continue };
         if !scope.is_empty() && !scope.contains(&id) {
@@ -187,6 +198,7 @@ pub(super) fn apply_reply(db: &Db, plugin: &Plugin, reply: plugins::run::PluginR
         }
         if !ch.tags.is_empty() {
             db.add_tags(&[id], &ch.tags)?;
+            tagged = true;
         }
         if let Some(r) = ch.rating {
             db.set_rating(&[id], r)?;
@@ -211,5 +223,6 @@ pub(super) fn apply_reply(db: &Db, plugin: &Plugin, reply: plugins::run::PluginR
         }
         ids.push(id);
     }
-    Ok(Changed::items(&ids))
+    let ch = Changed::items(&ids);
+    Ok(if tagged { ch.with(crate::core::library::changes::Parts::TAGS) } else { ch })
 }

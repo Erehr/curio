@@ -264,18 +264,34 @@ impl Db {
     /// After plugins load: items waiting for a page that makes no thumbnails for them now, and failed ones of the extensions `paged` lists, go back in the queue.
     /// So do all of an extension a page makes thumbnails for since the last load, whose thumbnails came from elsewhere: the system's, before the plugin was there or had loaded.
     pub fn requeue_page_thumbs(&self, paged: &[String]) -> DbResult<usize> {
-        let quoted = |l: &[String]| if l.is_empty() { "''".to_string() } else { l.iter().map(|x| format!("'{}'", x.replace('\'', "''"))).collect::<Vec<_>>().join(", ") };
-        let mut now: Vec<String> = paged.iter().map(|x| x.to_lowercase()).collect();
+        let mut now: Vec<String> = paged.iter().map(|x| x.trim().to_lowercase()).filter(|x| !x.is_empty()).collect();
         now.sort();
         now.dedup();
-        let before: Vec<String> = self.meta_get("page_thumb_exts").unwrap_or_default().split(',').map(String::from).collect();
+        let prev_raw = self.meta_get("page_thumb_exts").unwrap_or_default();
+        let before: Vec<String> = prev_raw.split(',').map(|x| x.trim().to_lowercase()).filter(|x| !x.is_empty()).collect();
         let new: Vec<String> = now.iter().filter(|x| !before.contains(x)).cloned().collect();
-        let (list, new) = (quoted(&now), quoted(&new));
-        let n = self
-            .conn
-            .execute(&format!("UPDATE assets SET thumb_ver = thumb_ver + (thumb_state = 1), thumb_state = 3 WHERE part_of IS NULL AND ((thumb_state = 5 AND lower(ext) NOT IN ({list})) OR (thumb_state = 2 AND lower(ext) IN ({list})) OR (thumb_state = 1 AND lower(ext) IN ({new})))"), [])
-            .map_err(e)?;
-        self.meta_set("page_thumb_exts", &now.join(","))?;
+        let mut clauses = Vec::new();
+        let mut values: Vec<rusqlite::types::Value> = Vec::new();
+        if now.is_empty() {
+            clauses.push("thumb_state = 5".to_string());
+        } else {
+            let ph = vec!["?"; now.len()].join(", ");
+            clauses.push(format!("(thumb_state = 5 AND ext NOT IN ({ph}))"));
+            values.extend(now.iter().cloned().map(rusqlite::types::Value::Text));
+            clauses.push(format!("(thumb_state = 2 AND ext IN ({ph}))"));
+            values.extend(now.iter().cloned().map(rusqlite::types::Value::Text));
+        }
+        if !new.is_empty() {
+            let ph = vec!["?"; new.len()].join(", ");
+            clauses.push(format!("(thumb_state = 1 AND ext IN ({ph}))"));
+            values.extend(new.iter().cloned().map(rusqlite::types::Value::Text));
+        }
+        let sql = format!("UPDATE assets SET thumb_ver = thumb_ver + (thumb_state = 1), thumb_state = 3 WHERE part_of IS NULL AND ({})", clauses.join(" OR "));
+        let n = self.conn.execute(&sql, params_from_iter(values)).map_err(e)?;
+        let joined = now.join(",");
+        if joined != prev_raw {
+            self.meta_set("page_thumb_exts", &joined)?;
+        }
         Ok(n)
     }
 

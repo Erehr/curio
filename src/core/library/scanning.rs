@@ -183,14 +183,18 @@ pub(super) fn scanner_loop(mut db: Db, rx: Receiver<ScanJob>, self_tx: Sender<Sc
         }
         let wait = if animated_pending { Duration::from_millis(50) } else { Duration::from_secs(4) };
         let job = match rx.recv_timeout(wait) {
+            Ok(ScanJob::Shutdown) => break,
             Ok(j) => Some(j),
             Err(crossbeam_channel::RecvTimeoutError::Timeout) => None,
             Err(_) => break,
         };
+        if shutdown.load(Ordering::Relaxed) {
+            break;
+        }
         let maint_every = Duration::from_secs(ctx.settings.read().maintenance_minutes.max(5) * 60);
         if last_maint.elapsed() > maint_every {
             last_maint = Instant::now();
-            guard("maintenance", || run_maintenance(&db, &ctx));
+            guard("maintenance", || run_maintenance(&mut db, &ctx));
         }
         if ctx.backup_dirty.load(Ordering::Relaxed) && !dirty_saved {
             dirty_saved = db.meta_set("backup_dirty", "1").is_ok();
@@ -275,7 +279,7 @@ pub(super) fn scanner_loop(mut db: Db, rx: Receiver<ScanJob>, self_tx: Sender<Sc
                 }
             }
             ScanJob::Maintenance => {
-                run_maintenance(&db, &ctx);
+                run_maintenance(&mut db, &ctx);
                 ctx.send(LibEvent::Done(Said::new("results.maintenance.done", Value::Null, "Maintenance finished")));
             }
             ScanJob::Backup => {
@@ -327,6 +331,7 @@ pub(super) fn scanner_loop(mut db: Db, rx: Receiver<ScanJob>, self_tx: Sender<Sc
                 }
                 *ctx.busy.lock() = None;
             }
+            ScanJob::Shutdown => {}
             ScanJob::Run(f) => {
                 *ctx.busy.lock() = Some("Working".into());
                 match f(&mut db, &ctx) {

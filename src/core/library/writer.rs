@@ -54,6 +54,13 @@ pub(super) fn writer_loop(mut db: Db, rx: Receiver<WriterJob>, ctx: Arc<Ctx>) {
                     flush_guarded(&mut db, &mut results, &ctx, &mut pending_ready);
                     done(run_edit(&mut db, &ctx, f));
                 }
+                WriterJob::Shutdown(done) => {
+                    flush_guarded(&mut db, &mut results, &ctx, &mut pending_ready);
+                    drop(db);
+                    drop(ctx);
+                    let _ = done.send(());
+                    return;
+                }
                 other => results.push(other),
             }
         }
@@ -149,7 +156,7 @@ fn flush_results(db: &mut Db, results: &mut Vec<WriterJob>, ctx: &Ctx, ready: &m
                     db.queue_item(id, &later)?;
                     meta_changed.push(id);
                 }
-                WriterJob::Run(_) | WriterJob::RunThen(..) => {}
+                WriterJob::Run(_) | WriterJob::RunThen(..) | WriterJob::Shutdown(_) => {}
             }
         }
         db.refresh_fts(&searchable)

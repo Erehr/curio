@@ -364,7 +364,8 @@ pub fn folder_op(db: &Db, op: &str, mut a: FolderArgs) -> DbResult<Changed> {
         "clear" => db.clear_folders(&a.ids)?,
         "auto_tags" => {
             let tags: Vec<String> = a.value.as_deref().unwrap_or("").split(',').map(|t| t.trim().to_string()).filter(|t| !t.is_empty()).collect();
-            db.set_folder_auto_tags(id()?, &tags)?
+            let tagged = db.set_folder_auto_tags(id()?, &tags)?;
+            return Ok(if tagged.is_empty() { Changed::looks(Parts::FOLDERS) } else { Changed::items(&tagged).with(Parts::FOLDERS | Parts::TAGS) });
         }
         "color" => db.set_folder_color(id()?, a.value.as_deref())?,
         "icon" => db.set_folder_icon(id()?, a.value.as_deref())?,
