@@ -14,16 +14,24 @@ use crate::core::plugins::manifest::Plugin;
 /// Shown for a plugin that arrived inside a library folder and hasn't been allowed on this computer.
 pub const WAITING_APPROVAL: &str = "Came with this library. Allow it to run on this computer.";
 
-fn plugin_files(dir: &Path, rel: &str, out: &mut Vec<(String, PathBuf)>) {
+fn plugin_files(dir: &Path, root: Option<&Path>, rel: &str, visited: &mut HashSet<PathBuf>, out: &mut Vec<(String, PathBuf, bool)>) {
     let Ok(rd) = std::fs::read_dir(dir) else { return };
     for e in rd.flatten() {
         let name = e.file_name().to_string_lossy().into_owned();
         let Ok(ft) = e.file_type() else { continue };
         let rel = if rel.is_empty() { name.clone() } else { format!("{rel}/{name}") };
-        if ft.is_dir() {
-            plugin_files(&e.path(), &rel, out);
+        let path = e.path();
+        if ft.is_symlink() {
+            out.push((rel.clone(), path.clone(), true));
+            if let (Some(root), Ok(real)) = (root, path.canonicalize()) {
+                if real.starts_with(root) && real.is_dir() && visited.insert(real) {
+                    plugin_files(&path, Some(root), &rel, visited, out);
+                }
+            }
+        } else if ft.is_dir() {
+            plugin_files(&path, root, &rel, visited, out);
         } else {
-            out.push((rel, e.path()));
+            out.push((rel, path, false));
         }
     }
 }
@@ -34,14 +42,41 @@ pub fn approval_print(p: &Plugin) -> String {
     granted.sort();
     let mut h = blake3::Hasher::new();
     h.update(format!("plugin|{}|{}|{}|", p.manifest.id, p.dir.display(), granted.join(",")).as_bytes());
+    let root = p.dir.canonicalize().ok();
+    let mut visited = HashSet::new();
+    if let Some(r) = &root {
+        visited.insert(r.clone());
+    }
     let mut files = Vec::new();
-    plugin_files(&p.dir, "", &mut files);
-    files.sort();
-    for (rel, path) in files {
+    plugin_files(&p.dir, root.as_deref(), "", &mut visited, &mut files);
+    files.sort_by(|a, b| a.0.cmp(&b.0).then(a.2.cmp(&b.2)));
+    for (rel, path, is_link) in files {
         h.update(format!("|{rel}|").as_bytes());
+        if is_link {
+            h.update(b"symlink|");
+            match std::fs::read_link(&path) {
+                Ok(t) => {
+                    h.update(t.to_string_lossy().as_bytes());
+                    let escapes = root.as_deref().is_none_or(|r| path.canonicalize().map_or(true, |real| !real.starts_with(r)));
+                    if escapes {
+                        h.update(b"|outside");
+                        continue;
+                    }
+                }
+                Err(_) => {
+                    h.update(b"unreadable");
+                    continue;
+                }
+            }
+            if path.is_dir() {
+                continue;
+            }
+        }
         match std::fs::File::open(&path) {
             Ok(f) => {
-                let _ = h.update_reader(f);
+                if h.update_reader(f).is_err() {
+                    h.update(b"|read-error");
+                }
             }
             Err(_) => {
                 h.update(b"unreadable");

@@ -22,6 +22,7 @@ pub(super) fn http_response(status: u16, mime: &str, body: Vec<u8>) -> tauri::ht
     tauri::http::Response::builder()
         .status(status)
         .header("Content-Type", mime)
+        .header("X-Content-Type-Options", "nosniff")
         .header("Access-Control-Allow-Origin", APP_ORIGIN)
         // a refusal is never kept: the same address answers once its thumbnail or preview is made
         .header("Cache-Control", if status == 200 { "max-age=31536000, immutable" } else { "no-store" })
@@ -71,6 +72,7 @@ pub(super) fn serve_file_for(path: &Path, mime: &str, range: Option<&str>, origi
     let Ok(parsed) = byte_range(range, len) else { return refused() };
     let media = mime.starts_with("video/") || mime.starts_with("audio/");
     let fallback = (media && len > 32 << 20).then_some((0, len - 1));
+    let sandbox_csp = mime.contains("svg") || mime.contains("html") || mime.contains("xml");
     match parsed.or(fallback) {
         Some((start, end)) => {
             let end = end.min(start + RANGE_CAP - 1);
@@ -78,26 +80,32 @@ pub(super) fn serve_file_for(path: &Path, mime: &str, range: Option<&str>, origi
             if f.seek(SeekFrom::Start(start)).is_err() || f.read_exact(&mut buf).is_err() {
                 return refused();
             }
-            tauri::http::Response::builder()
+            let mut b = tauri::http::Response::builder()
                 .status(206)
                 .header("Content-Type", mime)
+                .header("X-Content-Type-Options", "nosniff")
                 .header("Accept-Ranges", "bytes")
                 .header("Content-Range", format!("bytes {start}-{end}/{len}"))
                 .header("Content-Length", buf.len().to_string())
-                .header("Access-Control-Allow-Origin", origin)
-                .body(buf)
-                .unwrap_or_else(|_| tauri::http::Response::new(Vec::new()))
+                .header("Access-Control-Allow-Origin", origin);
+            if sandbox_csp {
+                b = b.header("Content-Security-Policy", "sandbox; default-src 'none'; style-src 'unsafe-inline'");
+            }
+            b.body(buf).unwrap_or_else(|_| tauri::http::Response::new(Vec::new()))
         }
         None => {
             let mut buf = Vec::with_capacity(len as usize);
             let _ = f.read_to_end(&mut buf);
-            tauri::http::Response::builder()
+            let mut b = tauri::http::Response::builder()
                 .status(200)
                 .header("Content-Type", mime)
+                .header("X-Content-Type-Options", "nosniff")
                 .header("Accept-Ranges", "bytes")
-                .header("Access-Control-Allow-Origin", origin)
-                .body(buf)
-                .unwrap_or_else(|_| tauri::http::Response::new(Vec::new()))
+                .header("Access-Control-Allow-Origin", origin);
+            if sandbox_csp {
+                b = b.header("Content-Security-Policy", "sandbox; default-src 'none'; style-src 'unsafe-inline'");
+            }
+            b.body(buf).unwrap_or_else(|_| tauri::http::Response::new(Vec::new()))
         }
     }
 }

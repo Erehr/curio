@@ -16,8 +16,7 @@ export function currentTheme() {
 let themeFileCss = ''
 /** A theme file kept up to date by another program: read now, and again on coming back to the window. */
 export async function loadThemeFile() {
-  const path = S.ui.themeFile
-  const css = path ? await call('read_text', { path }).catch(() => '') : ''
+  const css = S.ui.themeFile ? await call('read_theme_file').catch(() => '') : ''
   if (css === themeFileCss) return
   themeFileCss = css
   refreshTheme()

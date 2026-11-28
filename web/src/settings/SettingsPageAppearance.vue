@@ -48,12 +48,11 @@ async function exportTheme() {
   await run('save_text', { name: `${th.name}.css`, content: toCss(th) })
 }
 async function importTheme() {
-  const p = await call('pick', { kind: 'file' })
-  if (!p) return
-  const css = await run('read_text', { path: p[0] })
-  const th = fromCss(css)
-  const name = th.name === 'Imported' ? p[0].split(/[\\/]/).pop().replace(/\.css$/, '') : th.name
-  S.ui.customThemes[name] = css
+  const got = await run('pick_text_file')
+  if (!got) return
+  const th = fromCss(got.text)
+  const name = th.name === 'Imported' ? got.name.replace(/\.css$/i, '') : th.name
+  S.ui.customThemes[name] = got.text
   if (th.dark) S.ui.darkTheme = name
   else S.ui.lightTheme = name
   saveUi()
@@ -144,13 +143,14 @@ function deleteProfile(n) {
   refreshTheme()
 }
 async function pickThemeFile() {
-  const p = await call('pick', { kind: 'file' })
+  const p = await call('pick_theme_file')
   if (!p) return
-  S.ui.themeFile = p[0]
+  S.ui.themeFile = p
   saveUi()
   loadThemeFile()
 }
-function clearThemeFile() {
+async function clearThemeFile() {
+  await call('clear_theme_file').catch(() => {})
   S.ui.themeFile = ''
   saveUi()
   loadThemeFile()

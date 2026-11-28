@@ -553,7 +553,11 @@ pub(super) fn serve_plugin(app: &tauri::AppHandle, host: &str, path: &str, range
     let mime = plugins::pages::page_mime(&file);
     let network = p.has("network").then_some(p.manifest.network.as_slice());
     let origin = plugin_origin(id);
-    let csp = mime.starts_with("text/html").then(|| plugins::pages::page_csp(&format!("{origin}/{id}/"), &format!("{origin}/curio/ui/"), network, APP_ORIGIN));
+    let csp = if mime.contains("svg") || mime.contains("xml") {
+        Some(ITEM_FILE_CSP.to_string())
+    } else {
+        Some(plugins::pages::page_csp(&format!("{origin}/{id}/"), &format!("{origin}/curio/ui/"), network, APP_ORIGIN))
+    };
     page_response(200, mime, body, csp)
 }
 

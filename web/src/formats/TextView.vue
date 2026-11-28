@@ -22,7 +22,9 @@ watch(() => [props.item?.id, props.item?.thumb_ver], async ([id], old) => {
   const mine = ++asked
   failed.value = null
   try {
-    const t = await (await fetch(textUrl(props.item.id))).text()
+    const res = await fetch(textUrl(props.item.id))
+    const t = await res.text()
+    if (!res.ok) throw new Error(t || String(res.status))
     if (mine !== asked) return
     text.value = t
     // another file starts at its top; the same file read again stays where it was
@@ -81,8 +83,15 @@ function clickRendered(e) {
   if (!a) return
   e.preventDefault()
   const href = a.getAttribute('href') || ''
-  if (href.startsWith('#')) renderedEl.value?.querySelector(`[data-anchor="${CSS.escape(decodeURIComponent(href.slice(1)))}"]`)?.scrollIntoView({ block: 'start' })
-  else if (/^https?:\/\//i.test(href)) call('open_url', { url: href }).catch((err) => toast(errorText(err), 'error'))
+  if (href.startsWith('#')) {
+    let target
+    try {
+      target = decodeURIComponent(href.slice(1))
+    } catch {
+      return
+    }
+    renderedEl.value?.querySelector(`[data-anchor="${CSS.escape(target)}"]`)?.scrollIntoView({ block: 'start' })
+  } else if (/^https?:\/\//i.test(href)) call('open_url', { url: href }).catch((err) => toast(errorText(err), 'error'))
 }
 </script>
 
@@ -96,7 +105,7 @@ function clickRendered(e) {
         <pre v-else class="page mono" :class="{ wrap: tv.wrap }">{{ pretty }}</pre>
       </div>
       <div v-if="mode !== 'source'" ref="renderedEl" class="pane" @scroll="follow(renderedEl, sourceEl)">
-        <article class="page md" v-html="rendered" @click="clickRendered" />
+        <article class="page md" v-html="rendered" @click="clickRendered" @auxclick="clickRendered" />
       </div>
     </template>
   </div>

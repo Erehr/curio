@@ -2,7 +2,7 @@
 
 use crate::desktop::AppState;
 use crate::desktop::R;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use tauri::Manager;
 use crate::core::library::instance;
 use crate::core::library::changes::Changed;
@@ -71,14 +71,64 @@ pub(super) async fn save_text(name: String, content: String) -> R<bool> {
     Ok(true)
 }
 
-/// Read a text file the user picked through `pick` (theme import). Capped at 2 MB.
-#[tauri::command]
-pub(super) async fn read_text(path: String) -> R<String> {
-    let md = std::fs::metadata(&path).map_err(|e| e.to_string())?;
+fn read_capped_text(path: &Path) -> R<String> {
+    let md = std::fs::metadata(path).map_err(|e| e.to_string())?;
     if md.len() > 2 * 1024 * 1024 {
         return Err("file is too large".into());
     }
-    std::fs::read_to_string(&path).map_err(|e| e.to_string())
+    std::fs::read_to_string(path).map_err(|e| e.to_string())
+}
+
+/// Pick and read a text file (theme import) inside Rust so the window has no arbitrary path reader.
+#[tauri::command]
+pub(super) async fn pick_text_file() -> R<Option<serde_json::Value>> {
+    tauri::async_runtime::spawn_blocking(|| {
+        let Some(p) = rfd::FileDialog::new().pick_file() else { return Ok(None) };
+        let text = read_capped_text(&p)?;
+        let name = p.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+        Ok(Some(serde_json::json!({ "name": name, "text": text })))
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+/// Pick a theme CSS file and store its path in app.json (never settable directly by the window).
+#[tauri::command]
+pub(super) async fn pick_theme_file() -> R<Option<String>> {
+    tauri::async_runtime::spawn_blocking(|| {
+        let Some(p) = rfd::FileDialog::new().pick_file() else { return Ok(None) };
+        let shown = p.to_string_lossy().into_owned();
+        let mut cfg = crate::desktop::config::load_config();
+        cfg.theme_file = Some(p);
+        crate::desktop::config::save_config(&cfg);
+        Ok(Some(shown))
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+/// Clear the stored theme file path.
+#[tauri::command]
+pub(super) async fn clear_theme_file() -> R<()> {
+    tauri::async_runtime::spawn_blocking(|| {
+        let mut cfg = crate::desktop::config::load_config();
+        cfg.theme_file = None;
+        crate::desktop::config::save_config(&cfg);
+        Ok(())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+/// Read the user-picked theme file stored in app.json. Capped at 2 MB.
+#[tauri::command]
+pub(super) async fn read_theme_file() -> R<String> {
+    tauri::async_runtime::spawn_blocking(|| {
+        let Some(p) = crate::desktop::config::load_config().theme_file else { return Ok(String::new()) };
+        read_capped_text(&p)
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 /// Native drag of the selected files out of the window (to Explorer, other apps).

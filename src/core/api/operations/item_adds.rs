@@ -149,6 +149,7 @@ fn add_paths_once(c: &Ctx, p: PathsParams, req: Option<crate::core::api::request
         None => OnClash::Keep,
     };
     folders_exist(c, &p.place.folders)?;
+    crate::core::api::operations::item_edits::check_plugin_fields(c, p.place.fields.as_ref())?;
     let paths: Vec<PathBuf> = p.paths.iter().map(PathBuf::from).collect();
     if p.take {
         if let Some(d) = paths.iter().find(|f| !f.is_file()) {
@@ -279,6 +280,7 @@ fn once(c: &Ctx, request_id: Option<String>, f: impl FnOnce(Option<crate::core::
 /// Imports on the scanner thread; the answer is kept for `req` once the job ends, however long the call waited.
 fn import_job(c: &Ctx, wait: Duration, place: Placing, req: Option<crate::core::api::requests::Request>, f: impl FnOnce(&mut Db, &LibCtx, &crate::core::library::paths::LibraryPaths, crate::core::store::SuffixStyle, Option<i64>) -> Made + Send + 'static) -> ApiResult {
     folders_exist(c, &place.folders)?;
+    crate::core::api::operations::item_edits::check_plugin_fields(c, place.fields.as_ref())?;
     let (tx, rx) = crossbeam_channel::bounded(1);
     let how = how(c);
     // a caller outside Curio has no window to say what failed
@@ -495,6 +497,7 @@ fn add_urls_once(c: &Ctx, p: UrlsParams, req: Option<crate::core::api::requests:
         return Ok(json!({ "success": true, "ids": [], "errors": refused, "handed": handed }));
     }
     folders_exist(c, &p.place.folders)?;
+    crate::core::api::operations::item_edits::check_plugin_fields(c, p.place.fields.as_ref())?;
     let (place, how) = (p.place.json(), how(c));
     let on_duplicate = p.on_duplicate.unwrap_or_else(|| "keep".into());
     let news = urls

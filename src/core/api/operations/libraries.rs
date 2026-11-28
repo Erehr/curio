@@ -82,6 +82,9 @@ pub(super) fn library_create(c: &Ctx, p: LibraryCreate) -> ApiResult {
     if name.is_empty() {
         return Err(said("bad_request", "errors.library.noName", Value::Null, "The library needs a name"));
     }
+    if p.folder.is_some() && !c.caller.may(crate::core::api::Perm::FilesOutside) {
+        return Err(crate::core::api::ApiError::new("not_allowed", "Choosing a folder outside Curio's Libraries folder needs files.outside"));
+    }
     let base = p.folder.map(PathBuf::from).unwrap_or_else(|| c.host.data_dir().join("Libraries"));
     let path = base.join(format!("{}{}", crate::core::import::sanitize_name(name), instance::LIBRARY_SUFFIX));
     if path.exists() {

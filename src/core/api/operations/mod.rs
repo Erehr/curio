@@ -426,7 +426,7 @@ pub(super) fn all() -> Vec<Op> {
         op("location.rescan", Organize, Wr, "Look through a location again for new, changed and missing files", location_rescan).returns("{ success: true; queued: true }"),
         op("location.setAccess", Organize, Wr, "What Curio may do to a location's files: read_only, full (edit files) or organize (edit and move them)", location_set_access).returns("Done"),
         op("location.setLook", Organize, Wr, "Set a location's icon or colour", location_set_look).returns("Done"),
-        op("location.relocate", Organize, Wr, "Point a location at the folder's new place after it was moved", location_relocate).returns("Done"),
+        op("location.relocate", FilesOutside, Wr, "Point a location at the folder's new place after it was moved", location_relocate).returns("Done"),
         op("query.validate", MetadataRead, R, "Check a query: whether it parses, and how many items it finds", query_validate).returns("{ valid: true; count: number } | { valid: false; error: string }"),
         op("query.facets", MetadataRead, R, "Ratings, shapes and kinds with their counts among the items a query finds", query_facets).returns("Facets"),
         op("viewer.setTools", LibraryRead, W, "A viewer page's texts, slider and buttons in Curio's own toolbar, each drawn by the widget its plugin declares under the same id (`viewer_tools`); a click comes to the page as `plugin.tool` with the button's id, a right-click with `menu: true` as well, and a value set with the slider or a control in a button's panel with `value`. Answered by the page showing the plugin; an empty list clears them", viewer_set_tools).app().pages().returns("Done"),

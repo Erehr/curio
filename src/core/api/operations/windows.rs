@@ -332,8 +332,8 @@ pub(super) fn viewer_current(c: &Ctx, _: Nothing) -> ApiResult {
 
 /// Files that run code when opened; only the window opens them.
 const RUNS_CODE: &[&str] = &[
-    "exe", "com", "bat", "cmd", "ps1", "psm1", "vbs", "vbe", "js", "jse", "wsf", "wsh", "hta", "msi", "msp", "scr", "pif", "cpl", "lnk", "jar", "reg", "inf", "scf", "msc", "application", "appref-ms",
-    "settingcontent-ms", "library-ms", "searchconnector-ms", "sh", "bash", "command", "app", "appimage", "desktop", "run", "bin", "py", "pyw", "pl", "rb", "php",
+    "exe", "com", "bat", "cmd", "ps1", "psm1", "vbs", "vbe", "js", "jse", "wsf", "wsh", "hta", "msi", "msp", "msu", "msix", "appx", "msixbundle", "scr", "pif", "cpl", "lnk", "jar", "jnlp", "reg", "inf", "scf", "msc", "chm", "diagcab", "application", "appref-ms",
+    "settingcontent-ms", "library-ms", "searchconnector-ms", "xll", "xlam", "docm", "xlsm", "pptm", "sh", "bash", "zsh", "csh", "ksh", "fish", "command", "app", "appimage", "desktop", "run", "bin", "pkg", "dmg", "workflow", "scpt", "applescript", "terminal", "py", "pyw", "pyz", "pyzw", "pl", "rb", "php",
 ];
 
 fn file_of(c: &Ctx, id: AssetId) -> Result<(PathBuf, String), ApiError> {
@@ -359,9 +359,15 @@ pub(super) fn item_open(c: &Ctx, p: OpenItem) -> ApiResult {
         "app" => {
             let (path, ext) = file_of(c, id)?;
             let outside = c.caller.kind != CallerKind::Window;
-            if ext == "url" {
+            if matches!(ext.as_str(), "url" | "webloc" | "website" | "inetloc") {
                 // a saved link opens in the browser, and only a web address
                 let url = thumbs::links::url_from_file(&path).filter(|u| u.starts_with("http://") || u.starts_with("https://")).ok_or_else(|| ApiError::new("not_allowed", "This link doesn't point to a web page"))?;
+                if outside {
+                    let answer = in_window(c, "ui.confirm", asking(c, json!({"title": "Open this address in your browser?", "body": url, "okLabel": "Open"})), true)?;
+                    if answer["ok"] != json!(true) {
+                        return Ok(done());
+                    }
+                }
                 opener::open(&url).map_err(|e| ApiError::new("failed", format!("Failed to open: {e}")))?;
             } else if outside && (RUNS_CODE.contains(&ext.as_str()) || path.is_dir()) {
                 return Err(ApiError::new("not_allowed", format!("{} would run a program; only Curio's window opens such files", path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default())));

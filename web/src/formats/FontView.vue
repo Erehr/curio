@@ -138,15 +138,16 @@ const detailRows = computed(() => {
   const n = i.names || {}
   const d = (k) => t(`formats.font.details.${k}`)
   const axesText = (i.axes || []).filter((a) => !a.hidden).map((a) => t('formats.font.details.axisRange', { name: a.name, min: +a.min.toFixed(2), max: +a.max.toFixed(2) })).join(', ')
+  const webHref = (u) => (typeof u === 'string' && /^https?:\/\//i.test(u.trim()) ? u.trim() : null)
   return [
     { label: d('family'), value: i.family },
     { label: d('style'), value: i.style },
     { label: d('fullName'), value: n.full },
     { label: d('postscriptName'), value: n.postscript, mono: true },
     { label: d('version'), value: i.version },
-    { label: d('designer'), value: n.designer, href: n.designerUrl },
-    { label: d('foundry'), value: n.foundry, href: n.vendorUrl },
-    { label: d('license'), value: i.license, href: n.licenseUrl },
+    { label: d('designer'), value: n.designer, href: webHref(n.designerUrl) },
+    { label: d('foundry'), value: n.foundry, href: webHref(n.vendorUrl) },
+    { label: d('license'), value: i.license, href: webHref(n.licenseUrl) },
     { label: d('copyright'), value: n.copyright },
     { label: d('trademark'), value: n.trademark },
     { label: d('format'), value: i.format },
@@ -250,7 +251,7 @@ onMounted(() => nextTick(() => grid.value && (scroll.value = grid.value.scrollTo
         <div class="props">
           <div v-for="r in detailRows" :key="r.label" class="kv">
             <span>{{ r.label }}</span>
-            <a v-if="r.href" :class="{ mono: r.mono }" :href="r.href" :title="r.href" @click.prevent="openUrl(r.href)">{{ r.value }}</a>
+            <a v-if="r.href" :class="{ mono: r.mono }" :href="r.href" :title="r.href" @click.prevent="openUrl(r.href)" @auxclick.prevent="openUrl(r.href)" @dragstart.prevent>{{ r.value }}</a>
             <span v-else :class="{ mono: r.mono }" :title="r.value">{{ r.value }}</span>
           </div>
         </div>

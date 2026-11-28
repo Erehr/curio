@@ -35,6 +35,7 @@ fn parse_config(text: &str) -> Result<AppConfig, String> {
     take(&mut map, &mut c.raw_fallbacks, "current_library", &mut c.current_library);
     take(&mut map, &mut c.raw_fallbacks, "plugin_dirs", &mut c.plugin_dirs);
     take(&mut map, &mut c.raw_fallbacks, "cache_dir", &mut c.cache_dir);
+    take(&mut map, &mut c.raw_fallbacks, "theme_file", &mut c.theme_file);
     take(&mut map, &mut c.raw_fallbacks, "gpu", &mut c.gpu);
     take(&mut map, &mut c.raw_fallbacks, "api_enabled", &mut c.api_enabled);
     if map.contains_key("api_port") {
@@ -91,7 +92,7 @@ fn serialize_config(c: &AppConfig) -> Result<String, serde_json::Error> {
 
 /// Every path `app.json` holds.
 fn map_paths(c: &mut AppConfig, f: impl Fn(&Path) -> PathBuf) {
-    for p in c.libraries.iter_mut().chain(c.plugin_dirs.iter_mut()).chain(c.current_library.iter_mut()).chain(c.cache_dir.iter_mut()) {
+    for p in c.libraries.iter_mut().chain(c.plugin_dirs.iter_mut()).chain(c.current_library.iter_mut()).chain(c.cache_dir.iter_mut()).chain(c.theme_file.iter_mut()) {
         *p = f(p);
     }
 }

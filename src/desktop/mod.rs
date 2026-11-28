@@ -172,6 +172,9 @@ struct AppConfig {
     plugin_dirs: Vec<PathBuf>,
     #[serde(default)]
     cache_dir: Option<PathBuf>,
+    /// User-picked CSS file overlaid on the active theme (set only via `pick_theme_file`).
+    #[serde(default)]
+    theme_file: Option<PathBuf>,
     /// GPU acceleration of the web view (on by default; off adds --disable-gpu, needs restart)
     #[serde(default = "yes")]
     gpu: bool,
@@ -223,6 +226,7 @@ impl Default for AppConfig {
             current_library: None,
             plugin_dirs: Vec::new(),
             cache_dir: None,
+            theme_file: None,
             gpu: true,
             api_enabled: true,
             api_port: None,
@@ -631,7 +635,10 @@ pub fn run(mut opts: StartOptions) {
             plugin_manager::plugin_list,
             plugin_manager::plugin_op,
             files::save_text,
-            files::read_text,
+            files::pick_text_file,
+            files::pick_theme_file,
+            files::clear_theme_file,
+            files::read_theme_file,
             files::open_url,
             reads::selection_summary,
             reads::filter_facets,

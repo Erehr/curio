@@ -65,7 +65,24 @@ pub(super) struct UpdateParams {
     fields: Option<serde_json::Map<String, Value>>,
 }
 
+pub(super) fn check_plugin_fields(c: &Ctx, fields: Option<&serde_json::Map<String, Value>>) -> Result<(), ApiError> {
+    let (Some(plugin_id), Some(map)) = (c.caller.plugin.as_deref(), fields) else { return Ok(()) };
+    if map.is_empty() {
+        return Ok(());
+    }
+    let cat = read(c.host, |db| Ok(db.field_catalog()))?;
+    for k in map.keys() {
+        if let Some(f) = cat.custom(k) {
+            if !crate::core::plugins::may_write_field(plugin_id, f) {
+                return Err(ApiError::new("not_allowed", format!("{plugin_id} may not write field '{k}', which belongs to {}", f.owner)));
+            }
+        }
+    }
+    Ok(())
+}
+
 pub(super) fn item_update(c: &Ctx, p: UpdateParams) -> ApiResult {
+    check_plugin_fields(c, p.fields.as_ref())?;
     let ids = items_of(c, &either(p.id, p.ids)?)?;
     write(c, move |db| {
         if let Some(n) = &p.name {

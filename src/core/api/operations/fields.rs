@@ -105,8 +105,15 @@ pub(super) fn field_define(c: &Ctx, p: FieldDefine) -> ApiResult {
     let kind = p.kind.as_deref().map(|k| FieldType::parse(k).ok_or_else(|| bad(format!("Unknown field type {k}")))).transpose()?;
     let current = read(c.host, |db| db.fields())?.into_iter().find(|f| f.key == p.key);
     let mut f = match (current, &kind) {
-        (Some(f), _) => f,
-        (None, Some(t)) => FieldDef::new(&p.key, p.label.as_deref().unwrap_or(&p.key), t.clone(), "user"),
+        (Some(f), _) => {
+            if let Some(plugin_id) = c.caller.plugin.as_deref() {
+                if !crate::core::plugins::may_write_field(plugin_id, &f) {
+                    return Err(crate::core::api::ApiError::new("not_allowed", format!("{plugin_id} may not modify field '{}', which belongs to {}", f.key, f.owner)));
+                }
+            }
+            f
+        }
+        (None, Some(t)) => FieldDef::new(&p.key, p.label.as_deref().unwrap_or(&p.key), t.clone(), c.caller.plugin.as_deref().unwrap_or("user")),
         (None, None) => return Err(bad("A new field needs a `type`")),
     };
     if let Some(t) = kind {

@@ -36,9 +36,12 @@ let seq = 0
 let started = false
 const label = getCurrentWindow().label
 
-const post = (f, m) => f.win?.postMessage({ curio: 1, ...m }, f.origin)
-// a frame speaks for its plugin only while it shows the plugin's own page: one navigated elsewhere is neither heard nor told; WebKitGTK's origin for plugin:// pages isn't relied on
-const originOf = (plugin) => (navigator.userAgent.includes('Windows') ? pageOrigin(plugin, true) : '*')
+const isWin = navigator.userAgent.includes('Windows')
+const isLinux = navigator.userAgent.includes('Linux')
+const post = (f, m) => f.win?.postMessage({ curio: 1, ...m }, f.replyOrigin || f.origin)
+// a frame speaks for its plugin only while it shows the plugin's own page; WebKitGTK can report 'null' for custom schemes, never another plugin or web origin
+const originOf = (plugin) => pageOrigin(plugin, isWin)
+const originAllowed = (f, origin) => origin === f.origin || (isLinux && origin === 'null')
 const plain = (v) => JSON.parse(JSON.stringify(v ?? {}))
 
 function tellTheme(f) {
@@ -193,7 +196,9 @@ function start() {
   window.addEventListener('message', async (e) => {
     const f = [...frames.values()].find((x) => x.win === e.source)
     const m = e.data
-    if (!f || !m || m.curio !== 1 || (f.origin !== '*' && e.origin !== f.origin)) return
+    if (!f || !m || m.curio !== 1 || !originAllowed(f, e.origin)) return
+    if (!f.iframe.getAttribute('src')?.startsWith(f.origin + '/')) return
+    f.replyOrigin = e.origin === f.origin ? f.origin : '*'
     if (m.key) return replayKey(f, m.key)
     // a press in a page, which the window's own listeners never hear: its menus and popovers close as for a press anywhere else
     if (m.down) return window.dispatchEvent(new CustomEvent('curio-frame-down', { detail: f.iframe }))

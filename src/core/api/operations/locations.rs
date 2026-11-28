@@ -185,6 +185,9 @@ pub(super) fn location_relocate(c: &Ctx, p: Relocate) -> ApiResult {
     if !dir.is_dir() {
         return Err(said("bad_request", "errors.folders.none", json!({"path": p.path}), format!("There is no folder at {}", p.path)));
     }
+    if instance::in_library_store(&dir) {
+        return Err(said("bad_request", "errors.locations.inStore", Value::Null, "That folder is inside a library's own store"));
+    }
     let np = crate::core::system::filesystem::canonical(&dir).to_string_lossy().to_string();
     let id = p.id;
     job_for(c, WRITE_WAIT, move |db, _| {
