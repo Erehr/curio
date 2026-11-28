@@ -18,6 +18,8 @@ const JOB_LIMIT_MS = 60000
 const CLOSE_AFTER_MS = 30000
 // files each loop works on at once: one at a time leaves the computer mostly waiting on each answer; a few more would hold that many book or PDF engines in a page
 const AT_ONCE = 3
+// jobs asked for at once: one query of the library's queue for many files, not one each
+const BATCH = 32
 
 export const setFrameRef = (key, c) => (c ? refs.set(key, c) : refs.delete(key))
 
@@ -76,13 +78,15 @@ async function read(job) {
   await call('page_read_done', { id: job.id, reader: job.reader, mode: job.mode, values: answer?.values ?? null, error: answer?.error ?? null, timedOut: !answer })
 }
 
-/** Runs `work` on the jobs `next(under)` hands out, `AT_ONCE` at a time, asking for another as each ends, so a slow file holds up only its own place; `under` are the jobs under way. Answers whether there was any. */
+/** Runs `work` on the jobs `next(under)` hands out, `AT_ONCE` at a time, starting the next as each ends, so a slow file holds up only its own place; `under` are the jobs under way. Jobs are asked for `BATCH` at a time, again once those are started. Answers whether there was any. */
 async function drain(next, keyOf, work) {
   const running = new Map()
+  let waiting = []
   let any = false
   for (;;) {
     if (running.size < AT_ONCE) {
-      const job = (await next([...running.values()].map((r) => r.job))).find((j) => !running.has(keyOf(j)))
+      if (!waiting.length) waiting = (await next([...running.values()].map((r) => r.job))).filter((j) => !running.has(keyOf(j)))
+      const job = waiting.shift()
       if (job) {
         any = true
         const key = keyOf(job)
@@ -142,7 +146,7 @@ export function startPageJobs() {
         for (const [id, at] of madeThumbs) if (now - at > ANSWERED_MS) madeThumbs.delete(id)
         // the library reads only so many: those under way and the latest made first
         const skip = [...under.map((j) => j.id), ...[...madeThumbs.keys()].reverse(), ...gaveUpThumbs]
-        return (await call('page_jobs', { limit: AT_ONCE * 2, skip })).filter((j) => !gaveUpThumbs.has(j.id) && !madeThumbs.has(j.id))
+        return (await call('page_jobs', { limit: BATCH, skip })).filter((j) => !gaveUpThumbs.has(j.id) && !madeThumbs.has(j.id))
       },
       (j) => j.id,
       (j) => thumbnail(j).then(() => madeThumbs.set(j.id, Date.now()), () => gaveUpThumbs.add(j.id)),
@@ -155,7 +159,7 @@ export function startPageJobs() {
         const now = Date.now()
         for (const [key, entry] of answered) if (now - entry.at > ANSWERED_MS) answered.delete(key)
         const skip = [...under.map((j) => [j.id, j.reader]), ...[...answered.values()].reverse().map((e) => [e.id, e.reader]), ...gaveUpReads.values()]
-        return (await call('page_reads', { limit: AT_ONCE * 2, skip })).filter((j) => !gaveUpReads.has(readKey(j)) && !answered.has(readKey(j)))
+        return (await call('page_reads', { limit: BATCH, skip })).filter((j) => !gaveUpReads.has(readKey(j)) && !answered.has(readKey(j)))
       },
       readKey,
       (j) => read(j).then(() => answered.set(readKey(j), { id: j.id, reader: j.reader, at: Date.now() }), () => gaveUpReads.set(readKey(j), [j.id, j.reader])),
