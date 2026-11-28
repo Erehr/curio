@@ -300,15 +300,16 @@ pub(super) async fn sidebar(state: tauri::State<'_, AppState>) -> R<serde_json::
     })
 }
 
+/// Asked for every second or faster: async, so its counts over a large library run beside the window's main thread, not on it.
 #[tauri::command]
-pub(super) fn status(state: tauri::State<AppState>) -> serde_json::Value {
+pub(super) async fn status(state: tauri::State<'_, AppState>) -> R<serde_json::Value> {
     // what plugin pages still have to do in the window: thumbnails to draw, files to read
     let pages = state.with_lib(|l| Ok(l.page_readers())).and_then(|readers| state.read(|db| Ok((db.page_jobs_left()?, db.queue_left(&readers, None, true))))).unwrap_or((0, 0));
     let g = state.lib.lock();
-    match g.as_ref() {
+    Ok(match g.as_ref() {
         Some(l) => serde_json::json!({"open": true, "busy": l.busy(), "thumbs": l.thumbs_pending(), "pageThumbs": pages.0, "reads": pages.1, "import": l.import_state(), "jobs": api::jobs::running()}),
         None => serde_json::json!({"open": false, "jobs": api::jobs::running()}),
-    }
+    })
 }
 
 #[tauri::command]
