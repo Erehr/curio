@@ -313,7 +313,7 @@ void currentAspect
     <PageJobFrames />
     <ActionDialog />
     <WindowControls main :right="controlsOver ? 0 : rightPaneWidth" />
-    <TheToasts />
+    <TheToasts progress />
   </div>
 </template>
 

@@ -161,7 +161,8 @@ export async function boot() {
     } else if (ev.kind === 'scan') {
       if (ev.done) delete S.scanning[ev.location]
       else S.scanning[ev.location] = true
-    } else if (ev.text) {
+    } else if (ev.text && !S.prefsWindow && !S.itemWindow && !S.pluginWindow && !S.toolWindow) {
+      // the library's own notices show in the main window alone; every window hears them
       toast(saidText(ev.said, ev.text), ev.kind === 'error' ? 'error' : 'info', undefined, null, ev.kind === 'error' ? 'error' : 'import')
     }
   })

@@ -13,12 +13,14 @@ const NOTICE_MS = 5000
 const ERROR_MS = 8000
 const IMPORT_ID = 'curio-import'
 const JOB_PREFIX = 'curio-job-'
+// the progress of imports, jobs and background work shows in the main window alone; Settings and other windows, which follow the same status, keep only their own notices
+const props = defineProps({ progress: { type: Boolean, default: false } })
 const toast = useToast()
 const shown = new Map()
 const ours = (m) => S.toasts.find((x) => 'curio-' + x.id === m.id)
 
-const importJob = computed(() => S.status.import)
-const jobs = computed(() => S.status.jobs || [])
+const importJob = computed(() => (props.progress ? S.status.import : null))
+const jobs = computed(() => (props.progress ? S.status.jobs || [] : []))
 const jobOf = (m) => (typeof m.id === 'string' && m.id.startsWith(JOB_PREFIX) ? jobs.value.find((j) => JOB_PREFIX + j.id === m.id) : null)
 const fraction = (done, total) => (total ? Math.min(1, done / total) : 0)
 
@@ -90,7 +92,7 @@ watch(() => jobs.value.map((j) => j.id), (ids) => {
 const BACKGROUND_PREFIX = 'curio-background-'
 const BACKGROUND_AFTER_MS = 5000
 const background = reactive({ thumbs: { done: 0, left: 0, since: 0, hidden: false }, reads: { done: 0, left: 0, since: 0, hidden: false } })
-const leftOf = (kind) => (kind === 'thumbs' ? (S.status.thumbs || 0) + (S.status.pageThumbs || 0) : S.status.reads || 0)
+const leftOf = (kind) => (!props.progress ? 0 : kind === 'thumbs' ? (S.status.thumbs || 0) + (S.status.pageThumbs || 0) : S.status.reads || 0)
 // a rescan's "Reading metadata" job already shows the reading
 const readingJob = () => jobs.value.some((j) => j.title === englishText('library.jobs.titles.metadata'))
 const backgroundKind = (m) => (typeof m.id === 'string' && m.id.startsWith(BACKGROUND_PREFIX) ? m.id.slice(BACKGROUND_PREFIX.length) : null)
