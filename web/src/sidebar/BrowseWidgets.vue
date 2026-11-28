@@ -3,7 +3,7 @@ import { t } from '../shared/i18n.js'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { listedRoot, sideClick, sideSelected, sideTargets, deleteSide, startNewFolder, finishNewFolder, newFolderListed, rootIcon, LOOK_COLORS, colorName, sideScoped, folderInScope, rootDirsMap, loadRootDirs } from './sidebar.js'
 import { tagColor } from '../tags/tags.js'
-import { smartOpen, rootOpen, S } from '../app/state.js'
+import { smartOpen, rootOpen, folderOpen, S } from '../app/state.js'
 import { openPrefs, saveUi, flushUi } from '../app/preferences.js'
 import { L, cycleLibrary } from '../layout/arrangement.js'
 import { setScope, filterByTag } from '../library/navigation.js'
@@ -287,6 +287,46 @@ function dirRows(r) {
   return list.filter(([p]) => shown(p)).map(([p, count]) => ({ path: p, count, name: p.slice(p.lastIndexOf('/') + 1), depth: p.split('/').length, kids: list.some(([q]) => q.startsWith(p + '/')) }))
 }
 const dirActive = (r, d) => S.scope.kind === 'rootdir' && S.scope.id === r.id && S.scope.path === d.path
+
+// the folder or location the view shows, wherever it was opened from (an item's folder in the Inspector, the breadcrumb, back and forward, a subfolder in the grid): its list opens down to it and scrolls its row into view
+const REVEAL_TRIES = 20
+const REVEAL_WAIT_MS = 50
+watch(() => [S.scope.kind, S.scope.id, S.scope.path], async () => {
+  if (props.mode !== 'panel') return
+  const { kind, id, path } = S.scope
+  let row
+  if (listId.value === 'folders' && kind === 'folder') {
+    const parentOf = (f) => S.sidebar.folders.find((x) => x.id === f)?.parent_id ?? null
+    for (let p = parentOf(id); p != null; p = parentOf(p)) folderOpen[p] = true
+    row = `[data-drop="folder:${id}"]`
+  } else if (listId.value === 'locations' && (kind === 'root' || kind === 'rootdir')) {
+    if (kind === 'rootdir' && path) {
+      rootOpen[id] = true
+      const parts = path.split('/')
+      for (let i = 1; i < parts.length; i++) rootOpen[id + ':' + parts.slice(0, i).join('/')] = true
+      loadRootDirs(id)
+    }
+    row = kind === 'root' ? `[data-drop="root:${id}"]` : `[data-dir="${CSS.escape(id + ':' + path)}"]`
+  } else return
+  // the opened rows are drawn first, and a location's folders come from disk
+  for (let i = 0; i < REVEAL_TRIES; i++) {
+    await new Promise((r) => setTimeout(r, REVEAL_WAIT_MS))
+    const els = document.querySelectorAll(row)
+    if (!els.length) continue
+    for (const el of els) intoView(el)
+    return
+  }
+}, { immediate: true })
+/** Scrolls the list holding `el` just enough to show it, and nothing else on the page. */
+function intoView(el) {
+  let box = el.parentElement
+  while (box && !/(auto|scroll)/.test(getComputedStyle(box).overflowY)) box = box.parentElement
+  if (!box) return
+  const r = el.getBoundingClientRect()
+  const b = box.getBoundingClientRect()
+  if (r.top < b.top) box.scrollTop -= b.top - r.top
+  else if (r.bottom > b.bottom) box.scrollTop += r.bottom - b.bottom
+}
 const dirItems = (r, d) => [{ label: t('sidebar.menu.copyIn'), icon: 'copy-plus', disabled: !d.count, command: () => run('transfer', { action: 'copy_in', ids: [], root: r.id, path: d.path }) }]
 function openDir(r, d) {
   S.sideSel = { kind: null, ids: [], anchor: null }
@@ -696,7 +736,7 @@ function railClick(e) {
       <span class="count">{{ cnt(r.asset_count) }}</span>
     </div>
     <template v-if="!q && rootOpen[r.id]">
-      <div v-for="d in dirRows(r)" :key="d.path" class="item" data-drag-with :class="{ active: dirActive(r, d) }" :style="{ paddingLeft: treePx(TREE_PAD + d.depth * TREE_INDENT) }" @click="openDir(r, d)" @dblclick="d.kids && (rootOpen[r.id + ':' + d.path] = !rootOpen[r.id + ':' + d.path])" @contextmenu.prevent="openRow($event, dirItems(r, d))">
+      <div v-for="d in dirRows(r)" :key="d.path" class="item" data-drag-with :data-dir="r.id + ':' + d.path" :class="{ active: dirActive(r, d) }" :style="{ paddingLeft: treePx(TREE_PAD + d.depth * TREE_INDENT) }" @click="openDir(r, d)" @dblclick="d.kids && (rootOpen[r.id + ':' + d.path] = !rootOpen[r.id + ':' + d.path])" @contextmenu.prevent="openRow($event, dirItems(r, d))">
         <span v-if="d.kids" class="caret" :style="{ left: treePx(TREE_PAD - CARET + d.depth * TREE_INDENT) }" @click.stop="rootOpen[r.id + ':' + d.path] = !rootOpen[r.id + ':' + d.path]"><AppIcon :name="rootOpen[r.id + ':' + d.path] ? 'chevron-down' : 'chevron-right'" :size="12" /></span>
         <AppIcon name="folder" :size="18" />
         <span class="name">{{ d.name }}</span>
