@@ -80,6 +80,10 @@ pub fn thumb_path(cache_dir: &Path, uid: &str, ver: i64) -> PathBuf {
 
 /// Removes the asset's thumbnails from before `ver`: its version can go up more than once before the next thumbnail is written (a rescan, then a plugin turned on), so not only the one before it.
 pub fn remove_older(cache_dir: &Path, uid: &str, ver: i64) {
+    // a first thumbnail has none before it
+    if ver == 0 {
+        return;
+    }
     let key = cache_key(uid);
     let Ok(entries) = std::fs::read_dir(cache_dir.join(&key[key.len() - 2..])) else { return };
     for f in entries.flatten() {
@@ -181,7 +185,7 @@ pub fn generate_with(src: &Path, ext: &str, kind: AssetKind, dest: &Path, handle
         // images without a readable header take their dimensions from the decoded picture
         res.dims = Some((w as i64, h as i64));
     }
-    let thumb = if w > max || h > max { img.thumbnail(max, max) } else { img };
+    let thumb = crate::core::thumbs::previews::fit_fast(img, max);
     let (tw, th) = thumb.dimensions();
     if res.dims.is_none() && tw > 0 && th > 0 {
         res.aspect = Some(tw as f64 / th as f64);

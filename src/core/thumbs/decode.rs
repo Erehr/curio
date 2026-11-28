@@ -18,6 +18,17 @@ pub fn decode_source(src: &Path, ext: &str, kind: AssetKind, max: u32, handlers:
     decode_full(src, ext, kind, max, handlers, tmp_dir, None).map(|(i, _)| i)
 }
 
+/// An archive's first picture in reading order; a JPEG page is decoded at the fraction of its size that still covers `max`, a quarter or less of a full page's work.
+fn archive_cover(src: &Path, max: u32) -> Result<DynamicImage, String> {
+    let bytes = crate::core::archive::first_picture(src).ok_or("no image inside archive")?;
+    if bytes.starts_with(&[0xFF, 0xD8]) {
+        if let Ok(img) = crate::core::thumbs::previews::decode_jpeg_scaled_bytes(&bytes, max) {
+            return Ok(img);
+        }
+    }
+    image::load_from_memory(&bytes).map_err(|e| e.to_string())
+}
+
 pub(super) fn decode_full(
     src: &Path,
     ext: &str,
@@ -110,10 +121,8 @@ pub(super) fn decode_full(
     // 5) built-in decoders
     match ext {
         "svg" => return render_svg(src, max).map(plain),
-        "zip" | "7z" => {
-            let bytes = crate::core::archive::first_picture(src).ok_or("no image inside archive")?;
-            return image::load_from_memory(&bytes).map(plain).map_err(|e| e.to_string());
-        }
+        // comics too: their cover is their first page
+        "zip" | "7z" | "cbz" | "cb7" => return archive_cover(src, max).map(plain),
         _ => {}
     }
     if kind == AssetKind::Image || ext == "ico" {

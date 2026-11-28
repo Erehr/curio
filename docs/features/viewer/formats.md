@@ -65,7 +65,7 @@ With the optional **Reader** plugin (`curio.reader`) enabled, Curio adds:
 - **Ebooks** (`epub`, `fb2`, `fbz`, `mobi`, `azw3`, `azw`, `prc`): Cover extraction, bibliographic metadata and paginated or scrolled reading.
 - **Comics** (`cbz`, `cb7`): First-image covers in reading order, two-page spreads, continuous strip and page grids.
 
-Standard `zip` and `7z` archives use their first image in reading order as their thumbnail. Other archives (`rar`, `tar`, `gz`, `tgz`, `xz`) stay indexed and open in your system's default archive app. See [Read books, PDFs and comics](reader.md).
+`zip`, `7z`, `cbz` and `cb7` archives use their first image in reading order as their thumbnail, with or without the Reader. Other archives (`rar`, `tar`, `gz`, `tgz`, `xz`) stay indexed and open in your system's default archive app. See [Read books, PDFs and comics](reader.md).
 
 ## Text, code & 3D
 
